@@ -8,21 +8,21 @@ interface ReceiveAnimationProps {
   onComplete: () => void;
 }
 
-type Phase = 'arrive' | 'read' | 'write' | 'send' | 'done';
+type Phase = 'deliver' | 'read' | 'write' | 'reply' | 'done';
 
 export function ReceiveAnimation({ animalId, onComplete }: ReceiveAnimationProps) {
   const animal = getAnimalById(animalId);
-  const [phase, setPhase] = useState<Phase>('arrive');
+  const [phase, setPhase] = useState<Phase>('deliver');
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase('read'), 1200),
-      setTimeout(() => setPhase('write'), 2800),
-      setTimeout(() => setPhase('send'), 4500),
+      setTimeout(() => setPhase('read'), 1400),
+      setTimeout(() => setPhase('write'), 3200),
+      setTimeout(() => setPhase('reply'), 5000),
       setTimeout(() => {
         setPhase('done');
         onComplete();
-      }, 5800),
+      }, 6300),
     ];
     return () => timers.forEach(clearTimeout);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -35,17 +35,17 @@ export function ReceiveAnimation({ animalId, onComplete }: ReceiveAnimationProps
         <motion.div
           className="receive-anim__animal"
           animate={{
-            scale: phase === 'read' ? [1, 1.05, 1] : phase === 'write' ? 1 : 1,
+            scale: phase === 'read' ? [1, 1.05, 1] : 1,
           }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6, repeat: phase === 'read' ? 2 : 0 }}
         >
           <span className="receive-anim__animal-emoji">{animal.emoji}</span>
         </motion.div>
 
         <AnimatePresence mode="wait">
-          {phase === 'arrive' && (
+          {phase === 'deliver' && (
             <motion.div
-              key="incoming"
+              key="deliver"
               className="receive-anim__envelope"
               initial={{ x: -300, y: -100, opacity: 0 }}
               animate={{ x: 0, y: 0, opacity: 1 }}
@@ -87,9 +87,9 @@ export function ReceiveAnimation({ animalId, onComplete }: ReceiveAnimationProps
             </motion.div>
           )}
 
-          {phase === 'send' && (
+          {phase === 'reply' && (
             <motion.div
-              key="outgoing"
+              key="reply"
               className="receive-anim__envelope"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ x: [0, 50, 200], y: [0, -40, -100], opacity: [0, 1, 1], scale: [0.5, 0.8, 0.6] }}
@@ -102,10 +102,10 @@ export function ReceiveAnimation({ animalId, onComplete }: ReceiveAnimationProps
       </div>
 
       <p className="receive-anim__status">
-        {phase === 'arrive' && `Your letter arrived!`}
+        {phase === 'deliver' && `Your letter arrived!`}
         {phase === 'read' && `${animal.name} is reading your letter...`}
         {phase === 'write' && `${animal.name} is writing back...`}
-        {phase === 'send' && `${animal.name} sent a reply!`}
+        {phase === 'reply' && `${animal.name} sent a reply!`}
       </p>
     </div>
   );

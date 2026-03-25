@@ -115,19 +115,20 @@
   pointer-events: none;
   background: repeating-linear-gradient(
     transparent,
-    transparent 31px,
-    rgba(0, 0, 0, 0.04) 31px,
-    rgba(0, 0, 0, 0.04) 32px
+    transparent 51px,
+    rgba(0, 0, 0, 0.06) 51px,
+    rgba(0, 0, 0, 0.06) 52px
   );
-  background-position-y: 60px;
+  background-position-y: 72px;
   border-radius: 12px;
 }
 
 .compose__greeting {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.6rem;
+  font-weight: 400;
   color: color-mix(in srgb, var(--animal-color) 70%, black);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .compose__textarea {
@@ -136,16 +137,15 @@
   border: none;
   outline: none;
   background: transparent;
-  font-family: 'Georgia', 'Times New Roman', serif;
-  font-size: 1.05rem;
-  line-height: 32px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.5rem;
+  line-height: 52px;
   color: #2d3436;
-  min-height: 256px;
+  min-height: 220px;
 }
 
 .compose__textarea::placeholder {
   color: rgba(0, 0, 0, 0.25);
-  font-style: italic;
 }
 
 /* Actions */
@@ -163,13 +163,13 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 28px;
-  border-radius: 14px;
+  gap: 10px;
+  padding: 16px 36px;
+  border-radius: 18px;
   border: none;
   background: var(--animal-color);
   color: white;
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   transition: transform 0.15s, opacity 0.15s;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--animal-color) 40%, transparent);
