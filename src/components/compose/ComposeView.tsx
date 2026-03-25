@@ -24,6 +24,18 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
     textareaRef.current?.focus();
   }, []);
 
+  // Preload the receive video so it plays instantly after send
+  useEffect(() => {
+    const receiveVideo = getAnimalVideo(animalId, 'receive');
+    if (!receiveVideo) return;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'video';
+    link.href = receiveVideo.url;
+    document.head.appendChild(link);
+    return () => { link.remove(); };
+  }, [animalId]);
+
   // Handle text written by the voice agent
   useEffect(() => {
     if (externalText) {
