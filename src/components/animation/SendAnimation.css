@@ -26,15 +26,17 @@
 }
 
 .send-anim__paper-greeting {
-  font-weight: 600;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.3rem;
+  font-weight: 400;
   color: var(--animal-color);
   margin-bottom: 8px;
 }
 
 .send-anim__paper-text {
-  font-family: 'Georgia', serif;
-  font-size: 0.9rem;
-  line-height: 1.6;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.2rem;
+  line-height: 1.8;
   color: #2d3436;
   white-space: pre-wrap;
 }

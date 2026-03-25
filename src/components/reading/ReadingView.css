@@ -46,20 +46,17 @@
   gap: 12px;
 }
 
-.reading__from-emoji {
-  font-size: 2.5rem;
-}
-
 .reading__from-name {
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.6rem;
+  font-weight: 400;
   color: color-mix(in srgb, var(--animal-color) 80%, black);
 }
 
 .reading__paper {
   background: #fffdf5;
   border-radius: 12px;
-  padding: 28px 32px;
+  padding: 32px 36px;
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.08),
     0 4px 12px rgba(0, 0, 0, 0.04);
@@ -84,9 +81,9 @@
   border: 1px solid color-mix(in srgb, var(--animal-color) 20%, transparent);
   font: inherit;
   cursor: pointer;
-  padding: 8px 18px;
-  border-radius: 10px;
-  font-size: 0.9rem;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-size: 1.1rem;
   color: color-mix(in srgb, var(--animal-color) 80%, black);
   transition: background 0.15s;
 }
@@ -110,12 +107,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 28px;
-  border-radius: 14px;
+  padding: 16px 36px;
+  border-radius: 18px;
   border: none;
   background: var(--animal-color);
   color: white;
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   transition: transform 0.15s;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--animal-color) 40%, transparent);
@@ -130,12 +127,12 @@
   -webkit-appearance: none;
   font: inherit;
   cursor: pointer;
-  padding: 12px 24px;
-  border-radius: 14px;
+  padding: 16px 28px;
+  border-radius: 18px;
   border: 2px solid rgba(0, 0, 0, 0.1);
   background: white;
   color: rgba(0, 0, 0, 0.6);
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 600;
   transition: border-color 0.15s;
 }

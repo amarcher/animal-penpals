@@ -22,6 +22,7 @@ function App() {
   storeRef.current = store;
   const currentDraftRef = useRef('');
   const pendingLetterIdRef = useRef<string | null>(null);
+  const pendingResponseRef = useRef<string | null>(null);
   const [externalText, setExternalText] = useState<{ text: string; seq: number } | undefined>(undefined);
   const externalTextSeq = useRef(0);
 
@@ -72,8 +73,9 @@ function App() {
     }
     if (nav.view === 'reading') {
       const letter = storeRef.current.getLetterById(nav.letterId);
-      if (letter) {
-        voice.notifyLetterReceived(nav.animalId, letter.content);
+      const content = letter?.content ?? pendingResponseRef.current;
+      if (content) {
+        voice.notifyLetterReceived(nav.animalId, content);
       }
     }
   }, [nav]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -99,6 +101,7 @@ function App() {
     if (current.view !== 'sending') return;
     const { letterId } = storeRef.current.addLetter(current.animalId, 'animal', animalResponse, current.threadId);
     pendingLetterIdRef.current = letterId;
+    pendingResponseRef.current = animalResponse;
     goToReceiving(current.animalId, current.threadId);
   }, [goToReceiving]);
 
@@ -139,8 +142,10 @@ function App() {
     }
   }, []);
 
-  // Get letter content for reading view
-  const readingLetter = nav.view === 'reading' ? store.getLetterById(nav.letterId) : undefined;
+  // Get letter content for reading view — fall back to the pending response ref
+  // because the store state update may not have flushed yet
+  const readingLetterFromStore = nav.view === 'reading' ? store.getLetterById(nav.letterId) : undefined;
+  const readingLetterContent = readingLetterFromStore?.content ?? pendingResponseRef.current ?? null;
 
   return (
     <div className="app">
@@ -180,10 +185,10 @@ function App() {
         />
       )}
 
-      {nav.view === 'reading' && readingLetter && (
+      {nav.view === 'reading' && readingLetterContent && (
         <ReadingView
           animalId={nav.animalId}
-          letterContent={readingLetter.content}
+          letterContent={readingLetterContent}
           ttsRequest={ttsRequest}
           onReply={handleReply}
           onBack={goToMailbox}
