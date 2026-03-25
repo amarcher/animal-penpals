@@ -1,0 +1,45 @@
+.mailbox {
+  min-height: 100dvh;
+  padding: 40px 24px 120px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.mailbox__header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.mailbox__title {
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  font-weight: 800;
+  color: #2d3436;
+  letter-spacing: -0.02em;
+}
+
+.mailbox__subtitle {
+  font-size: 1.1rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 8px;
+}
+
+.mailbox__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 560px) {
+  .mailbox {
+    padding: 24px 16px 120px;
+  }
+
+  .mailbox__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .mailbox__header {
+    margin-bottom: 24px;
+  }
+}

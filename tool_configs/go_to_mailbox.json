@@ -1,0 +1,9 @@
+{
+  "name": "go_to_mailbox",
+  "description": "Return to the mailbox / animal selection screen. Use when the child wants to go back, choose a different animal, or see their inbox.",
+  "parameters": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

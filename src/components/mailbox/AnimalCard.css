@@ -1,0 +1,78 @@
+.animal-card {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px 20px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--animal-color) 12%, white);
+  border: 2px solid color-mix(in srgb, var(--animal-color) 25%, transparent);
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center;
+}
+
+.animal-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--animal-color) 25%, transparent);
+}
+
+.animal-card:focus-visible {
+  outline: 3px solid var(--animal-color);
+  outline-offset: 2px;
+}
+
+.animal-card__badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background: #e74c3c;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+.animal-card__emoji {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+.animal-card__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--animal-color) 80%, black);
+}
+
+.animal-card__traits {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.5);
+  line-height: 1.3;
+}
+
+.animal-card__cta {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--animal-color);
+  padding: 4px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--animal-color) 15%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animal-card {
+    transition: none;
+  }
+}

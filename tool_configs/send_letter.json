@@ -1,0 +1,9 @@
+{
+  "name": "send_letter",
+  "description": "Send the current letter to the animal pen pal. Use when the child says they are done writing and want to send their letter.",
+  "parameters": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}
