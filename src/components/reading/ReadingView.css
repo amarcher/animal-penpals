@@ -46,10 +46,6 @@
   gap: 12px;
 }
 
-.reading__from-emoji {
-  font-size: 3rem;
-}
-
 .reading__from-name {
   font-family: 'Patrick Hand', cursive;
   font-size: 1.6rem;

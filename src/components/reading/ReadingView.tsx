@@ -64,7 +64,6 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
 
       <div className="reading__letter">
         <div className="reading__from">
-          <span className="reading__from-emoji">{animal.emoji}</span>
           <span className="reading__from-name">From {animal.name}</span>
         </div>
 

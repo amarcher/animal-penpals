@@ -1,7 +1,7 @@
 .compose {
   min-height: 100dvh;
   padding: 24px;
-  max-width: 700px;
+  max-width: 1000px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -35,20 +35,39 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
-.compose__recipient {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.compose__recipient-emoji {
-  font-size: 2rem;
-}
-
 .compose__recipient-name {
   font-size: 1.2rem;
   font-weight: 700;
   color: color-mix(in srgb, var(--animal-color) 80%, black);
+}
+
+/* Side-by-side: video + letter */
+.compose__body {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+}
+
+.compose__video-wrap {
+  flex: none;
+  border-radius: 16px;
+  overflow: hidden;
+  align-self: flex-start;
+}
+
+.compose__video {
+  display: block;
+  border-radius: 16px;
+  height: 60vh;
+  width: auto;
+}
+
+.compose__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
 }
 
 /* Thread history */
@@ -150,9 +169,6 @@
 
 /* Actions */
 .compose__actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
   padding-bottom: 100px;
 }
 
@@ -184,14 +200,21 @@
   cursor: not-allowed;
 }
 
-.compose__hint {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.3);
-}
-
-@media (max-width: 560px) {
+@media (max-width: 700px) {
   .compose {
     padding: 16px;
+  }
+
+  .compose__body {
+    flex-direction: column;
+  }
+
+  .compose__video-wrap {
+    flex: none;
+    width: 100%;
+    max-width: 280px;
+    align-self: center;
+    position: static;
   }
 
   .compose__paper {

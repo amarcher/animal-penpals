@@ -33,6 +33,9 @@ agents.json
 tools.json
 tests.json
 
+# Animal videos (large files, hosted on CDN in prod)
+public/animal-videos/*.mp4
+
 # Claude worktrees
 .claude/worktrees/
 
