@@ -7,31 +7,42 @@ import './ComposeView.css';
 interface ComposeViewProps {
   animalId: string;
   thread?: Thread;
+  externalText?: { text: string; seq: number };
   onSend: (content: string) => void;
   onBack: () => void;
   onDraftChange?: (animalId: string, content: string) => void;
 }
 
-export function ComposeView({ animalId, thread, onSend, onBack, onDraftChange }: ComposeViewProps) {
+export function ComposeView({ animalId, thread, externalText, onSend, onBack, onDraftChange }: ComposeViewProps) {
   const animal = getAnimalById(animalId);
   const [draft, setDraft] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
 
+  // Handle text written by the voice agent
+  useEffect(() => {
+    if (externalText) {
+      setDraft(prev => {
+        const newDraft = prev ? prev + ' ' + externalText.text : externalText.text;
+        if (onDraftChange) onDraftChange(animalId, newDraft);
+        return newDraft;
+      });
+      // Scroll textarea to bottom after agent writes
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+        }
+      }, 0);
+    }
+  }, [externalText]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setDraft(value);
-
-    if (onDraftChange) {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        onDraftChange(animalId, value);
-      }, 500);
-    }
+    if (onDraftChange) onDraftChange(animalId, value);
   }, [animalId, onDraftChange]);
 
   const handleSend = useCallback(() => {

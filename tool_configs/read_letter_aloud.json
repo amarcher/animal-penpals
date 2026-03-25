@@ -1,6 +1,6 @@
 {
-    "name": "send_letter",
-    "description": "Send the current letter to the animal pen pal. Use when the child says they are done writing and want to send their letter (e.g. 'send it', 'I'm done', 'mail it', 'finished').",
+    "name": "read_letter_aloud",
+    "description": "Read the animal's letter aloud using the animal's voice. Use when the child asks to hear the letter read to them, or asks 'read it to me', 'what does it say', etc.",
     "type": "client",
     "expects_response": true,
     "response_timeout_secs": 30,

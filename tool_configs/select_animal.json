@@ -1,14 +1,21 @@
 {
-  "name": "select_animal",
-  "description": "Navigate to a specific animal's writing page. Use when the child mentions wanting to write to a specific animal by name or species.",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "type": "string",
-        "description": "The name, species, or identifier of the animal to write to (e.g. 'elephant', 'Ella', 'owl', 'Oliver')"
-      }
+    "name": "select_animal",
+    "description": "Navigate to a specific animal's writing page. Use when the child mentions wanting to write to a specific animal by name or species.",
+    "type": "client",
+    "expects_response": true,
+    "response_timeout_secs": 30,
+    "parameters": {
+        "type": "object",
+        "description": "Parameters for the client tool",
+        "properties": {
+            "name": {
+                "type": "string",
+                "description": "The name, species, or identifier of the animal to write to (e.g. 'elephant', 'Ella', 'owl', 'Oliver')"
+            }
+        },
+        "required": ["name"]
     },
-    "required": ["name"]
-  }
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    }
 }

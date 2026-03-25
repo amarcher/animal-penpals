@@ -8,12 +8,13 @@ import './ReadingView.css';
 interface ReadingViewProps {
   animalId: string;
   letterContent: string;
+  ttsRequest?: { seq: number };
   onReply: () => void;
   onBack: () => void;
   onMarkRead: () => void;
 }
 
-export function ReadingView({ animalId, letterContent, onReply, onBack, onMarkRead }: ReadingViewProps) {
+export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBack, onMarkRead }: ReadingViewProps) {
   const animal = getAnimalById(animalId);
   const tts = useTtsPlayback();
 
@@ -28,6 +29,13 @@ export function ReadingView({ animalId, letterContent, onReply, onBack, onMarkRe
     }
     return () => tts.stop();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle agent-triggered TTS
+  useEffect(() => {
+    if (ttsRequest && animal && letterContent) {
+      tts.play(letterContent, animal.voiceId);
+    }
+  }, [ttsRequest]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleReplay = useCallback(() => {
     if (animal) {
@@ -75,12 +83,12 @@ export function ReadingView({ animalId, letterContent, onReply, onBack, onMarkRe
           )}
           {tts.isPlaying && (
             <button className="reading__tts-btn" onClick={tts.stop} type="button">
-              ⏸ Pause
+              Pause
             </button>
           )}
           {!tts.isPlaying && !tts.isLoading && (
             <button className="reading__tts-btn" onClick={handleReplay} type="button">
-              🔊 Read aloud
+              Read aloud
             </button>
           )}
         </div>
@@ -88,7 +96,7 @@ export function ReadingView({ animalId, letterContent, onReply, onBack, onMarkRe
 
       <div className="reading__actions">
         <button className="reading__reply" onClick={onReply} type="button">
-          ✏️ Write Back
+          Write Back
         </button>
         <button className="reading__other" onClick={onBack} type="button">
           Choose another animal

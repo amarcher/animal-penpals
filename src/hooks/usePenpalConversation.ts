@@ -7,12 +7,14 @@ interface ConversationCallbacks {
   onSelectAnimal: (animalId: string) => void;
   onSendLetter: () => void;
   onGoToMailbox: () => void;
+  onWriteText: (text: string) => void;
+  onReadAloud: () => string;
 }
 
 export type VoiceStatus = 'off' | 'connecting' | 'connected' | 'error';
 export type MicError = 'timeout' | 'not-allowed' | 'device' | 'no-input' | null;
 
-export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMailbox }: ConversationCallbacks) {
+export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMailbox, onWriteText, onReadAloud }: ConversationCallbacks) {
   const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID as string | undefined;
   const [sessionStarted, setSessionStarted] = useState(false);
   const [micError, setMicError] = useState<MicError>(null);
@@ -32,6 +34,10 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
         onSelectAnimal(match.id);
         return `Navigated to ${match.name}'s writing page`;
       },
+      write_text: (params: { text: string }) => {
+        onWriteText(params.text);
+        return `Added to letter: "${params.text}"`;
+      },
       send_letter: () => {
         onSendLetter();
         return 'Letter sent!';
@@ -39,6 +45,9 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
       go_to_mailbox: () => {
         onGoToMailbox();
         return 'Returned to mailbox';
+      },
+      read_letter_aloud: () => {
+        return onReadAloud();
       },
     },
     onConnect: () => {
@@ -145,6 +154,19 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
     }
   }, [agentId, conversation]);
 
+  const notifyLetterReceived = useCallback((animalId: string, letterContent: string) => {
+    if (!agentId || conversation.status !== 'connected') return;
+    const animal = getAnimalById(animalId);
+    if (!animal) return;
+    conversation.sendContextualUpdate(
+      `[LETTER RECEIVED] ${animal.name} wrote back! Here is the letter:\n\n"${letterContent}"\n\n` +
+      `The child is now reading this letter on screen. You can:\n` +
+      `- Use read_letter_aloud to have ${animal.name}'s voice read the letter out loud\n` +
+      `- Help the child understand words they might not know\n` +
+      `- When they're ready, suggest writing back or choosing another animal`
+    );
+  }, [agentId, conversation]);
+
   const notifyDraftChange = useCallback((animalId: string, draftContent: string) => {
     if (!agentId || conversation.status !== 'connected') return;
     const animal = getAnimalById(animalId);
@@ -179,6 +201,7 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
     micError,
     clearMicError,
     notifyViewChange,
+    notifyLetterReceived,
     notifyDraftChange,
     toggle,
     agentId,

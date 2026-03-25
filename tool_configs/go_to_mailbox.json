@@ -1,9 +1,15 @@
 {
-  "name": "go_to_mailbox",
-  "description": "Return to the mailbox / animal selection screen. Use when the child wants to go back, choose a different animal, or see their inbox.",
-  "parameters": {
-    "type": "object",
-    "properties": {},
-    "required": []
-  }
+    "name": "go_to_mailbox",
+    "description": "Return to the mailbox / animal selection screen. Use when the child wants to go back, choose a different animal, or see their letters.",
+    "type": "client",
+    "expects_response": true,
+    "response_timeout_secs": 30,
+    "parameters": {
+        "type": "object",
+        "description": "Parameters for the client tool",
+        "properties": {}
+    },
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    }
 }

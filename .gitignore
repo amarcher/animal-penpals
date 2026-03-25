@@ -38,3 +38,4 @@ tests.json
 
 # Vercel
 .vercel/
+.vercel

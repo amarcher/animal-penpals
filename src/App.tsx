@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { useNavigation } from './hooks/useNavigation.ts';
 import { useLetterStore } from './hooks/useLetterStore.ts';
@@ -14,92 +14,130 @@ import './App.css';
 function App() {
   const { nav, goToMailbox, goToCompose, goToSending, goToReceiving, goToReading } = useNavigation();
   const store = useLetterStore();
-  const pendingSendRef = useRef<{ threadId: string; animalId: string } | null>(null);
 
-  // Track which animal the child wants to send to (for agent tool)
-  const currentAnimalRef = useRef<string | null>(null);
-  const currentDraftRef = useRef<string>('');
+  // Refs so agent tool callbacks always see current values (no stale closures)
+  const navRef = useRef(nav);
+  navRef.current = nav;
+  const storeRef = useRef(store);
+  storeRef.current = store;
+  const currentDraftRef = useRef('');
+  const pendingLetterIdRef = useRef<string | null>(null);
+  const [externalText, setExternalText] = useState<{ text: string; seq: number } | undefined>(undefined);
+  const externalTextSeq = useRef(0);
+
+  // Ref for triggering TTS from the agent
+  const [ttsRequest, setTtsRequest] = useState<{ seq: number } | undefined>(undefined);
+  const ttsSeq = useRef(0);
 
   const handleSelectAnimal = useCallback((animalId: string) => {
-    const existingThread = store.getThreadByAnimal(animalId);
+    const existingThread = storeRef.current.getThreadByAnimal(animalId);
     goToCompose(animalId, existingThread?.id);
-  }, [store, goToCompose]);
+  }, [goToCompose]);
 
   const handleSendLetter = useCallback(() => {
-    if (nav.view !== 'compose' || !currentDraftRef.current.trim()) return;
+    const current = navRef.current;
+    if (current.view !== 'compose' || !currentDraftRef.current.trim()) return;
     const content = currentDraftRef.current.trim();
-    const { threadId } = store.addLetter(nav.animalId, 'child', content, nav.threadId);
-    goToSending(nav.animalId, threadId, content);
-  }, [nav, store, goToSending]);
+    const { threadId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
+    goToSending(current.animalId, threadId, content);
+  }, [goToSending]);
+
+  const handleWriteText = useCallback((text: string) => {
+    currentDraftRef.current = currentDraftRef.current
+      ? currentDraftRef.current + ' ' + text
+      : text;
+    externalTextSeq.current += 1;
+    setExternalText({ text, seq: externalTextSeq.current });
+  }, []);
+
+  const handleReadAloud = useCallback(() => {
+    ttsSeq.current += 1;
+    setTtsRequest({ seq: ttsSeq.current });
+    return 'Reading the letter aloud now!';
+  }, []);
 
   const voice = usePenpalConversation({
     onSelectAnimal: handleSelectAnimal,
     onSendLetter: handleSendLetter,
     onGoToMailbox: goToMailbox,
+    onWriteText: handleWriteText,
+    onReadAloud: handleReadAloud,
   });
 
   // Notify agent of view changes
   useEffect(() => {
     voice.notifyViewChange(nav);
     if (nav.view === 'compose') {
-      currentAnimalRef.current = nav.animalId;
+      currentDraftRef.current = '';
+    }
+    if (nav.view === 'reading') {
+      const letter = storeRef.current.getLetterById(nav.letterId);
+      if (letter) {
+        voice.notifyLetterReceived(nav.animalId, letter.content);
+      }
     }
   }, [nav]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleComposeSend = useCallback((content: string) => {
-    if (nav.view !== 'compose') return;
-    const { threadId } = store.addLetter(nav.animalId, 'child', content, nav.threadId);
-    goToSending(nav.animalId, threadId, content);
-  }, [nav, store, goToSending]);
+    const current = navRef.current;
+    if (current.view !== 'compose') return;
+    const { threadId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
+    goToSending(current.animalId, threadId, content);
+  }, [goToSending]);
 
+  const draftNotifyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleDraftChange = useCallback((animalId: string, content: string) => {
     currentDraftRef.current = content;
-    voice.notifyDraftChange(animalId, content);
+    if (draftNotifyRef.current) clearTimeout(draftNotifyRef.current);
+    draftNotifyRef.current = setTimeout(() => {
+      voice.notifyDraftChange(animalId, content);
+    }, 800);
   }, [voice]);
 
   const handleSendComplete = useCallback((animalResponse: string) => {
-    if (nav.view !== 'sending') return;
-    const { letterId } = store.addLetter(nav.animalId, 'animal', animalResponse, nav.threadId);
-    pendingSendRef.current = { threadId: nav.threadId, animalId: nav.animalId };
-    goToReceiving(nav.animalId, nav.threadId);
-    // Store the letter ID for when receive animation completes
-    pendingSendRef.current = { ...pendingSendRef.current };
-    // We need to store the letterId somewhere accessible
-    (pendingSendRef.current as { threadId: string; animalId: string; letterId?: string }).letterId = letterId;
-  }, [nav, store, goToReceiving]);
+    const current = navRef.current;
+    if (current.view !== 'sending') return;
+    const { letterId } = storeRef.current.addLetter(current.animalId, 'animal', animalResponse, current.threadId);
+    pendingLetterIdRef.current = letterId;
+    goToReceiving(current.animalId, current.threadId);
+  }, [goToReceiving]);
 
   const handleReceiveComplete = useCallback(() => {
-    if (nav.view !== 'receiving') return;
-    const pending = pendingSendRef.current as { threadId: string; animalId: string; letterId?: string } | null;
-    if (pending?.letterId) {
-      goToReading(nav.animalId, pending.letterId, nav.threadId);
+    const current = navRef.current;
+    if (current.view !== 'receiving') return;
+
+    if (pendingLetterIdRef.current) {
+      goToReading(current.animalId, pendingLetterIdRef.current, current.threadId);
+      pendingLetterIdRef.current = null;
     } else {
-      // Fallback: find the latest animal letter in the thread
-      const thread = store.getThread(nav.threadId);
+      // Fallback: find latest animal letter
+      const thread = storeRef.current.getThread(current.threadId);
       const latestAnimalLetter = thread?.letters.filter(l => l.from === 'animal').pop();
       if (latestAnimalLetter) {
-        goToReading(nav.animalId, latestAnimalLetter.id, nav.threadId);
+        goToReading(current.animalId, latestAnimalLetter.id, current.threadId);
       } else {
         goToMailbox();
       }
     }
-  }, [nav, store, goToReading, goToMailbox]);
+  }, [goToReading, goToMailbox]);
 
   const handleReply = useCallback(() => {
-    if (nav.view !== 'reading') return;
+    const current = navRef.current;
+    if (current.view !== 'reading') return;
     currentDraftRef.current = '';
-    goToCompose(nav.animalId, nav.threadId);
-  }, [nav, goToCompose]);
+    goToCompose(current.animalId, current.threadId);
+  }, [goToCompose]);
 
   const hasThread = useCallback((animalId: string) => {
-    return !!store.getThreadByAnimal(animalId);
-  }, [store]);
+    return !!storeRef.current.getThreadByAnimal(animalId);
+  }, []);
 
   const handleMarkRead = useCallback(() => {
-    if (nav.view === 'reading') {
-      store.markRead(nav.letterId);
+    const current = navRef.current;
+    if (current.view === 'reading') {
+      storeRef.current.markRead(current.letterId);
     }
-  }, [nav, store]);
+  }, []);
 
   // Get letter content for reading view
   const readingLetter = nav.view === 'reading' ? store.getLetterById(nav.letterId) : undefined;
@@ -118,6 +156,7 @@ function App() {
         <ComposeView
           animalId={nav.animalId}
           thread={nav.threadId ? store.getThread(nav.threadId) : undefined}
+          externalText={externalText}
           onSend={handleComposeSend}
           onBack={goToMailbox}
           onDraftChange={handleDraftChange}
@@ -145,6 +184,7 @@ function App() {
         <ReadingView
           animalId={nav.animalId}
           letterContent={readingLetter.content}
+          ttsRequest={ttsRequest}
           onReply={handleReply}
           onBack={goToMailbox}
           onMarkRead={handleMarkRead}
