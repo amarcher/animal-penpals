@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
+import { getAnimalVideo } from '../../data/videoManifest.ts';
 import { useTtsPlayback } from '../../hooks/useTtsPlayback.ts';
 import { HighlightedText } from './HighlightedText.tsx';
 import './ReadingView.css';
@@ -16,6 +17,7 @@ interface ReadingViewProps {
 
 export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBack, onMarkRead }: ReadingViewProps) {
   const animal = getAnimalById(animalId);
+  const videoEntry = getAnimalVideo(animalId, 'receive');
   const tts = useTtsPlayback();
   const hasAutoPlayed = useRef(false);
   const lastTtsSeq = useRef<number | undefined>(undefined);
@@ -66,34 +68,50 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
         </button>
       </header>
 
-      <div className="reading__letter">
-        <div className="reading__from">
-          <span className="reading__from-name">From {animal.name}</span>
-        </div>
+      <div className="reading__body">
+        {videoEntry && (
+          <div className="reading__video-wrap">
+            <video
+              className="reading__video"
+              src={videoEntry.url}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+            />
+          </div>
+        )}
 
-        <div className="reading__paper">
-          <HighlightedText
-            text={letterContent}
-            wordTimings={tts.wordTimings}
-            currentWordIndex={tts.currentWordIndex}
-            animalColor={animal.color}
-          />
-        </div>
+        <div className="reading__letter">
+          <div className="reading__from">
+            <span className="reading__from-name">From {animal.name}</span>
+          </div>
 
-        <div className="reading__tts-controls">
-          {tts.isLoading && (
-            <span className="reading__tts-status">Loading voice...</span>
-          )}
-          {tts.isPlaying && (
-            <button className="reading__tts-btn" onClick={tts.stop} type="button">
-              Pause
-            </button>
-          )}
-          {!tts.isPlaying && !tts.isLoading && (
-            <button className="reading__tts-btn" onClick={handleReplay} type="button">
-              Read aloud
-            </button>
-          )}
+          <div className="reading__paper">
+            <HighlightedText
+              text={letterContent}
+              wordTimings={tts.wordTimings}
+              currentWordIndex={tts.currentWordIndex}
+              animalColor={animal.color}
+            />
+          </div>
+
+          <div className="reading__tts-controls">
+            {tts.isLoading && (
+              <span className="reading__tts-status">Loading voice...</span>
+            )}
+            {tts.isPlaying && (
+              <button className="reading__tts-btn" onClick={tts.stop} type="button">
+                Pause
+              </button>
+            )}
+            {!tts.isPlaying && !tts.isLoading && (
+              <button className="reading__tts-btn" onClick={handleReplay} type="button">
+                Read aloud
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
