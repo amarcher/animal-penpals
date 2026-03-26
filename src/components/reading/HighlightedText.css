@@ -7,15 +7,15 @@
 }
 
 .highlighted-text__word {
-  transition: background 0.15s, color 0.15s;
+  transition: box-shadow 0.15s, color 0.15s;
   border-radius: 6px;
-  padding: 2px 2px;
+  padding: 2px 4px;
+  box-shadow: 0 0 0 0 transparent;
 }
 
 .highlighted-text__word--active {
-  background: color-mix(in srgb, var(--animal-color) 30%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--animal-color) 35%, transparent);
   color: color-mix(in srgb, var(--animal-color) 70%, black);
-  padding: 2px 6px;
 }
 
 .highlighted-text__word--read {

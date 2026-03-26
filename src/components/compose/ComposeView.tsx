@@ -24,16 +24,17 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
     textareaRef.current?.focus();
   }, []);
 
-  // Preload the receive video so it plays instantly after send
+  // Preload the receive video by fetching it into the browser cache
   useEffect(() => {
     const receiveVideo = getAnimalVideo(animalId, 'receive');
     if (!receiveVideo) return;
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'video';
-    link.href = receiveVideo.url;
-    document.head.appendChild(link);
-    return () => { link.remove(); };
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.muted = true;
+    video.src = receiveVideo.url;
+    // Trigger the browser to start buffering
+    video.load();
+    return () => { video.src = ''; video.load(); };
   }, [animalId]);
 
   // Handle text written by the voice agent

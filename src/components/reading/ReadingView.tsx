@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
 import { useTtsPlayback } from '../../hooks/useTtsPlayback.ts';
@@ -17,22 +17,26 @@ interface ReadingViewProps {
 export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBack, onMarkRead }: ReadingViewProps) {
   const animal = getAnimalById(animalId);
   const tts = useTtsPlayback();
+  const hasAutoPlayed = useRef(false);
+  const lastTtsSeq = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     onMarkRead();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-play TTS on mount
+  // Auto-play TTS once on mount
   useEffect(() => {
-    if (animal && letterContent) {
+    if (!hasAutoPlayed.current && animal && letterContent) {
+      hasAutoPlayed.current = true;
       tts.play(letterContent, animal.voiceId);
     }
     return () => tts.stop();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handle agent-triggered TTS
+  // Handle agent-triggered TTS (only if it's a new request)
   useEffect(() => {
-    if (ttsRequest && animal && letterContent) {
+    if (ttsRequest && ttsRequest.seq !== lastTtsSeq.current && animal && letterContent) {
+      lastTtsSeq.current = ttsRequest.seq;
       tts.play(letterContent, animal.voiceId);
     }
   }, [ttsRequest]); // eslint-disable-line react-hooks/exhaustive-deps
