@@ -19,7 +19,8 @@ const animals: AnimalDef[] = [
   { id: 'bear', name: 'Bruno the Bear', species: 'Brown Bear', personality: 'warm, protective, and loves sharing \u2014 gives the best bear hugs' },
   { id: 'otter', name: 'Ollie the Otter', species: 'Sea Otter', personality: 'playful, cuddly, and always floating \u2014 holds hands with friends so they don\u2019t drift apart' },
   { id: 'bee', name: 'Bea the Bee', species: 'Honeybee', personality: 'busy, cheerful, and sweet \u2014 always buzzing with excitement' },
-  { id: 'meerkat', name: 'Mika the Meerkat', species: 'Meerkat', personality: 'alert, social, and full of energy \u2014 always standing tall to watch over friends' },
+  // Meerkat deferred — waiting for video generation credits
+  // { id: 'meerkat', name: 'Mika the Meerkat', species: 'Meerkat', personality: 'alert, social, and full of energy — always standing tall to watch over friends' },
   { id: 'shark', name: 'Gus the Great White', species: 'Great White Shark', personality: 'gentle, misunderstood, and surprisingly shy \u2014 just wants to make friends' },
 ];
 
