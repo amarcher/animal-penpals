@@ -18,11 +18,14 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
   const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID as string | undefined;
   const [sessionStarted, setSessionStarted] = useState(false);
   const [micError, setMicError] = useState<MicError>(null);
+  const [agentVolume, setAgentVolume] = useState(1);
+  const muteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingNavRef = useRef<AppState | null>(null);
   const currentNavRef = useRef<string | null>(null);
   const inputVolumeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const conversation = useConversation({
+    volume: agentVolume,
     clientTools: {
       select_animal: (params: { name: string }) => {
         const match = animals.find(a =>
@@ -154,7 +157,35 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
     }
   }, [agentId, conversation]);
 
-  const notifyLetterReceived = useCallback((animalId: string, letterContent: string) => {
+  const muteAgent = useCallback(() => {
+    setAgentVolume(0);
+    // Safety timeout: force unmute after 45s in case TTS never ends
+    if (muteTimeoutRef.current) clearTimeout(muteTimeoutRef.current);
+    muteTimeoutRef.current = setTimeout(() => setAgentVolume(1), 45_000);
+  }, []);
+
+  const unmuteAgent = useCallback(() => {
+    if (muteTimeoutRef.current) {
+      clearTimeout(muteTimeoutRef.current);
+      muteTimeoutRef.current = null;
+    }
+    // Small delay so agent doesn't immediately blurt after TTS ends
+    setTimeout(() => setAgentVolume(1), 500);
+  }, []);
+
+  const notifyLetterReceivedWithTts = useCallback((animalId: string, letterContent: string) => {
+    if (!agentId || conversation.status !== 'connected') return;
+    const animal = getAnimalById(animalId);
+    if (!animal) return;
+    conversation.sendContextualUpdate(
+      `[LETTER RECEIVED] ${animal.name} wrote back! The letter is being read aloud automatically in ${animal.name}'s voice.\n\n` +
+      `"${letterContent}"\n\n` +
+      `IMPORTANT: Do NOT speak, do NOT offer to read the letter, and do NOT use read_letter_aloud. The child is listening to it right now.\n` +
+      `When they finish listening, help them understand words, suggest writing back, or choosing another animal.`
+    );
+  }, [agentId, conversation]);
+
+  const notifyLetterReceivedNoTts = useCallback((animalId: string, letterContent: string) => {
     if (!agentId || conversation.status !== 'connected') return;
     const animal = getAnimalById(animalId);
     if (!animal) return;
@@ -201,8 +232,11 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
     micError,
     clearMicError,
     notifyViewChange,
-    notifyLetterReceived,
+    notifyLetterReceivedWithTts,
+    notifyLetterReceivedNoTts,
     notifyDraftChange,
+    muteAgent,
+    unmuteAgent,
     toggle,
     agentId,
   };

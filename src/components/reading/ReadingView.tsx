@@ -13,9 +13,12 @@ interface ReadingViewProps {
   onReply: () => void;
   onBack: () => void;
   onMarkRead: () => void;
+  onTtsAutoPlayStarted?: () => void;
+  onTtsAutoPlayFailed?: () => void;
+  onTtsEnd?: () => void;
 }
 
-export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBack, onMarkRead }: ReadingViewProps) {
+export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBack, onMarkRead, onTtsAutoPlayStarted, onTtsAutoPlayFailed, onTtsEnd }: ReadingViewProps) {
   const animal = getAnimalById(animalId);
   const videoEntry = getAnimalVideo(animalId, 'receive');
   const tts = useTtsPlayback();
@@ -30,10 +33,22 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
   useEffect(() => {
     if (!hasAutoPlayed.current && animal && letterContent) {
       hasAutoPlayed.current = true;
-      tts.play(letterContent, animal.voiceId);
+      tts.play(letterContent, animal.voiceId).then(started => {
+        if (started) onTtsAutoPlayStarted?.();
+        else onTtsAutoPlayFailed?.();
+      });
     }
     return () => tts.stop();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Notify when TTS playback ends
+  const wasPlayingRef = useRef(false);
+  useEffect(() => {
+    if (wasPlayingRef.current && !tts.isPlaying) {
+      onTtsEnd?.();
+    }
+    wasPlayingRef.current = tts.isPlaying;
+  }, [tts.isPlaying]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle agent-triggered TTS (only if it's a new request)
   useEffect(() => {
