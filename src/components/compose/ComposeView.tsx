@@ -37,21 +37,21 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
     return () => { video.src = ''; video.load(); };
   }, [animalId]);
 
-  // Handle text written by the voice agent
+  // Handle text written by the voice agent — adjust state when prop changes
+  const [lastExternalSeq, setLastExternalSeq] = useState<number | undefined>(undefined);
+  if (externalText && externalText.seq !== lastExternalSeq) {
+    setLastExternalSeq(externalText.seq);
+    const newDraft = draft ? draft + ' ' + externalText.text : externalText.text;
+    setDraft(newDraft);
+    if (onDraftChange) onDraftChange(animalId, newDraft);
+  }
+
+  // Scroll textarea to bottom when external text is appended
   useEffect(() => {
-    if (externalText) {
-      setDraft(prev => {
-        const newDraft = prev ? prev + ' ' + externalText.text : externalText.text;
-        if (onDraftChange) onDraftChange(animalId, newDraft);
-        return newDraft;
-      });
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
-        }
-      }, 0);
+    if (externalText && textareaRef.current) {
+      textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
     }
-  }, [externalText]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [externalText]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;

@@ -17,14 +17,22 @@ function App() {
 
   // Refs so agent tool callbacks always see current values (no stale closures)
   const navRef = useRef(nav);
-  navRef.current = nav;
+  useEffect(() => { navRef.current = nav; });
   const storeRef = useRef(store);
-  storeRef.current = store;
+  useEffect(() => { storeRef.current = store; });
   const currentDraftRef = useRef('');
   const pendingLetterIdRef = useRef<string | null>(null);
   const pendingResponseRef = useRef<string | null>(null);
+  const [pendingResponse, setPendingResponse] = useState<string | null>(null);
   const [externalText, setExternalText] = useState<{ text: string; seq: number } | undefined>(undefined);
   const externalTextSeq = useRef(0);
+  // Clear stale voice-dictated text when switching to a new animal's compose view
+  const [lastComposeAnimal, setLastComposeAnimal] = useState<string | null>(null);
+  const composeAnimal = nav.view === 'compose' ? nav.animalId : null;
+  if (composeAnimal !== lastComposeAnimal) {
+    setLastComposeAnimal(composeAnimal);
+    if (composeAnimal !== null) setExternalText(undefined);
+  }
 
   // Ref for triggering TTS from the agent
   const [ttsRequest, setTtsRequest] = useState<{ seq: number } | undefined>(undefined);
@@ -65,19 +73,35 @@ function App() {
     onReadAloud: handleReadAloud,
   });
 
+  const handleTtsAutoPlayStarted = useCallback(() => {
+    const current = navRef.current;
+    if (current.view !== 'reading') return;
+    voice.muteAgent();
+    const letter = storeRef.current.getLetterById(current.letterId);
+    const content = letter?.content ?? pendingResponseRef.current;
+    if (content) voice.notifyLetterReceivedWithTts(current.animalId, content);
+  }, [voice]);
+
+  const handleTtsAutoPlayFailed = useCallback(() => {
+    const current = navRef.current;
+    if (current.view !== 'reading') return;
+    const letter = storeRef.current.getLetterById(current.letterId);
+    const content = letter?.content ?? pendingResponseRef.current;
+    if (content) voice.notifyLetterReceivedNoTts(current.animalId, content);
+  }, [voice]);
+
+  const handleTtsEnd = useCallback(() => {
+    voice.unmuteAgent();
+  }, [voice]);
+
   // Notify agent of view changes
   useEffect(() => {
     voice.notifyViewChange(nav);
     if (nav.view === 'compose') {
       currentDraftRef.current = '';
     }
-    if (nav.view === 'reading') {
-      const letter = storeRef.current.getLetterById(nav.letterId);
-      const content = letter?.content ?? pendingResponseRef.current;
-      if (content) {
-        voice.notifyLetterReceived(nav.animalId, content);
-      }
-    }
+    // Letter received context is now sent from TTS callbacks (onTtsAutoPlayStarted/Failed)
+    // so the agent gets the right message depending on whether auto-play worked
   }, [nav]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleComposeSend = useCallback((content: string) => {
@@ -102,6 +126,7 @@ function App() {
     const { letterId } = storeRef.current.addLetter(current.animalId, 'animal', animalResponse, current.threadId);
     pendingLetterIdRef.current = letterId;
     pendingResponseRef.current = animalResponse;
+    setPendingResponse(animalResponse);
     goToReceiving(current.animalId, current.threadId);
   }, [goToReceiving]);
 
@@ -145,7 +170,7 @@ function App() {
   // Get letter content for reading view — fall back to the pending response ref
   // because the store state update may not have flushed yet
   const readingLetterFromStore = nav.view === 'reading' ? store.getLetterById(nav.letterId) : undefined;
-  const readingLetterContent = readingLetterFromStore?.content ?? pendingResponseRef.current ?? null;
+  const readingLetterContent = readingLetterFromStore?.content ?? pendingResponse ?? null;
 
   return (
     <div className="app">
@@ -159,6 +184,7 @@ function App() {
 
       {nav.view === 'compose' && (
         <ComposeView
+          key={nav.animalId}
           animalId={nav.animalId}
           thread={nav.threadId ? store.getThread(nav.threadId) : undefined}
           externalText={externalText}
@@ -193,6 +219,9 @@ function App() {
           onReply={handleReply}
           onBack={goToMailbox}
           onMarkRead={handleMarkRead}
+          onTtsAutoPlayStarted={handleTtsAutoPlayStarted}
+          onTtsAutoPlayFailed={handleTtsAutoPlayFailed}
+          onTtsEnd={handleTtsEnd}
         />
       )}
 

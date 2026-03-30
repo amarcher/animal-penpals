@@ -80,7 +80,7 @@ export function useTtsPlayback() {
     setState({ isPlaying: false, isLoading: false, currentWordIndex: -1, wordTimings: [] });
   }, [stopAudio]);
 
-  const play = useCallback(async (text: string, voiceId: string) => {
+  const play = useCallback(async (text: string, voiceId: string): Promise<boolean> => {
     // Increment play ID to invalidate any in-flight requests
     playIdRef.current += 1;
     const thisPlayId = playIdRef.current;
@@ -98,13 +98,13 @@ export function useTtsPlayback() {
       });
 
       // If a newer play was requested while we were fetching, bail out
-      if (thisPlayId !== playIdRef.current) return;
+      if (thisPlayId !== playIdRef.current) return false;
 
       if (!res.ok) throw new Error('TTS request failed');
 
       const data = await res.json();
 
-      if (thisPlayId !== playIdRef.current) return;
+      if (thisPlayId !== playIdRef.current) return false;
 
       const wordTimings = buildWordTimings(text, data.alignment);
       const audio = new Audio(`data:audio/mpeg;base64,${data.audio_base64}`);
@@ -114,7 +114,7 @@ export function useTtsPlayback() {
 
       await audio.play();
 
-      if (thisPlayId !== playIdRef.current) return;
+      if (thisPlayId !== playIdRef.current) return false;
 
       const tick = () => {
         if (!audioRef.current || thisPlayId !== playIdRef.current) return;
@@ -138,10 +138,13 @@ export function useTtsPlayback() {
         }));
         cancelAnimationFrame(animFrameRef.current);
       };
+
+      return true;
     } catch (err) {
-      if (thisPlayId !== playIdRef.current) return;
+      if (thisPlayId !== playIdRef.current) return false;
       console.error('[TTS] playback failed:', err);
       setState({ isPlaying: false, isLoading: false, currentWordIndex: -1, wordTimings: [] });
+      return false;
     }
   }, [stopAudio]);
 
