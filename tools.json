@@ -1,0 +1,34 @@
+{
+    "tools": [
+        {
+            "type": "client",
+            "config": "tool_configs/select_animal.json",
+            "id": "tool_0801kmk0gsqyf5m8v6r3fm44td1m"
+        },
+        {
+            "type": "client",
+            "config": "tool_configs/send_letter.json",
+            "id": "tool_5401kmk0h0qpe6b9skt24z2tr1g1"
+        },
+        {
+            "type": "client",
+            "config": "tool_configs/go_to_mailbox.json",
+            "id": "tool_2001kmk0h2xafby91z5m96fae3ch"
+        },
+        {
+            "type": "client",
+            "config": "tool_configs/write_text.json",
+            "id": "tool_9001kmk1ghwqfjxbgtm8f41tqxtk"
+        },
+        {
+            "type": "client",
+            "config": "tool_configs/read_letter_aloud.json",
+            "id": "tool_6701kmk2ngwzeexb1k77bjk3pd9c"
+        },
+        {
+            "type": "client",
+            "config": "tool_configs/read_previous_letter.json",
+            "id": "tool_1501kn591mnwf77b202ehqfvcqfa"
+        }
+    ]
+}
