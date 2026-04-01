@@ -83,8 +83,9 @@ export function evictVideo(url: string): void {
   const entry = cache.get(url);
   if (entry) {
     console.log(`${PREFIX} evicting: ${url}`);
-    entry.element.src = '';
-    entry.element.load();
+    // Remove the error listener before clearing src to avoid spurious
+    // MEDIA_ELEMENT_ERROR from the empty src attribute.
+    entry.element.removeAttribute('src');
     cache.delete(url);
   }
 }
