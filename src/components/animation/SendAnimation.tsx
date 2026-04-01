@@ -23,6 +23,12 @@ export function SendAnimation({ animalId, letterContent, threadId, threadHistory
     if (hasFiredRef.current) return;
     hasFiredRef.current = true;
 
+    // Filter out the current child letter from thread history to avoid
+    // sending it twice (addLetter may or may not have flushed to state)
+    const priorHistory = threadHistory
+      .filter(l => !(l.from === 'child' && l.content === letterContent))
+      .map(l => ({ from: l.from, content: l.content }));
+
     responsePromiseRef.current = fetch('/api/generate-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -30,7 +36,7 @@ export function SendAnimation({ animalId, letterContent, threadId, threadHistory
         animalId,
         childLetter: letterContent,
         threadId,
-        threadHistory: threadHistory.map(l => ({ from: l.from, content: l.content })),
+        threadHistory: priorHistory,
       }),
     })
       .then(r => r.json())
