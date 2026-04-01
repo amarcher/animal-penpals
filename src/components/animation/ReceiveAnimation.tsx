@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
+import { getCachedVideo, preloadVideo } from '../../utils/videoPreloadCache.ts';
 import './ReceiveAnimation.css';
 
 interface ReceiveAnimationProps {
@@ -40,15 +41,51 @@ function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
   onComplete: () => void;
   onError: () => void;
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Grab the preloaded element from the cache, or create a fresh one as fallback
+    const cached = getCachedVideo(videoUrl);
+    const video = cached ? cached.element : preloadVideo(videoUrl).element;
+
+    // Style the element so it matches the layout
+    video.className = 'receive-anim__video';
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+
     const handleEnded = () => onComplete();
+    const handleError = () => onError();
     video.addEventListener('ended', handleEnded);
-    return () => video.removeEventListener('ended', handleEnded);
-  }, [onComplete]);
+    video.addEventListener('error', handleError);
+
+    // Mount the (already-buffered) element into the DOM
+    container.appendChild(video);
+
+    // If already buffered, play immediately; otherwise wait for canplay
+    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      setReady(true);
+      video.play().catch(() => {});
+    } else {
+      const onCanPlay = () => {
+        setReady(true);
+        video.play().catch(() => {});
+        video.removeEventListener('canplay', onCanPlay);
+      };
+      video.addEventListener('canplay', onCanPlay);
+    }
+
+    return () => {
+      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('error', handleError);
+      video.pause();
+      if (container.contains(video)) container.removeChild(video);
+    };
+  }, [videoUrl, onComplete, onError]);
 
   // Safety timeout in case ended event never fires
   useEffect(() => {
@@ -58,16 +95,17 @@ function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
 
   return (
     <div className="receive-anim">
-      <video
-        ref={videoRef}
-        className="receive-anim__video"
-        src={videoUrl}
-        autoPlay
-        muted
-        playsInline
-        preload="auto"
-        onError={onError}
-      />
+      {!ready && <LoadingIndicator />}
+      <div ref={containerRef} style={{ display: ready ? 'contents' : 'none' }} />
+    </div>
+  );
+}
+
+function LoadingIndicator() {
+  return (
+    <div className="receive-anim__loading">
+      <span className="receive-anim__loading-envelope">✉️</span>
+      <p className="receive-anim__loading-text">Opening your letter...</p>
     </div>
   );
 }

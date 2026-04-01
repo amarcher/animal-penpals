@@ -16,6 +16,35 @@
   object-fit: cover;
 }
 
+/* Loading indicator while video buffers */
+.receive-anim__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.receive-anim__loading-envelope {
+  font-size: 4rem;
+  animation: loading-bounce 1s ease-in-out infinite;
+}
+
+.receive-anim__loading-text {
+  font-size: 1.15rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+@keyframes loading-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .receive-anim__loading-envelope {
+    animation: none;
+  }
+}
+
 /* Fallback: framer-motion animation */
 .receive-anim__scene {
   position: relative;
