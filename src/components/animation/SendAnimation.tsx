@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
+import { prefetchTts } from '../../utils/ttsPrefetchCache.ts';
 import type { Letter } from '../../types/app.ts';
 import './SendAnimation.css';
 
@@ -33,6 +34,10 @@ export function SendAnimation({ animalId, letterContent, threadId, threadHistory
       .then(r => r.json())
       .then(data => {
         console.log(`[SendAnim] API responded (+${Math.round(performance.now() - t0)}ms)`);
+        // Start TTS prefetch immediately — don't wait for the receive video
+        if (animal) {
+          prefetchTts(data.response, animal.voiceId);
+        }
         return data.response as string;
       })
       .catch(err => {
