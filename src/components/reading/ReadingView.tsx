@@ -22,17 +22,17 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
   const animal = getAnimalById(animalId);
   const videoEntry = getAnimalVideo(animalId, 'receive');
   const tts = useTtsPlayback();
-  const hasAutoPlayed = useRef(false);
   const lastTtsSeq = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     onMarkRead();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-play TTS once on mount
+  // Auto-play TTS on mount. No hasAutoPlayed guard needed — play() already
+  // deduplicates via playIdRef, and the guard breaks under StrictMode
+  // (which unmounts/remounts route components, leaving the ref stale).
   useEffect(() => {
-    if (!hasAutoPlayed.current && animal && letterContent) {
-      hasAutoPlayed.current = true;
+    if (animal && letterContent) {
       tts.play(letterContent, animal.voiceId).then(started => {
         if (started) onTtsAutoPlayStarted?.();
         else onTtsAutoPlayFailed?.();
