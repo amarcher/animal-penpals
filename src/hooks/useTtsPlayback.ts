@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { getCachedTts, evictTts, type TtsResult } from '../utils/ttsPrefetchCache.ts';
 
 export interface WordTiming {
   word: string;
@@ -91,19 +92,24 @@ export function useTtsPlayback() {
     setState(s => ({ ...s, isLoading: true, isPlaying: false, currentWordIndex: -1 }));
 
     try {
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voiceId }),
-      });
+      // Use prefetched TTS data if available, otherwise fetch fresh
+      const cached = getCachedTts(text, voiceId);
+      let data: TtsResult;
+      if (cached) {
+        data = await cached;
+        // Clean up the cache entry after consuming it
+        evictTts(text, voiceId);
+      } else {
+        const res = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, voiceId }),
+        });
+        if (!res.ok) throw new Error('TTS request failed');
+        data = await res.json();
+      }
 
       // If a newer play was requested while we were fetching, bail out
-      if (thisPlayId !== playIdRef.current) return false;
-
-      if (!res.ok) throw new Error('TTS request failed');
-
-      const data = await res.json();
-
       if (thisPlayId !== playIdRef.current) return false;
 
       const wordTimings = buildWordTimings(text, data.alignment);

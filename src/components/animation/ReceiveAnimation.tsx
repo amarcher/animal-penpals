@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
 import { getCachedVideo, preloadVideo, evictVideo } from '../../utils/videoPreloadCache.ts';
+import { prefetchTts } from '../../utils/ttsPrefetchCache.ts';
 import './ReceiveAnimation.css';
 
 interface ReceiveAnimationProps {
@@ -17,6 +18,15 @@ export function ReceiveAnimation({ animalId, responsePromise, onComplete }: Rece
   const animal = getAnimalById(animalId);
   const videoEntry = getAnimalVideo(animalId, 'receive');
   const [videoError, setVideoError] = useState(false);
+
+  // Prefetch TTS audio as soon as the API response is available — while the
+  // video is still playing — so it's ready by the time ReadingView mounts.
+  useEffect(() => {
+    if (!animal) return;
+    responsePromise.then(text => {
+      prefetchTts(text, animal.voiceId);
+    });
+  }, [animal, responsePromise]);
 
   const useVideo = !!videoEntry && !reducedMotion && !videoError;
 
