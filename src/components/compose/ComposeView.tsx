@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
+import { preloadVideo } from '../../utils/videoPreloadCache.ts';
 import type { Thread } from '../../types/app.ts';
 import './ComposeView.css';
 
@@ -24,17 +25,15 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
     textareaRef.current?.focus();
   }, []);
 
-  // Preload the receive video by fetching it into the browser cache
+  // Preload the receive video into the shared cache so ReceiveAnimation can
+  // mount the already-buffered element instantly (no second network fetch).
+  // NOTE: We intentionally do NOT evict on unmount — ComposeView unmounts when
+  // transitioning to sending, but ReceiveAnimation needs the cached element later.
+  // The cache entry is consumed (and can be evicted) by ReceiveAnimation itself.
   useEffect(() => {
     const receiveVideo = getAnimalVideo(animalId, 'receive');
     if (!receiveVideo) return;
-    const video = document.createElement('video');
-    video.preload = 'auto';
-    video.muted = true;
-    video.src = receiveVideo.url;
-    // Trigger the browser to start buffering
-    video.load();
-    return () => { video.src = ''; video.load(); };
+    preloadVideo(receiveVideo.url);
   }, [animalId]);
 
   // Handle text written by the voice agent — adjust state when prop changes

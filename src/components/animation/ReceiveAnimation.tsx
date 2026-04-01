@@ -2,19 +2,32 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
+import { getCachedVideo, preloadVideo, evictVideo } from '../../utils/videoPreloadCache.ts';
+import { prefetchTts } from '../../utils/ttsPrefetchCache.ts';
 import './ReceiveAnimation.css';
 
 interface ReceiveAnimationProps {
   animalId: string;
-  onComplete: () => void;
+  responsePromise: Promise<string>;
+  onComplete: (animalResponse: string) => void;
 }
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export function ReceiveAnimation({ animalId, onComplete }: ReceiveAnimationProps) {
+export function ReceiveAnimation({ animalId, responsePromise, onComplete }: ReceiveAnimationProps) {
   const animal = getAnimalById(animalId);
   const videoEntry = getAnimalVideo(animalId, 'receive');
   const [videoError, setVideoError] = useState(false);
+
+  // Prefetch TTS audio as soon as the API response is available — while the
+  // video is still playing — so it's ready by the time ReadingView mounts.
+  // (Also fires from SendAnimation, but this is a safe duplicate call.)
+  useEffect(() => {
+    if (!animal) return;
+    responsePromise.then(text => {
+      prefetchTts(text, animal.voiceId);
+    });
+  }, [animal, responsePromise]);
 
   const useVideo = !!videoEntry && !reducedMotion && !videoError;
 
@@ -24,50 +37,97 @@ export function ReceiveAnimation({ animalId, onComplete }: ReceiveAnimationProps
     return (
       <ReceiveAnimationVideo
         videoUrl={videoEntry.url}
+        responsePromise={responsePromise}
         onComplete={onComplete}
         onError={() => setVideoError(true)}
       />
     );
   }
 
-  return <ReceiveAnimationFallback animal={animal} onComplete={onComplete} />;
+  return <ReceiveAnimationFallback animal={animal} responsePromise={responsePromise} onComplete={onComplete} />;
 }
 
 // --- Video-based animation ---
 
-function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
+function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError }: {
   videoUrl: string;
-  onComplete: () => void;
+  responsePromise: Promise<string>;
+  onComplete: (animalResponse: string) => void;
   onError: () => void;
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const handleEnded = () => onComplete();
-    video.addEventListener('ended', handleEnded);
-    return () => video.removeEventListener('ended', handleEnded);
-  }, [onComplete]);
+    let cancelled = false;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Grab the preloaded element from the cache, or create a fresh one as fallback
+    const cached = getCachedVideo(videoUrl);
+    const video = cached ? cached.element : preloadVideo(videoUrl).element;
+
+    video.className = 'receive-anim__video';
+    video.autoplay = true;
+    video.playsInline = true;
+
+    // Wait for BOTH video end AND API response before transitioning
+    const videoEndedPromise = new Promise<void>((resolve) => {
+      video.addEventListener('ended', () => resolve(), { once: true });
+    });
+
+    video.addEventListener('error', () => onError(), { once: true });
+
+    Promise.all([videoEndedPromise, responsePromise]).then(([, animalResponse]) => {
+      if (!cancelled) onComplete(animalResponse);
+    });
+
+    // Mount the (already-buffered) element into the DOM
+    container.appendChild(video);
+
+    // If already buffered, play immediately; otherwise wait for canplay
+    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      setReady(true);
+      video.play().catch(() => {});
+    } else {
+      const onCanPlay = () => {
+        setReady(true);
+        video.play().catch(() => {});
+        video.removeEventListener('canplay', onCanPlay);
+      };
+      video.addEventListener('canplay', onCanPlay);
+    }
+
+    return () => {
+      cancelled = true;
+      video.pause();
+      if (container.contains(video)) container.removeChild(video);
+      evictVideo(videoUrl);
+    };
+  }, [videoUrl, responsePromise, onComplete, onError]);
 
   // Safety timeout in case ended event never fires
   useEffect(() => {
-    const timer = setTimeout(onComplete, 30_000);
+    const timer = setTimeout(() => {
+      responsePromise.then((r) => onComplete(r));
+    }, 30_000);
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, [onComplete, responsePromise]);
 
   return (
     <div className="receive-anim">
-      <video
-        ref={videoRef}
-        className="receive-anim__video"
-        src={videoUrl}
-        autoPlay
-        muted
-        playsInline
-        preload="auto"
-        onError={onError}
-      />
+      {!ready && <LoadingIndicator />}
+      <div ref={containerRef} style={{ display: ready ? 'contents' : 'none' }} />
+    </div>
+  );
+}
+
+function LoadingIndicator() {
+  return (
+    <div className="receive-anim__loading">
+      <span className="receive-anim__loading-envelope">✉️</span>
+      <p className="receive-anim__loading-text">Opening your letter...</p>
     </div>
   );
 }
@@ -76,23 +136,38 @@ function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
 
 type FallbackPhase = 'deliver' | 'read' | 'write' | 'reply' | 'done';
 
-function ReceiveAnimationFallback({ animal, onComplete }: {
+function ReceiveAnimationFallback({ animal, responsePromise, onComplete }: {
   animal: { emoji: string; name: string; color: string };
-  onComplete: () => void;
+  responsePromise: Promise<string>;
+  onComplete: (animalResponse: string) => void;
 }) {
   const [phase, setPhase] = useState<FallbackPhase>('deliver');
 
   useEffect(() => {
-    const timers = [
-      setTimeout(() => setPhase('read'), 1400),
-      setTimeout(() => setPhase('write'), 3200),
-      setTimeout(() => setPhase('reply'), 5000),
-      setTimeout(() => {
-        setPhase('done');
-        onComplete();
-      }, 6300),
-    ];
-    return () => timers.forEach(clearTimeout);
+    let cancelled = false;
+    const animDone = new Promise<void>((resolve) => {
+      const timers = [
+        setTimeout(() => setPhase('read'), 1400),
+        setTimeout(() => setPhase('write'), 3200),
+        setTimeout(() => setPhase('reply'), 5000),
+        setTimeout(() => {
+          setPhase('done');
+          resolve();
+        }, 6300),
+      ];
+      // Store for cleanup
+      (animDone as unknown as { _timers: ReturnType<typeof setTimeout>[] })._timers = timers;
+    });
+
+    Promise.all([animDone, responsePromise]).then(([, animalResponse]) => {
+      if (!cancelled) onComplete(animalResponse);
+    });
+
+    return () => {
+      cancelled = true;
+      const timers = (animDone as unknown as { _timers: ReturnType<typeof setTimeout>[] })._timers;
+      timers?.forEach(clearTimeout);
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

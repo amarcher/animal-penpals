@@ -16,19 +16,20 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
   const videoEntry = getAnimalVideo(animal.id, 'idle');
   const [videoError, setVideoError] = useState(false);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const preloadLinkRef = useRef<HTMLLinkElement | null>(null);
+  const preloadRef = useRef<HTMLVideoElement | null>(null);
 
   const showVideo = !!videoEntry && !reducedMotion && !videoError;
 
   const handleMouseEnter = useCallback(() => {
-    if (!videoEntry || preloadLinkRef.current) return;
+    if (!videoEntry || preloadRef.current) return;
     hoverTimerRef.current = setTimeout(() => {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'video';
-      link.href = videoEntry.url;
-      document.head.appendChild(link);
-      preloadLinkRef.current = link;
+      // Use a detached video element to warm the browser cache —
+      // <link rel=preload as=video> is not supported by browsers.
+      const video = document.createElement('video');
+      video.preload = 'auto';
+      video.src = videoEntry.url;
+      video.load();
+      preloadRef.current = video;
     }, 300);
   }, [videoEntry]);
 
