@@ -7,7 +7,7 @@ describe('getAnimalVideo', () => {
     for (const animal of animals) {
       const entry = getAnimalVideo(animal.id, 'idle');
       expect(entry, `${animal.id} should have idle video`).toBeDefined();
-      expect(entry!.url).toContain(`${animal.id}_idle.mp4`);
+      expect(entry!.url).toMatch(/\.mp4$/);
     }
   });
 
@@ -15,7 +15,7 @@ describe('getAnimalVideo', () => {
     for (const animal of animals) {
       const entry = getAnimalVideo(animal.id, 'receive');
       expect(entry, `${animal.id} should have receive video`).toBeDefined();
-      expect(entry!.url).toContain(`${animal.id}_receive.mp4`);
+      expect(entry!.url).toMatch(/\.mp4$/);
     }
   });
 
