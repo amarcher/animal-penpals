@@ -9,12 +9,13 @@ interface ConversationCallbacks {
   onGoToMailbox: () => void;
   onWriteText: (text: string) => void;
   onReadAloud: () => string;
+  onReadPreviousLetter: (letterIndex: number) => string;
 }
 
 export type VoiceStatus = 'off' | 'connecting' | 'connected' | 'error';
 export type MicError = 'timeout' | 'not-allowed' | 'device' | 'no-input' | null;
 
-export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMailbox, onWriteText, onReadAloud }: ConversationCallbacks) {
+export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMailbox, onWriteText, onReadAloud, onReadPreviousLetter }: ConversationCallbacks) {
   const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID as string | undefined;
   const [sessionStarted, setSessionStarted] = useState(false);
   const [micError, setMicError] = useState<MicError>(null);
@@ -51,6 +52,9 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
       },
       read_letter_aloud: () => {
         return onReadAloud();
+      },
+      read_previous_letter: (params: { letter_index: number }) => {
+        return onReadPreviousLetter(params.letter_index);
       },
     },
     onConnect: () => {
@@ -253,12 +257,16 @@ function buildContextForView(nav: AppState): string | null {
     case 'compose': {
       const animal = getAnimalById(nav.animalId);
       if (!animal) return null;
-      return [
+      const lines = [
         `[COMPOSE] The child is writing a letter to ${animal.name} (${animal.species}).`,
         `${animal.name}'s personality: ${animal.personality}`,
         'Help them write their letter! Suggest fun things to ask or share.',
         'When they seem done, suggest sending it.',
-      ].join('\n');
+      ];
+      if (nav.threadId && nav.animalLetterCount && nav.animalLetterCount > 0) {
+        lines.push(`There are ${nav.animalLetterCount} previous letter(s) from ${animal.name} in the conversation history. Use read_previous_letter to open one if the child wants to re-read or hear a previous response.`);
+      }
+      return lines.join('\n');
     }
     case 'sending': {
       const animal = getAnimalById(nav.animalId);

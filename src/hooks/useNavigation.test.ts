@@ -11,13 +11,19 @@ describe('useNavigation', () => {
   it('goToCompose sets compose view with animalId', () => {
     const { result } = renderHook(() => useNavigation());
     act(() => result.current.goToCompose('elephant'));
-    expect(result.current.nav).toEqual({ view: 'compose', animalId: 'elephant', threadId: undefined });
+    expect(result.current.nav).toEqual({ view: 'compose', animalId: 'elephant', threadId: undefined, animalLetterCount: undefined });
   });
 
   it('goToCompose includes optional threadId', () => {
     const { result } = renderHook(() => useNavigation());
     act(() => result.current.goToCompose('dolphin', 'thread-1'));
-    expect(result.current.nav).toEqual({ view: 'compose', animalId: 'dolphin', threadId: 'thread-1' });
+    expect(result.current.nav).toEqual({ view: 'compose', animalId: 'dolphin', threadId: 'thread-1', animalLetterCount: undefined });
+  });
+
+  it('goToCompose includes optional animalLetterCount', () => {
+    const { result } = renderHook(() => useNavigation());
+    act(() => result.current.goToCompose('dolphin', 'thread-1', 3));
+    expect(result.current.nav).toEqual({ view: 'compose', animalId: 'dolphin', threadId: 'thread-1', animalLetterCount: 3 });
   });
 
   it('goToSending sets sending view with letter content', () => {

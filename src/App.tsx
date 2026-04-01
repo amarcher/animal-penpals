@@ -40,7 +40,8 @@ function App() {
 
   const handleSelectAnimal = useCallback((animalId: string) => {
     const existingThread = storeRef.current.getThreadByAnimal(animalId);
-    goToCompose(animalId, existingThread?.id);
+    const animalLetterCount = existingThread?.letters.filter(l => l.from === 'animal').length ?? 0;
+    goToCompose(animalId, existingThread?.id, animalLetterCount);
   }, [goToCompose]);
 
   const handleSendLetter = useCallback(() => {
@@ -65,12 +66,29 @@ function App() {
     return 'Reading the letter aloud now!';
   }, []);
 
+  const handleReadPreviousLetter = useCallback((letterIndex: number) => {
+    const current = navRef.current;
+    if (current.view !== 'compose' || !current.threadId) {
+      return 'You need to be in a conversation to read previous letters.';
+    }
+    const thread = storeRef.current.getThread(current.threadId);
+    if (!thread) return 'No conversation history found.';
+    const animalLetters = thread.letters.filter(l => l.from === 'animal');
+    const idx = letterIndex - 1; // convert 1-based to 0-based
+    if (idx < 0 || idx >= animalLetters.length) {
+      return `There are only ${animalLetters.length} letter(s) from the animal. Try a number between 1 and ${animalLetters.length}.`;
+    }
+    goToReading(current.animalId, animalLetters[idx].id, current.threadId);
+    return `Opening letter #${letterIndex} from the animal. The child can read it and use "Write Back" to return to composing.`;
+  }, [goToReading]);
+
   const voice = usePenpalConversation({
     onSelectAnimal: handleSelectAnimal,
     onSendLetter: handleSendLetter,
     onGoToMailbox: goToMailbox,
     onWriteText: handleWriteText,
     onReadAloud: handleReadAloud,
+    onReadPreviousLetter: handleReadPreviousLetter,
   });
 
   const handleTtsAutoPlayStarted = useCallback(() => {
@@ -155,7 +173,9 @@ function App() {
     const current = navRef.current;
     if (current.view !== 'reading') return;
     currentDraftRef.current = '';
-    goToCompose(current.animalId, current.threadId);
+    const thread = storeRef.current.getThread(current.threadId);
+    const animalLetterCount = thread?.letters.filter(l => l.from === 'animal').length ?? 0;
+    goToCompose(current.animalId, current.threadId, animalLetterCount);
   }, [goToCompose]);
 
   const hasThread = useCallback((animalId: string) => {
