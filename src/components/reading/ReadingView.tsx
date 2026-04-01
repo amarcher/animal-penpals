@@ -89,12 +89,16 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
             <video
               className="reading__video"
               src={videoEntry.url}
-              autoPlay
               muted
               loop
               playsInline
               preload="auto"
-              ref={(el) => { if (el) el.muted = true; }}
+              ref={(el) => {
+                if (el) {
+                  el.muted = true;
+                  el.play().catch(() => {});
+                }
+              }}
             />
           </div>
         )}
