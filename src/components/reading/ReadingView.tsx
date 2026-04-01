@@ -94,6 +94,7 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
               loop
               playsInline
               preload="auto"
+              ref={(el) => { if (el) el.muted = true; }}
             />
           </div>
         )}
