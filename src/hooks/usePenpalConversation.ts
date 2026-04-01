@@ -53,8 +53,8 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
       read_letter_aloud: () => {
         return onReadAloud();
       },
-      read_previous_letter: (params: { letter_index: number }) => {
-        return onReadPreviousLetter(params.letter_index);
+      read_previous_letter: (params: { letterIndex: number }) => {
+        return onReadPreviousLetter(params.letterIndex);
       },
     },
     onConnect: () => {

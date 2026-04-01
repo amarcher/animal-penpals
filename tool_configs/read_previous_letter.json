@@ -8,12 +8,12 @@
         "type": "object",
         "description": "Parameters for the client tool",
         "properties": {
-            "letter_index": {
+            "letterIndex": {
                 "type": "number",
                 "description": "The 1-based index of the animal's letter in the conversation history (e.g. 1 for the first response, 2 for the second). If unsure, use 1 for the most recent."
             }
         },
-        "required": ["letter_index"]
+        "required": ["letterIndex"]
     },
     "dynamic_variables": {
         "dynamic_variable_placeholders": {}
