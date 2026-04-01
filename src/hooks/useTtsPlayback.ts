@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { getCachedTts, evictTts, type TtsResult } from '../utils/ttsPrefetchCache.ts';
+import { getCachedTts, type TtsResult } from '../utils/ttsPrefetchCache.ts';
 
 export interface WordTiming {
   word: string;
@@ -97,8 +97,6 @@ export function useTtsPlayback() {
       let data: TtsResult;
       if (cached) {
         data = await cached;
-        // Clean up the cache entry after consuming it
-        evictTts(text, voiceId);
       } else {
         const res = await fetch('/api/tts', {
           method: 'POST',

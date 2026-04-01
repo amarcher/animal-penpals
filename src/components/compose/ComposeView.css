@@ -132,22 +132,24 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    transparent,
-    transparent 51px,
-    rgba(0, 0, 0, 0.06) 51px,
-    rgba(0, 0, 0, 0.06) 52px
+  background-image: linear-gradient(
+    to bottom,
+    transparent 41px,
+    rgba(0, 0, 0, 0.06) 41px,
+    rgba(0, 0, 0, 0.06) 42px,
+    transparent 42px
   );
-  background-position-y: 72px;
+  background-size: 100% 52px;
+  background-position-y: 28px;
   border-radius: 12px;
 }
 
 .compose__greeting {
   font-family: 'Patrick Hand', cursive;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 400;
   color: color-mix(in srgb, var(--animal-color) 70%, black);
-  margin-bottom: 8px;
+  line-height: 52px;
 }
 
 .compose__textarea {
@@ -205,16 +207,8 @@
     padding: 16px;
   }
 
-  .compose__body {
-    flex-direction: column;
-  }
-
   .compose__video-wrap {
-    flex: none;
-    width: 100%;
-    max-width: 280px;
-    align-self: center;
-    position: static;
+    display: none;
   }
 
   .compose__paper {
