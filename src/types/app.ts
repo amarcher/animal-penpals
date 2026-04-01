@@ -28,7 +28,7 @@ export interface Thread {
 
 export type AppState =
   | { view: 'mailbox' }
-  | { view: 'compose'; animalId: string; threadId?: string }
+  | { view: 'compose'; animalId: string; threadId?: string; animalLetterCount?: number }
   | { view: 'sending'; animalId: string; threadId: string; letterContent: string }
   | { view: 'receiving'; animalId: string; threadId: string }
   | { view: 'reading'; animalId: string; letterId: string; threadId: string };

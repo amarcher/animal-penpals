@@ -1,0 +1,21 @@
+{
+    "name": "read_previous_letter",
+    "description": "Open a previous letter from the conversation history in the reading view with text-to-speech. Use when the child wants to re-read or hear a previous letter from the animal (e.g. 'read the first letter', 'what did they say before', 'go back to their letter').",
+    "type": "client",
+    "expects_response": true,
+    "response_timeout_secs": 30,
+    "parameters": {
+        "type": "object",
+        "description": "Parameters for the client tool",
+        "properties": {
+            "letter_index": {
+                "type": "number",
+                "description": "The 1-based index of the animal's letter in the conversation history (e.g. 1 for the first response, 2 for the second). If unsure, use 1 for the most recent."
+            }
+        },
+        "required": ["letter_index"]
+    },
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    }
+}

@@ -82,6 +82,54 @@ describe('ComposeView', () => {
     expect(screen.getByText('Hello friend!')).toBeInTheDocument();
   });
 
+  it('shows read button on animal letters in history', () => {
+    const thread = {
+      id: 'thread-1',
+      animalId: 'elephant',
+      letters: [
+        { id: 'l1', threadId: 'thread-1', animalId: 'elephant', from: 'child' as const, content: 'Hi Ella!', timestamp: 1, read: true },
+        { id: 'l2', threadId: 'thread-1', animalId: 'elephant', from: 'animal' as const, content: 'Hello friend!', timestamp: 2, read: true },
+      ],
+    };
+
+    const onReadLetter = vi.fn();
+    render(<ComposeView {...defaultProps} thread={thread} onReadLetter={onReadLetter} />);
+
+    const readBtn = screen.getByLabelText(/read aloud letter from/i);
+    expect(readBtn).toBeInTheDocument();
+  });
+
+  it('clicking read button calls onReadLetter with letter id', async () => {
+    const thread = {
+      id: 'thread-1',
+      animalId: 'elephant',
+      letters: [
+        { id: 'l1', threadId: 'thread-1', animalId: 'elephant', from: 'child' as const, content: 'Hi Ella!', timestamp: 1, read: true },
+        { id: 'l2', threadId: 'thread-1', animalId: 'elephant', from: 'animal' as const, content: 'Hello friend!', timestamp: 2, read: true },
+      ],
+    };
+
+    const onReadLetter = vi.fn();
+    render(<ComposeView {...defaultProps} thread={thread} onReadLetter={onReadLetter} />);
+
+    await user.click(screen.getByLabelText(/read aloud letter from/i));
+    expect(onReadLetter).toHaveBeenCalledWith('l2');
+  });
+
+  it('does not show read button on child letters', () => {
+    const thread = {
+      id: 'thread-1',
+      animalId: 'elephant',
+      letters: [
+        { id: 'l1', threadId: 'thread-1', animalId: 'elephant', from: 'child' as const, content: 'Hi Ella!', timestamp: 1, read: true },
+      ],
+    };
+
+    render(<ComposeView {...defaultProps} thread={thread} onReadLetter={vi.fn()} />);
+
+    expect(screen.queryByLabelText(/read aloud letter from/i)).not.toBeInTheDocument();
+  });
+
   it('external text sets draft', () => {
     render(<ComposeView {...defaultProps} externalText={{ text: 'voice text', seq: 1 }} />);
 

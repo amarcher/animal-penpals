@@ -44,14 +44,14 @@ Single `useState<AppState>` in App.tsx drives all views:
 ### Key Hooks
 
 - `useNavigation` — state machine transitions
-- `usePenpalConversation` — ElevenLabs agent wrapper with 3 client tools
+- `usePenpalConversation` — ElevenLabs agent wrapper with 6 client tools
 - `useLetterStore` — localStorage-backed thread/letter persistence
 - `useTtsPlayback` — TTS playback with word-level timing for highlighting
 
 ### Agent (Scribbles)
 
-Config: `agent_configs/Animal-Penpals-Coach.json`
-Tools: `select_animal`, `send_letter`, `go_to_mailbox` (in `tool_configs/`)
+Config: `agent_configs/Animal-Penpals.json`
+Tools (in `tool_configs/`): `select_animal`, `send_letter`, `go_to_mailbox`, `write_text`, `read_letter_aloud`, `read_previous_letter`
 
 The agent helps kids compose letters, suggests topics, and can trigger navigation.
 

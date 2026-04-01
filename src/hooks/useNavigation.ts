@@ -7,8 +7,8 @@ export function useNavigation() {
   const goToMailbox = useCallback(() =>
     setNav({ view: 'mailbox' }), []);
 
-  const goToCompose = useCallback((animalId: string, threadId?: string) =>
-    setNav({ view: 'compose', animalId, threadId }), []);
+  const goToCompose = useCallback((animalId: string, threadId?: string, animalLetterCount?: number) =>
+    setNav({ view: 'compose', animalId, threadId, animalLetterCount }), []);
 
   const goToSending = useCallback((animalId: string, threadId: string, letterContent: string) =>
     setNav({ view: 'sending', animalId, threadId, letterContent }), []);
