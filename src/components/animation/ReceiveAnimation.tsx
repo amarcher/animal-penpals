@@ -21,6 +21,7 @@ export function ReceiveAnimation({ animalId, responsePromise, onComplete }: Rece
 
   // Prefetch TTS audio as soon as the API response is available — while the
   // video is still playing — so it's ready by the time ReadingView mounts.
+  // (Also fires from SendAnimation, but this is a safe duplicate call.)
   useEffect(() => {
     if (!animal) return;
     responsePromise.then(text => {
@@ -58,56 +59,41 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const t0 = performance.now();
-    const log = (msg: string) => console.log(`[ReceiveVideo] ${msg} (+${Math.round(performance.now() - t0)}ms)`);
     let cancelled = false;
 
     const container = containerRef.current;
     if (!container) return;
 
-    log('mount');
-
     // Grab the preloaded element from the cache, or create a fresh one as fallback
     const cached = getCachedVideo(videoUrl);
     const video = cached ? cached.element : preloadVideo(videoUrl).element;
-    log(`using ${cached ? 'CACHED' : 'NEW'} element, readyState=${video.readyState}`);
 
-    // Style the element so it matches the layout
     video.className = 'receive-anim__video';
     video.autoplay = true;
-    video.muted = true;
     video.playsInline = true;
 
     // Wait for BOTH video end AND API response before transitioning
     const videoEndedPromise = new Promise<void>((resolve) => {
-      video.addEventListener('ended', () => { log('ended'); resolve(); }, { once: true });
+      video.addEventListener('ended', () => resolve(), { once: true });
     });
 
-    video.addEventListener('error', () => { log(`error: ${video.error?.message}`); onError(); }, { once: true });
+    video.addEventListener('error', () => onError(), { once: true });
 
     Promise.all([videoEndedPromise, responsePromise]).then(([, animalResponse]) => {
-      if (cancelled) return;
-      log('both video + API done, transitioning');
-      onComplete(animalResponse);
+      if (!cancelled) onComplete(animalResponse);
     });
-
-    // Also track API independently for logging
-    responsePromise.then(() => log('API response ready'));
 
     // Mount the (already-buffered) element into the DOM
     container.appendChild(video);
 
     // If already buffered, play immediately; otherwise wait for canplay
     if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-      log(`already ready (readyState=${video.readyState}), playing immediately`);
       setReady(true);
-      video.play().catch((e) => log(`play() rejected: ${e}`));
+      video.play().catch(() => {});
     } else {
-      log(`NOT ready (readyState=${video.readyState}), waiting for canplay...`);
       const onCanPlay = () => {
-        log(`canplay fired (readyState=${video.readyState})`);
         setReady(true);
-        video.play().catch((e) => log(`play() rejected: ${e}`));
+        video.play().catch(() => {});
         video.removeEventListener('canplay', onCanPlay);
       };
       video.addEventListener('canplay', onCanPlay);

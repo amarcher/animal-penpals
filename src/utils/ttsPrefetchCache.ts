@@ -1,7 +1,7 @@
 /**
  * TTS prefetch cache.
  *
- * Allows firing the TTS API request early (e.g. during the receive animation)
+ * Allows firing the TTS API request early (e.g. during the send animation)
  * so the audio is ready by the time ReadingView mounts.
  */
 
@@ -15,7 +15,6 @@ export interface TtsResult {
 }
 
 const cache = new Map<string, Promise<TtsResult>>();
-const PREFIX = '[TtsCache]';
 
 function cacheKey(text: string, voiceId: string): string {
   return `${voiceId}:${text}`;
@@ -28,13 +27,7 @@ function cacheKey(text: string, voiceId: string): string {
 export function prefetchTts(text: string, voiceId: string): Promise<TtsResult> {
   const key = cacheKey(text, voiceId);
   const existing = cache.get(key);
-  if (existing) {
-    console.log(`${PREFIX} already prefetching: ${voiceId}`);
-    return existing;
-  }
-
-  console.log(`${PREFIX} starting prefetch: ${voiceId}, text length=${text.length}`);
-  const t0 = performance.now();
+  if (existing) return existing;
 
   const promise = fetch('/api/tts', {
     method: 'POST',
@@ -45,13 +38,7 @@ export function prefetchTts(text: string, voiceId: string): Promise<TtsResult> {
       if (!res.ok) throw new Error('TTS request failed');
       return res.json() as Promise<TtsResult>;
     })
-    .then(data => {
-      console.log(`${PREFIX} prefetch complete: ${voiceId} (+${Math.round(performance.now() - t0)}ms)`);
-      return data;
-    })
     .catch(err => {
-      console.error(`${PREFIX} prefetch failed:`, err);
-      // Remove from cache so a retry can happen
       cache.delete(key);
       throw err;
     });
@@ -64,14 +51,7 @@ export function prefetchTts(text: string, voiceId: string): Promise<TtsResult> {
  * Retrieve a cached TTS promise, or undefined if not prefetched.
  */
 export function getCachedTts(text: string, voiceId: string): Promise<TtsResult> | undefined {
-  const key = cacheKey(text, voiceId);
-  const entry = cache.get(key);
-  if (entry) {
-    console.log(`${PREFIX} cache HIT: ${voiceId}`);
-  } else {
-    console.log(`${PREFIX} cache MISS: ${voiceId}`);
-  }
-  return entry;
+  return cache.get(cacheKey(text, voiceId));
 }
 
 /**

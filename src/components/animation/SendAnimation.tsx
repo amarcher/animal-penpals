@@ -19,8 +19,6 @@ export function SendAnimation({ animalId, letterContent, threadId, threadHistory
 
   // Fire API call immediately, store the promise
   useEffect(() => {
-    const t0 = performance.now();
-    console.log('[SendAnim] mount, firing API call');
     responsePromiseRef.current = fetch('/api/generate-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -33,15 +31,13 @@ export function SendAnimation({ animalId, letterContent, threadId, threadHistory
     })
       .then(r => r.json())
       .then(data => {
-        console.log(`[SendAnim] API responded (+${Math.round(performance.now() - t0)}ms)`);
         // Start TTS prefetch immediately — don't wait for the receive video
         if (animal) {
           prefetchTts(data.response, animal.voiceId);
         }
         return data.response as string;
       })
-      .catch(err => {
-        console.error('[SendAnimation] API error:', err);
+      .catch(() => {
         return "Oh no, my quill broke! I'll write back soon, I promise!";
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -49,7 +45,6 @@ export function SendAnimation({ animalId, letterContent, threadId, threadHistory
   // After fold animation completes, transition immediately — don't wait for API
   useEffect(() => {
     const timer = setTimeout(() => {
-      console.log('[SendAnim] anim done, transitioning to receiving (API still in flight)');
       onComplete(responsePromiseRef.current!);
     }, 1500);
     return () => clearTimeout(timer);
