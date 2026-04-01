@@ -6,13 +6,15 @@
  * second network fetch and the blank-screen pause that comes with it.
  */
 
-interface CachedVideo {
+export interface CachedVideo {
   element: HTMLVideoElement;
   ready: boolean;           // true once canplay has fired
   readyPromise: Promise<void>;
+  preloadedAt: number;
 }
 
 const cache = new Map<string, CachedVideo>();
+const PREFIX = '[VideoCache]';
 
 /**
  * Start preloading a video URL. Safe to call multiple times for the same URL.
@@ -20,7 +22,13 @@ const cache = new Map<string, CachedVideo>();
  */
 export function preloadVideo(url: string): CachedVideo {
   const existing = cache.get(url);
-  if (existing) return existing;
+  if (existing) {
+    console.log(`${PREFIX} already cached: ${url} (ready=${existing.ready}, readyState=${existing.element.readyState}, age=${Math.round(performance.now() - existing.preloadedAt)}ms)`);
+    return existing;
+  }
+
+  const t0 = performance.now();
+  console.log(`${PREFIX} preloading: ${url}`);
 
   const video = document.createElement('video');
   video.preload = 'auto';
@@ -34,12 +42,21 @@ export function preloadVideo(url: string): CachedVideo {
     readyPromise: new Promise<void>((resolve) => {
       const onReady = () => {
         entry.ready = true;
+        console.log(`${PREFIX} canplay fired: ${url} (+${Math.round(performance.now() - t0)}ms, readyState=${video.readyState})`);
         resolve();
         video.removeEventListener('canplay', onReady);
       };
       video.addEventListener('canplay', onReady);
     }),
+    preloadedAt: performance.now(),
   };
+
+  video.addEventListener('loadedmetadata', () => {
+    console.log(`${PREFIX} loadedmetadata: ${url} (+${Math.round(performance.now() - t0)}ms, duration=${video.duration}s)`);
+  });
+  video.addEventListener('error', () => {
+    console.warn(`${PREFIX} error loading: ${url}`, video.error);
+  });
 
   video.load();
   cache.set(url, entry);
@@ -50,7 +67,13 @@ export function preloadVideo(url: string): CachedVideo {
  * Retrieve a previously preloaded video, or return undefined.
  */
 export function getCachedVideo(url: string): CachedVideo | undefined {
-  return cache.get(url);
+  const entry = cache.get(url);
+  if (entry) {
+    console.log(`${PREFIX} cache HIT: ${url} (ready=${entry.ready}, readyState=${entry.element.readyState})`);
+  } else {
+    console.log(`${PREFIX} cache MISS: ${url}`);
+  }
+  return entry;
 }
 
 /**
@@ -59,6 +82,7 @@ export function getCachedVideo(url: string): CachedVideo | undefined {
 export function evictVideo(url: string): void {
   const entry = cache.get(url);
   if (entry) {
+    console.log(`${PREFIX} evicting: ${url}`);
     entry.element.src = '';
     entry.element.load();
     cache.delete(url);

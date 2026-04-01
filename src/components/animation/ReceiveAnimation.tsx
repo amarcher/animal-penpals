@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
-import { getCachedVideo, preloadVideo } from '../../utils/videoPreloadCache.ts';
+import { getCachedVideo, preloadVideo, evictVideo } from '../../utils/videoPreloadCache.ts';
 import './ReceiveAnimation.css';
 
 interface ReceiveAnimationProps {
@@ -45,12 +45,18 @@ function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const t0 = performance.now();
+    const log = (msg: string) => console.log(`[ReceiveVideo] ${msg} (+${Math.round(performance.now() - t0)}ms)`);
+
     const container = containerRef.current;
     if (!container) return;
+
+    log('mount');
 
     // Grab the preloaded element from the cache, or create a fresh one as fallback
     const cached = getCachedVideo(videoUrl);
     const video = cached ? cached.element : preloadVideo(videoUrl).element;
+    log(`using ${cached ? 'CACHED' : 'NEW'} element, readyState=${video.readyState}, networkState=${video.networkState}, buffered=${video.buffered.length > 0 ? `${video.buffered.start(0)}-${video.buffered.end(0)}` : 'empty'}`);
 
     // Style the element so it matches the layout
     video.className = 'receive-anim__video';
@@ -58,22 +64,26 @@ function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
     video.muted = true;
     video.playsInline = true;
 
-    const handleEnded = () => onComplete();
-    const handleError = () => onError();
+    const handleEnded = () => { log('ended'); onComplete(); };
+    const handleError = () => { log(`error: ${video.error?.message}`); onError(); };
     video.addEventListener('ended', handleEnded);
     video.addEventListener('error', handleError);
 
     // Mount the (already-buffered) element into the DOM
     container.appendChild(video);
+    log('appended to DOM');
 
     // If already buffered, play immediately; otherwise wait for canplay
     if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      log(`already ready (readyState=${video.readyState}), playing immediately`);
       setReady(true);
-      video.play().catch(() => {});
+      video.play().catch((e) => log(`play() rejected: ${e}`));
     } else {
+      log(`NOT ready (readyState=${video.readyState}), waiting for canplay...`);
       const onCanPlay = () => {
+        log(`canplay fired (readyState=${video.readyState})`);
         setReady(true);
-        video.play().catch(() => {});
+        video.play().catch((e) => log(`play() rejected: ${e}`));
         video.removeEventListener('canplay', onCanPlay);
       };
       video.addEventListener('canplay', onCanPlay);
@@ -84,6 +94,8 @@ function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
       video.removeEventListener('error', handleError);
       video.pause();
       if (container.contains(video)) container.removeChild(video);
+      // Now that we're done with the video, clean up the cache entry
+      evictVideo(videoUrl);
     };
   }, [videoUrl, onComplete, onError]);
 

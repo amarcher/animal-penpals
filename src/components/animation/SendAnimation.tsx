@@ -19,6 +19,8 @@ export function SendAnimation({ animalId, letterContent, threadId, threadHistory
 
   // Fire API call immediately
   useEffect(() => {
+    const t0 = performance.now();
+    console.log('[SendAnim] mount, firing API call');
     fetch('/api/generate-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -31,8 +33,10 @@ export function SendAnimation({ animalId, letterContent, threadId, threadHistory
     })
       .then(r => r.json())
       .then(data => {
+        console.log(`[SendAnim] API responded (+${Math.round(performance.now() - t0)}ms), animDone=${animDoneRef.current}`);
         responseRef.current = data.response;
         if (animDoneRef.current) {
+          console.log(`[SendAnim] calling onComplete (API was slower)`);
           onComplete(data.response);
         }
       })
@@ -47,9 +51,12 @@ export function SendAnimation({ animalId, letterContent, threadId, threadHistory
 
   // After fold completes, transition immediately
   useEffect(() => {
+    const t0 = performance.now();
     const timer = setTimeout(() => {
       animDoneRef.current = true;
+      console.log(`[SendAnim] anim timer fired (+${Math.round(performance.now() - t0)}ms), hasResponse=${!!responseRef.current}`);
       if (responseRef.current) {
+        console.log(`[SendAnim] calling onComplete (API was faster)`);
         onComplete(responseRef.current);
       }
     }, 1500);
