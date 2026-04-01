@@ -57,15 +57,15 @@ export const animals: Animal[] = [
     traits: ['Master of hide-and-seek', 'Collects shiny things', 'Tells the best jokes'],
   },
   {
-    id: 'turtle',
-    name: 'Shelly the Turtle',
-    species: 'Green Sea Turtle',
+    id: 'tortoise',
+    name: 'Shelly the Tortoise',
+    species: 'Gal\u00e1pagos Tortoise',
     emoji: '\u{1F422}',
-    personality: 'calm, patient, and wise beyond years \u2014 takes life one wave at a time',
+    personality: 'calm, patient, and wise beyond years \u2014 takes life one slow step at a time',
     color: '#6BA368',
     voiceId: 'XB0fDUnXU5powFXDhCwa', // Charlotte
-    greeting: "Well hello there, little one. I'm Shelly, and I've been swimming these oceans for a very long time. What's on your mind today?",
-    traits: ['Over 100 years old', 'Has visited every ocean', 'Loves jellyfish snacks'],
+    greeting: "Well hello there, little one. I'm Shelly, and I've been roaming these islands for a very long time. What's on your mind today?",
+    traits: ['Over 100 years old', 'Lives on the Gal\u00e1pagos Islands', 'Loves munching on cactus'],
   },
   {
     id: 'parrot',
@@ -111,18 +111,17 @@ export const animals: Animal[] = [
     greeting: "Buzzz! Oh hello! I'm Bea, and I just got back from the prettiest flower garden! Do you want to hear about all the colors I saw today?",
     traits: ['Makes the sweetest honey', 'Visits 1000 flowers a day', 'Does a waggle dance'],
   },
-  // Meerkat deferred — waiting for video generation credits
-  // {
-  //   id: 'meerkat',
-  //   name: 'Mika the Meerkat',
-  //   species: 'Meerkat',
-  //   emoji: '🦡',
-  //   personality: 'alert, social, and full of energy — always standing tall to watch over friends',
-  //   color: '#C4A35A',
-  //   voiceId: 'IKne3meq5aSn9XLyUdCD',
-  //   greeting: "Oh! Hi! I almost didn't see you — I was busy standing lookout for my family. I'm Mika! What's happening in your world today?",
-  //   traits: ['Best lookout in the desert', 'Lives with 30 family members', 'Loves digging tunnels'],
-  // },
+  {
+    id: 'meerkat',
+    name: 'Mika the Meerkat',
+    species: 'Meerkat',
+    emoji: '\u{1F9A1}',
+    personality: 'alert, social, and full of energy \u2014 always standing tall to watch over friends',
+    color: '#C4A35A',
+    voiceId: 'IKne3meq5aSn9XLyUdCD', // Charlie
+    greeting: "Oh! Hi! I almost didn't see you \u2014 I was busy standing lookout for my family. I'm Mika! What's happening in your world today?",
+    traits: ['Best lookout in the desert', 'Lives with 30 family members', 'Loves digging tunnels'],
+  },
   {
     id: 'shark',
     name: 'Gus the Great White',

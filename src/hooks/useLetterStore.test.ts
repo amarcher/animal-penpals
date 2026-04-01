@@ -71,23 +71,23 @@ describe('useLetterStore', () => {
     let threadId: string;
 
     act(() => {
-      threadId = result.current.addLetter('turtle', 'child', 'Hi Shelly!').threadId;
+      threadId = result.current.addLetter('tortoise', 'child', 'Hi Shelly the Tortoise!').threadId;
     });
 
     // Child letters are always read
-    expect(result.current.getUnreadCount('turtle')).toBe(0);
+    expect(result.current.getUnreadCount('tortoise')).toBe(0);
 
     act(() => {
-      result.current.addLetter('turtle', 'animal', 'Hello little one!', threadId!);
+      result.current.addLetter('tortoise', 'animal', 'Hello little one!', threadId!);
     });
 
-    expect(result.current.getUnreadCount('turtle')).toBe(1);
+    expect(result.current.getUnreadCount('tortoise')).toBe(1);
 
     act(() => {
-      result.current.addLetter('turtle', 'animal', 'How are you?', threadId!);
+      result.current.addLetter('tortoise', 'animal', 'How are you?', threadId!);
     });
 
-    expect(result.current.getUnreadCount('turtle')).toBe(2);
+    expect(result.current.getUnreadCount('tortoise')).toBe(2);
   });
 
   it('markRead decrements unread count', () => {
