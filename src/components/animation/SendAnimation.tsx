@@ -16,9 +16,13 @@ interface SendAnimationProps {
 export function SendAnimation({ animalId, letterContent, threadId, threadHistory, onComplete }: SendAnimationProps) {
   const animal = getAnimalById(animalId);
   const responsePromiseRef = useRef<Promise<string> | null>(null);
+  const hasFiredRef = useRef(false);
 
-  // Fire API call immediately, store the promise
+  // Fire API call immediately, store the promise (skip StrictMode duplicate)
   useEffect(() => {
+    if (hasFiredRef.current) return;
+    hasFiredRef.current = true;
+
     responsePromiseRef.current = fetch('/api/generate-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

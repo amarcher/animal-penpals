@@ -164,19 +164,8 @@
 }
 
 @media (max-width: 700px) {
-  .reading__body {
-    flex-direction: column;
-  }
-
   .reading__video-wrap {
-    width: 100%;
-    max-width: 280px;
-    align-self: center;
-  }
-
-  .reading__video {
-    height: auto;
-    width: 100%;
+    display: none;
   }
 }
 

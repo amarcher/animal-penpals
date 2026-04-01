@@ -97,8 +97,6 @@ export function useTtsPlayback() {
       let data: TtsResult;
       if (cached) {
         data = await cached;
-        // Clean up the cache entry after consuming it
-        evictTts(text, voiceId);
       } else {
         const res = await fetch('/api/tts', {
           method: 'POST',
