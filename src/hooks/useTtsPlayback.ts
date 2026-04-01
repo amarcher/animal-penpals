@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { getCachedTts, evictTts, type TtsResult } from '../utils/ttsPrefetchCache.ts';
+import { getCachedTts, type TtsResult } from '../utils/ttsPrefetchCache.ts';
 
 export interface WordTiming {
   word: string;
