@@ -20,7 +20,7 @@ interface TtsAlignment {
   character_end_times_seconds: number[];
 }
 
-function buildWordTimings(text: string, alignment: TtsAlignment): WordTiming[] {
+export function buildWordTimings(text: string, alignment: TtsAlignment): WordTiming[] {
   const timings: WordTiming[] = [];
   const words = text.split(/\s+/);
   let charIndex = 0;

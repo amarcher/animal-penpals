@@ -145,8 +145,10 @@ function ReceiveAnimationFallback({ animal, responsePromise, onComplete }: {
 
   useEffect(() => {
     let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
     const animDone = new Promise<void>((resolve) => {
-      const timers = [
+      timers.push(
         setTimeout(() => setPhase('read'), 1400),
         setTimeout(() => setPhase('write'), 3200),
         setTimeout(() => setPhase('reply'), 5000),
@@ -154,9 +156,7 @@ function ReceiveAnimationFallback({ animal, responsePromise, onComplete }: {
           setPhase('done');
           resolve();
         }, 6300),
-      ];
-      // Store for cleanup
-      (animDone as unknown as { _timers: ReturnType<typeof setTimeout>[] })._timers = timers;
+      );
     });
 
     Promise.all([animDone, responsePromise]).then(([, animalResponse]) => {
@@ -165,8 +165,7 @@ function ReceiveAnimationFallback({ animal, responsePromise, onComplete }: {
 
     return () => {
       cancelled = true;
-      const timers = (animDone as unknown as { _timers: ReturnType<typeof setTimeout>[] })._timers;
-      timers?.forEach(clearTimeout);
+      timers.forEach(clearTimeout);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

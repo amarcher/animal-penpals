@@ -15,10 +15,20 @@ A kid-friendly app where children write pen pal letters to animal characters. An
 
 ## Commands
 
-- `npm run dev` — start dev server
+- `npm run dev` — start dev server (proxies `/api` to production)
 - `npm run build` — type-check + build (`tsc -b && vite build`)
 - `npm run lint` — ESLint
+- `npm run test` — run all tests once
+- `npm run test:watch` — run tests in watch mode
 - `npm run preview` — preview production build
+
+## Testing
+
+- **Framework:** Vitest + @testing-library/react + happy-dom
+- **Co-located tests:** each `.tsx`/`.ts` has a matching `.test.tsx`/`.test.ts`
+- **Setup:** `src/test/setup.ts` — global mocks for matchMedia, Audio, HTMLMediaElement, and framer-motion
+- **Integration tests:** `src/test/integration/` — full App-level flows
+- **API route tests:** `api/*.test.ts` — call handlers directly with mock req/res
 
 ## Architecture
 
