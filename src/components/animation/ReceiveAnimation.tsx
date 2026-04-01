@@ -7,12 +7,13 @@ import './ReceiveAnimation.css';
 
 interface ReceiveAnimationProps {
   animalId: string;
-  onComplete: () => void;
+  responsePromise: Promise<string>;
+  onComplete: (animalResponse: string) => void;
 }
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export function ReceiveAnimation({ animalId, onComplete }: ReceiveAnimationProps) {
+export function ReceiveAnimation({ animalId, responsePromise, onComplete }: ReceiveAnimationProps) {
   const animal = getAnimalById(animalId);
   const videoEntry = getAnimalVideo(animalId, 'receive');
   const [videoError, setVideoError] = useState(false);
@@ -25,20 +26,22 @@ export function ReceiveAnimation({ animalId, onComplete }: ReceiveAnimationProps
     return (
       <ReceiveAnimationVideo
         videoUrl={videoEntry.url}
+        responsePromise={responsePromise}
         onComplete={onComplete}
         onError={() => setVideoError(true)}
       />
     );
   }
 
-  return <ReceiveAnimationFallback animal={animal} onComplete={onComplete} />;
+  return <ReceiveAnimationFallback animal={animal} responsePromise={responsePromise} onComplete={onComplete} />;
 }
 
 // --- Video-based animation ---
 
-function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
+function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError }: {
   videoUrl: string;
-  onComplete: () => void;
+  responsePromise: Promise<string>;
+  onComplete: (animalResponse: string) => void;
   onError: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,6 +50,7 @@ function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
   useEffect(() => {
     const t0 = performance.now();
     const log = (msg: string) => console.log(`[ReceiveVideo] ${msg} (+${Math.round(performance.now() - t0)}ms)`);
+    let cancelled = false;
 
     const container = containerRef.current;
     if (!container) return;
@@ -56,7 +60,7 @@ function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
     // Grab the preloaded element from the cache, or create a fresh one as fallback
     const cached = getCachedVideo(videoUrl);
     const video = cached ? cached.element : preloadVideo(videoUrl).element;
-    log(`using ${cached ? 'CACHED' : 'NEW'} element, readyState=${video.readyState}, networkState=${video.networkState}, buffered=${video.buffered.length > 0 ? `${video.buffered.start(0)}-${video.buffered.end(0)}` : 'empty'}`);
+    log(`using ${cached ? 'CACHED' : 'NEW'} element, readyState=${video.readyState}`);
 
     // Style the element so it matches the layout
     video.className = 'receive-anim__video';
@@ -64,14 +68,24 @@ function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
     video.muted = true;
     video.playsInline = true;
 
-    const handleEnded = () => { log('ended'); onComplete(); };
-    const handleError = () => { log(`error: ${video.error?.message}`); onError(); };
-    video.addEventListener('ended', handleEnded);
-    video.addEventListener('error', handleError);
+    // Wait for BOTH video end AND API response before transitioning
+    const videoEndedPromise = new Promise<void>((resolve) => {
+      video.addEventListener('ended', () => { log('ended'); resolve(); }, { once: true });
+    });
+
+    video.addEventListener('error', () => { log(`error: ${video.error?.message}`); onError(); }, { once: true });
+
+    Promise.all([videoEndedPromise, responsePromise]).then(([, animalResponse]) => {
+      if (cancelled) return;
+      log('both video + API done, transitioning');
+      onComplete(animalResponse);
+    });
+
+    // Also track API independently for logging
+    responsePromise.then(() => log('API response ready'));
 
     // Mount the (already-buffered) element into the DOM
     container.appendChild(video);
-    log('appended to DOM');
 
     // If already buffered, play immediately; otherwise wait for canplay
     if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
@@ -90,20 +104,20 @@ function ReceiveAnimationVideo({ videoUrl, onComplete, onError }: {
     }
 
     return () => {
-      video.removeEventListener('ended', handleEnded);
-      video.removeEventListener('error', handleError);
+      cancelled = true;
       video.pause();
       if (container.contains(video)) container.removeChild(video);
-      // Now that we're done with the video, clean up the cache entry
       evictVideo(videoUrl);
     };
-  }, [videoUrl, onComplete, onError]);
+  }, [videoUrl, responsePromise, onComplete, onError]);
 
   // Safety timeout in case ended event never fires
   useEffect(() => {
-    const timer = setTimeout(onComplete, 30_000);
+    const timer = setTimeout(() => {
+      responsePromise.then((r) => onComplete(r));
+    }, 30_000);
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, [onComplete, responsePromise]);
 
   return (
     <div className="receive-anim">
@@ -126,23 +140,38 @@ function LoadingIndicator() {
 
 type FallbackPhase = 'deliver' | 'read' | 'write' | 'reply' | 'done';
 
-function ReceiveAnimationFallback({ animal, onComplete }: {
+function ReceiveAnimationFallback({ animal, responsePromise, onComplete }: {
   animal: { emoji: string; name: string; color: string };
-  onComplete: () => void;
+  responsePromise: Promise<string>;
+  onComplete: (animalResponse: string) => void;
 }) {
   const [phase, setPhase] = useState<FallbackPhase>('deliver');
 
   useEffect(() => {
-    const timers = [
-      setTimeout(() => setPhase('read'), 1400),
-      setTimeout(() => setPhase('write'), 3200),
-      setTimeout(() => setPhase('reply'), 5000),
-      setTimeout(() => {
-        setPhase('done');
-        onComplete();
-      }, 6300),
-    ];
-    return () => timers.forEach(clearTimeout);
+    let cancelled = false;
+    const animDone = new Promise<void>((resolve) => {
+      const timers = [
+        setTimeout(() => setPhase('read'), 1400),
+        setTimeout(() => setPhase('write'), 3200),
+        setTimeout(() => setPhase('reply'), 5000),
+        setTimeout(() => {
+          setPhase('done');
+          resolve();
+        }, 6300),
+      ];
+      // Store for cleanup
+      (animDone as unknown as { _timers: ReturnType<typeof setTimeout>[] })._timers = timers;
+    });
+
+    Promise.all([animDone, responsePromise]).then(([, animalResponse]) => {
+      if (!cancelled) onComplete(animalResponse);
+    });
+
+    return () => {
+      cancelled = true;
+      const timers = (animDone as unknown as { _timers: ReturnType<typeof setTimeout>[] })._timers;
+      timers?.forEach(clearTimeout);
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

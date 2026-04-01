@@ -9,19 +9,18 @@ interface SendAnimationProps {
   letterContent: string;
   threadId: string;
   threadHistory: Letter[];
-  onComplete: (animalResponse: string) => void;
+  onComplete: (responsePromise: Promise<string>) => void;
 }
 
 export function SendAnimation({ animalId, letterContent, threadId, threadHistory, onComplete }: SendAnimationProps) {
   const animal = getAnimalById(animalId);
-  const responseRef = useRef<string | null>(null);
-  const animDoneRef = useRef(false);
+  const responsePromiseRef = useRef<Promise<string> | null>(null);
 
-  // Fire API call immediately
+  // Fire API call immediately, store the promise
   useEffect(() => {
     const t0 = performance.now();
     console.log('[SendAnim] mount, firing API call');
-    fetch('/api/generate-response', {
+    responsePromiseRef.current = fetch('/api/generate-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -33,32 +32,20 @@ export function SendAnimation({ animalId, letterContent, threadId, threadHistory
     })
       .then(r => r.json())
       .then(data => {
-        console.log(`[SendAnim] API responded (+${Math.round(performance.now() - t0)}ms), animDone=${animDoneRef.current}`);
-        responseRef.current = data.response;
-        if (animDoneRef.current) {
-          console.log(`[SendAnim] calling onComplete (API was slower)`);
-          onComplete(data.response);
-        }
+        console.log(`[SendAnim] API responded (+${Math.round(performance.now() - t0)}ms)`);
+        return data.response as string;
       })
       .catch(err => {
         console.error('[SendAnimation] API error:', err);
-        responseRef.current = "Oh no, my quill broke! I'll write back soon, I promise!";
-        if (animDoneRef.current) {
-          onComplete(responseRef.current);
-        }
+        return "Oh no, my quill broke! I'll write back soon, I promise!";
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // After fold completes, transition immediately
+  // After fold animation completes, transition immediately — don't wait for API
   useEffect(() => {
-    const t0 = performance.now();
     const timer = setTimeout(() => {
-      animDoneRef.current = true;
-      console.log(`[SendAnim] anim timer fired (+${Math.round(performance.now() - t0)}ms), hasResponse=${!!responseRef.current}`);
-      if (responseRef.current) {
-        console.log(`[SendAnim] calling onComplete (API was faster)`);
-        onComplete(responseRef.current);
-      }
+      console.log('[SendAnim] anim done, transitioning to receiving (API still in flight)');
+      onComplete(responsePromiseRef.current!);
     }, 1500);
     return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

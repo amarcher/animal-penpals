@@ -21,7 +21,7 @@ function App() {
   const storeRef = useRef(store);
   useEffect(() => { storeRef.current = store; });
   const currentDraftRef = useRef('');
-  const pendingLetterIdRef = useRef<string | null>(null);
+
   const pendingResponseRef = useRef<string | null>(null);
   const [pendingResponse, setPendingResponse] = useState<string | null>(null);
   const [externalText, setExternalText] = useState<{ text: string; seq: number } | undefined>(undefined);
@@ -120,33 +120,26 @@ function App() {
     }, 800);
   }, [voice]);
 
-  const handleSendComplete = useCallback((animalResponse: string) => {
+  const responsePromiseRef = useRef<Promise<string> | null>(null);
+
+  const handleSendComplete = useCallback((responsePromise: Promise<string>) => {
     const current = navRef.current;
     if (current.view !== 'sending') return;
-    const { letterId } = storeRef.current.addLetter(current.animalId, 'animal', animalResponse, current.threadId);
-    pendingLetterIdRef.current = letterId;
-    pendingResponseRef.current = animalResponse;
-    setPendingResponse(animalResponse);
+    // Store the promise — ReceiveAnimation will await it alongside the video
+    responsePromiseRef.current = responsePromise;
     goToReceiving(current.animalId, current.threadId);
   }, [goToReceiving]);
 
-  const handleReceiveComplete = useCallback(() => {
+  const handleReceiveComplete = useCallback((animalResponse: string) => {
     const current = navRef.current;
     if (current.view !== 'receiving') return;
 
-    if (pendingLetterIdRef.current) {
-      goToReading(current.animalId, pendingLetterIdRef.current, current.threadId);
-      pendingLetterIdRef.current = null;
-    } else {
-      // Fallback: find latest animal letter
-      const thread = storeRef.current.getThread(current.threadId);
-      const latestAnimalLetter = thread?.letters.filter(l => l.from === 'animal').pop();
-      if (latestAnimalLetter) {
-        goToReading(current.animalId, latestAnimalLetter.id, current.threadId);
-      } else {
-        goToMailbox();
-      }
-    }
+    // Now that both video and API are done, persist the response
+    const { letterId } = storeRef.current.addLetter(current.animalId, 'animal', animalResponse, current.threadId);
+    pendingResponseRef.current = animalResponse;
+    setPendingResponse(animalResponse);
+
+    goToReading(current.animalId, letterId, current.threadId);
   }, [goToReading, goToMailbox]);
 
   const handleReply = useCallback(() => {
@@ -207,6 +200,7 @@ function App() {
       {nav.view === 'receiving' && (
         <ReceiveAnimation
           animalId={nav.animalId}
+          responsePromise={responsePromiseRef.current!}
           onComplete={handleReceiveComplete}
         />
       )}
