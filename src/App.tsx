@@ -107,6 +107,9 @@ function App() {
   const handleComposeSend = useCallback((content: string) => {
     const current = navRef.current;
     if (current.view !== 'compose') return;
+    // Clear stale pending response from previous send
+    pendingResponseRef.current = null;
+    setPendingResponse(null);
     const { threadId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
     goToSending(current.animalId, threadId, content);
   }, [goToSending]);
