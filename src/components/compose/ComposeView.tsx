@@ -13,9 +13,10 @@ interface ComposeViewProps {
   onSend: (content: string) => void;
   onBack: () => void;
   onDraftChange?: (animalId: string, content: string) => void;
+  onReadLetter?: (letterId: string) => void;
 }
 
-export function ComposeView({ animalId, thread, externalText, onSend, onBack, onDraftChange }: ComposeViewProps) {
+export function ComposeView({ animalId, thread, externalText, onSend, onBack, onDraftChange, onReadLetter }: ComposeViewProps) {
   const animal = getAnimalById(animalId);
   const videoEntry = getAnimalVideo(animalId, 'idle');
   const [draft, setDraft] = useState('');
@@ -118,6 +119,18 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
                 >
                   <span className="compose__history-from">
                     {letter.from === 'child' ? 'You' : animal.name}
+                    {letter.from === 'animal' && onReadLetter && (
+                      <button
+                        className="compose__history-read-btn"
+                        onClick={() => onReadLetter(letter.id)}
+                        type="button"
+                        aria-label={`Read aloud letter from ${animal.name}`}
+                      >
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                      </button>
+                    )}
                   </span>
                   <p className="compose__history-content">{letter.content}</p>
                 </div>

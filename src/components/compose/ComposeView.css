@@ -101,11 +101,31 @@
 }
 
 .compose__history-from {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-weight: 600;
   font-size: 0.75rem;
   color: rgba(0, 0, 0, 0.5);
   margin-bottom: 4px;
+}
+
+.compose__history-read-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  background: color-mix(in srgb, var(--animal-color) 12%, transparent);
+  border: none;
+  border-radius: 6px;
+  padding: 3px 5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  color: var(--animal-color);
+  transition: background 0.15s;
+}
+
+.compose__history-read-btn:hover {
+  background: color-mix(in srgb, var(--animal-color) 22%, transparent);
 }
 
 .compose__history-content {

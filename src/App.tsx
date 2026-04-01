@@ -145,6 +145,12 @@ function App() {
     goToReading(current.animalId, letterId, current.threadId);
   }, [goToReading, goToMailbox]);
 
+  const handleReadLetter = useCallback((letterId: string) => {
+    const current = navRef.current;
+    if (current.view !== 'compose' || !current.threadId) return;
+    goToReading(current.animalId, letterId, current.threadId);
+  }, [goToReading]);
+
   const handleReply = useCallback(() => {
     const current = navRef.current;
     if (current.view !== 'reading') return;
@@ -187,6 +193,7 @@ function App() {
           onSend={handleComposeSend}
           onBack={goToMailbox}
           onDraftChange={handleDraftChange}
+          onReadLetter={handleReadLetter}
         />
       )}
 
