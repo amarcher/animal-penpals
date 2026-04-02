@@ -132,49 +132,67 @@ body {
 }
 
 /* ── Send Letter transition (compose → receiving) ── */
-/* Letter flies away Star Wars style, then receive video pops in */
+/* Timeline:
+   0–0.3s:    Root fades out (video, header, actions all disappear)
+   0.3–0.7s:  Letter group moves to center of screen
+   0.7–1.6s:  Letter does Star Wars rotation/recede into distance
+   1.6–2.2s:  Receive video springs in */
 
 html[data-vt-type="send-letter"]::view-transition-old(root) {
   animation: vt-fade-out 0.3s ease-in forwards;
 }
 
 html[data-vt-type="send-letter"]::view-transition-new(root) {
-  animation: vt-fade-in 0.4s ease-out 1.2s both;
+  animation: vt-fade-in 0.4s ease-out 1.7s both;
 }
 
-/* Letter: Star Wars credits style — recedes into the distance */
+/* Move the letter group to the center of the viewport after root fades */
+html[data-vt-type="send-letter"]::view-transition-group(compose-content) {
+  animation: vt-letter-group-center 0.4s ease-out 0.3s both;
+  overflow: visible;
+}
+
+/* Letter image: hold still during centering, then Star Wars recede */
 html[data-vt-type="send-letter"]::view-transition-old(compose-content) {
-  animation: vt-letter-send 1.0s ease-in forwards;
+  animation: vt-letter-send 0.9s ease-in 0.7s both;
 }
 
-/* Hide compose actions quickly */
+/* Hide compose actions with root */
 html[data-vt-type="send-letter"]::view-transition-old(compose-actions) {
-  animation: vt-fade-out 0.2s ease-in forwards;
+  animation: vt-fade-out 0.3s ease-in forwards;
 }
 
-/* Receive video: delayed spring pop-in */
+/* Receive video: delayed spring pop-in after letter has gone */
 html[data-vt-type="send-letter"]::view-transition-new(animal-video) {
-  animation: vt-spring-pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.1s both;
+  animation: vt-spring-pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.7s both;
 }
 
-/* Prevent the shared element group morph — treat as separate enter/exit */
+/* Prevent the shared element group morph for the video */
 html[data-vt-type="send-letter"]::view-transition-group(animal-video) {
   animation: none;
   animation-fill-mode: none;
 }
 
+@keyframes vt-letter-group-center {
+  to {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
 @keyframes vt-letter-send {
   0% {
     opacity: 1;
-    transform: perspective(800px) rotateX(0deg) translateZ(0px);
+    transform: perspective(800px) rotateX(0deg) translateZ(0);
   }
-  30% {
+  15% {
     opacity: 1;
-    transform: perspective(800px) rotateX(3deg) translateZ(-100px);
+    transform: perspective(800px) rotateX(4deg) translateZ(-50px);
   }
   100% {
     opacity: 0;
-    transform: perspective(800px) rotateX(20deg) translateZ(-2000px);
+    transform: perspective(800px) rotateX(25deg) translateZ(-2500px);
   }
 }
 
