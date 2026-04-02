@@ -57,8 +57,10 @@ body {
 }
 
 /* --- Shared element: animal video --- */
+/* Delay the morph so it starts after content has exited (0.25s) */
 ::view-transition-group(animal-video) {
-  animation-duration: 0.5s;
+  animation-duration: 0.4s;
+  animation-delay: 0.25s;
   animation-timing-function: ease-in-out;
 }
 
