@@ -3,15 +3,6 @@ import { useNavigate, useLocation, useParams, useSearchParams } from 'react-rout
 import { useTransitionContext } from '../contexts/TransitionContext.tsx';
 import type { AppState } from '../types/app.ts';
 
-/** Only trigger view transitions for explicit navigations, never popstate. */
-function navigateWithTransition(navigate: () => void) {
-  if (document.startViewTransition) {
-    document.startViewTransition(() => navigate());
-  } else {
-    navigate();
-  }
-}
-
 function pathnameToView(pathname: string): string {
   const segment = pathname.split('/')[1] ?? '';
   return segment || 'mailbox';
@@ -58,7 +49,7 @@ export function useNavigation() {
   }, [location.pathname, params, searchParams, ctx.letterContentRef]);
 
   const goToMailbox = useCallback(() => {
-    navigateWithTransition(() => routerNavigate('/mailbox'));
+    routerNavigate('/mailbox', { viewTransition: true });
   }, [routerNavigate]);
 
   const goToCompose = useCallback((animalId: string, threadId?: string, animalLetterCount?: number) => {
@@ -66,7 +57,7 @@ export function useNavigation() {
     if (threadId) params.set('thread', threadId);
     if (animalLetterCount !== undefined) params.set('count', String(animalLetterCount));
     const query = params.toString();
-    navigateWithTransition(() => routerNavigate(`/compose/${animalId}${query ? `?${query}` : ''}`));
+    routerNavigate(`/compose/${animalId}${query ? `?${query}` : ''}`, { viewTransition: true });
   }, [routerNavigate]);
 
   const goToSending = useCallback((animalId: string, threadId: string, letterContent: string) => {
