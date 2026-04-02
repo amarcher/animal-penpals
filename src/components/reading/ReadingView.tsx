@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
 import { useTtsPlayback } from '../../hooks/useTtsPlayback.ts';
@@ -67,12 +66,9 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
   if (!animal) return null;
 
   return (
-    <motion.div
+    <div
       className="reading"
       style={{ '--animal-color': animal.color } as React.CSSProperties}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
     >
       <header className="reading__header">
         <button className="reading__back" onClick={onBack} type="button" aria-label="Back to mailbox">
@@ -120,7 +116,7 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 

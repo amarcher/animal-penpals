@@ -50,6 +50,7 @@
   border-radius: 16px;
   overflow: hidden;
   align-self: stretch;
+  view-transition-name: animal-video;
 }
 
 .reading__video {
@@ -67,6 +68,7 @@
   gap: 16px;
   min-width: 0;
   min-height: 0;
+  view-transition-name: reading-content;
 }
 
 .reading__from-name {

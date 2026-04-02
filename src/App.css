@@ -89,6 +89,15 @@ body {
   animation: vt-slide-up-fade-in 0.3s ease-out 0.25s both;
 }
 
+/* --- Reading content: slides in from right, out to right --- */
+::view-transition-new(reading-content):only-child {
+  animation: vt-slide-in-right 0.3s ease-out 0.25s both;
+}
+
+::view-transition-old(reading-content):only-child {
+  animation: vt-slide-out-right 0.25s ease-in forwards;
+}
+
 /* --- Keyframes --- */
 @keyframes vt-fade-out {
   from { opacity: 1; }
