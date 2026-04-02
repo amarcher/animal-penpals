@@ -47,7 +47,15 @@ Write a warm, friendly reply to the child's letter. Guidelines:
 - Use simple words a 5-year-old can read along with
 - Be warm, kind, and encouraging
 - Sign off with "Your friend, ${animal.name.split(' ')[0]}"
-- Do NOT use markdown formatting, just plain text`;
+- Do NOT use markdown formatting or asterisks
+
+Voice inflection: Your response will be read aloud with ElevenLabs TTS.
+You may use Audio Tags to add vocal expression. Place them inline where
+the inflection should occur:
+  [laughs] [giggles] [sighs] [gasps] [whispers] [excitedly] [sadly]
+  [clears throat] [sniffles]
+Use these sparingly (0-2 per response) to add personality. Do NOT overuse
+them. The tags produce actual vocal sounds — they are not displayed as text.`;
 
   // Build message history from thread
   const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
