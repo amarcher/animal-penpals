@@ -22,7 +22,7 @@ describe('Mailbox', () => {
   it('renders title and subtitle', () => {
     render(<Mailbox {...defaultProps} />);
 
-    expect(screen.getByText('Animal Penpals')).toBeInTheDocument();
+    expect(screen.getByAltText('Animal Penpals')).toBeInTheDocument();
     expect(screen.getByText('Pick an animal friend to write to!')).toBeInTheDocument();
   });
 

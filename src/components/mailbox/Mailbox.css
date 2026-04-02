@@ -11,10 +11,12 @@
 }
 
 .mailbox__title {
-  font-size: clamp(1.8rem, 5vw, 2.8rem);
-  font-weight: 800;
-  color: #2d3436;
-  letter-spacing: -0.02em;
+  line-height: 0;
+}
+
+.mailbox__logo {
+  max-width: min(420px, 80vw);
+  height: auto;
 }
 
 .mailbox__subtitle {

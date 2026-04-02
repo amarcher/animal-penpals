@@ -86,7 +86,7 @@ describe('Letter Flow Integration', () => {
     renderWithRouter('/mailbox');
 
     // 1. Mailbox renders with all animals
-    expect(screen.getByText('Animal Penpals')).toBeInTheDocument();
+    expect(screen.getByAltText('Animal Penpals')).toBeInTheDocument();
     expect(screen.getByLabelText('Write to Ella the Elephant')).toBeInTheDocument();
 
     // 2. Select an animal → compose view
@@ -171,6 +171,6 @@ describe('Letter Flow Integration', () => {
     await user.click(screen.getByRole('button', { name: /back to mailbox/i }));
 
     // Should show "Continue writing" for elephant (has thread)
-    expect(screen.getByText('Animal Penpals')).toBeInTheDocument();
+    expect(screen.getByAltText('Animal Penpals')).toBeInTheDocument();
   });
 });
