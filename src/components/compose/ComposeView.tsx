@@ -89,7 +89,7 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          Back
+          Mailbox
         </button>
         <span className="compose__recipient-name">Writing to {animal.name}</span>
       </header>
