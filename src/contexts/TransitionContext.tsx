@@ -11,6 +11,8 @@ interface TransitionState {
   setExternalText: (val: { text: string; seq: number } | undefined) => void;
   ttsRequest: { seq: number } | undefined;
   setTtsRequest: (val: { seq: number } | undefined) => void;
+  selectedAnimalId: string | null;
+  setSelectedAnimalId: (val: string | null) => void;
 }
 
 const TransitionContext = createContext<TransitionState | null>(null);
@@ -23,6 +25,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
   const currentDraftRef = useRef('');
   const [externalText, setExternalText] = useState<{ text: string; seq: number } | undefined>(undefined);
   const [ttsRequest, setTtsRequest] = useState<{ seq: number } | undefined>(undefined);
+  const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
 
   return (
     <TransitionContext.Provider value={{
@@ -36,6 +39,8 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
       setExternalText,
       ttsRequest,
       setTtsRequest,
+      selectedAnimalId,
+      setSelectedAnimalId,
     }}>
       {children}
     </TransitionContext.Provider>

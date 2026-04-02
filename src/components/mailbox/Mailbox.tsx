@@ -7,9 +7,10 @@ interface MailboxProps {
   onSelectAnimal: (animalId: string) => void;
   getUnreadCount: (animalId: string) => number;
   hasThread: (animalId: string) => boolean;
+  selectedAnimalId?: string | null;
 }
 
-export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread }: MailboxProps) {
+export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread, selectedAnimalId }: MailboxProps) {
   return (
     <div className="mailbox">
       <header className="mailbox__header">
@@ -30,6 +31,7 @@ export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread }: MailboxPr
               unreadCount={getUnreadCount(animal.id)}
               hasThread={hasThread(animal.id)}
               onClick={onSelectAnimal}
+              viewTransitionName={animal.id === selectedAnimalId ? 'animal-video' : undefined}
             />
           </motion.div>
         ))}

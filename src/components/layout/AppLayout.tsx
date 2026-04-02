@@ -32,10 +32,11 @@ export function AppLayout() {
   const ttsSeq = useRef(0);
 
   const handleSelectAnimal = useCallback((animalId: string) => {
+    ctx.setSelectedAnimalId(animalId);
     const existingThread = storeRef.current.getThreadByAnimal(animalId);
     const animalLetterCount = existingThread?.letters.filter(l => l.from === 'animal').length ?? 0;
     goToCompose(animalId, existingThread?.id, animalLetterCount);
-  }, [goToCompose]);
+  }, [goToCompose, ctx]);
 
   const handleSendLetter = useCallback(() => {
     const current = navRef.current;

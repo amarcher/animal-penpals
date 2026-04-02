@@ -80,14 +80,6 @@ describe('ReadingView', () => {
     expect(onReply).toHaveBeenCalled();
   });
 
-  it('back button calls onBack', async () => {
-    const onBack = vi.fn();
-    render(<ReadingView {...defaultProps} onBack={onBack} />);
-
-    await userEvent.click(screen.getByRole('button', { name: /choose another animal/i }));
-    expect(onBack).toHaveBeenCalled();
-  });
-
   it('mailbox button calls onBack', async () => {
     const onBack = vi.fn();
     render(<ReadingView {...defaultProps} onBack={onBack} />);

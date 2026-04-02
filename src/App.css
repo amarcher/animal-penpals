@@ -40,3 +40,90 @@ body {
     right: 16px;
   }
 }
+
+/* ── View Transitions ── */
+/* Sequential: old page fades to white → then new elements animate in.
+   Phase 1 (0–0.25s): old root fades out, compose content/actions exit
+   Phase 2 (0.25–0.6s): new root fades in, compose content/actions enter
+   The shared video element morphs across both phases. */
+
+/* --- Root page (everything not named) --- */
+::view-transition-old(root) {
+  animation: vt-fade-out 0.25s ease-in forwards;
+}
+
+::view-transition-new(root) {
+  animation: vt-fade-in 0.3s ease-out 0.25s both;
+}
+
+/* --- Shared element: animal video --- */
+/* Delay the morph so it starts after content has exited (0.25s) */
+::view-transition-group(animal-video) {
+  animation-duration: 0.4s;
+  animation-delay: 0.25s;
+  animation-timing-function: ease-in-out;
+}
+
+::view-transition-old(animal-video),
+::view-transition-new(animal-video) {
+  /* No cross-fade — just show the new snapshot immediately */
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* --- Compose content: slides in/out from right --- */
+::view-transition-old(compose-content):only-child {
+  animation: vt-slide-out-right 0.25s ease-in forwards;
+}
+
+::view-transition-new(compose-content):only-child {
+  animation: vt-slide-in-right 0.3s ease-out 0.25s both;
+}
+
+/* --- Compose actions: slides up/down --- */
+::view-transition-old(compose-actions):only-child {
+  animation: vt-slide-down-fade-out 0.25s ease-in forwards;
+}
+
+::view-transition-new(compose-actions):only-child {
+  animation: vt-slide-up-fade-in 0.3s ease-out 0.25s both;
+}
+
+/* --- Keyframes --- */
+@keyframes vt-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vt-slide-in-right {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes vt-slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(30px); }
+}
+
+@keyframes vt-slide-up-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vt-slide-down-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
