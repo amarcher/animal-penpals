@@ -136,11 +136,12 @@
   color: rgba(0, 0, 0, 0.6);
   font-size: 1rem;
   font-weight: 600;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
 }
 
-.reading__action-btn:hover {
+.reading__action-btn:hover:not(:disabled) {
   border-color: rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
 }
 
 .reading__action-btn--loading {
