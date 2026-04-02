@@ -13,6 +13,8 @@ interface ReceiveAnimationProps {
 }
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 export function ReceiveAnimation({ animalId, responsePromise, onComplete }: ReceiveAnimationProps) {
   const animal = getAnimalById(animalId);
@@ -56,7 +58,9 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
   onError: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [ready, setReady] = useState(false);
+  const [showPlayButton, setShowPlayButton] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,10 +71,14 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
     // Grab the preloaded element from the cache, or create a fresh one as fallback
     const cached = getCachedVideo(videoUrl);
     const video = cached ? cached.element : preloadVideo(videoUrl).element;
+    videoRef.current = video;
 
     video.className = 'receive-anim__video';
     video.autoplay = true;
     video.playsInline = true;
+
+    // iOS requires muted for autoplay to work without user gesture
+    if (isIOS) video.muted = true;
 
     // Wait for BOTH video end AND API response before transitioning
     const videoEndedPromise = new Promise<void>((resolve) => {
@@ -86,14 +94,20 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
     // Mount the (already-buffered) element into the DOM
     container.appendChild(video);
 
+    const attemptPlay = () => {
+      video.play().catch(() => {
+        if (!cancelled) setShowPlayButton(true);
+      });
+    };
+
     // If already buffered, play immediately; otherwise wait for canplay
     if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
       setReady(true);
-      video.play().catch(() => {});
+      attemptPlay();
     } else {
       const onCanPlay = () => {
         setReady(true);
-        video.play().catch(() => {});
+        attemptPlay();
         video.removeEventListener('canplay', onCanPlay);
       };
       video.addEventListener('canplay', onCanPlay);
@@ -113,14 +127,27 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
   useEffect(() => {
     const timer = setTimeout(() => {
       responsePromise.then((r) => onComplete(r));
-    }, 30_000);
+    }, 15_000);
     return () => clearTimeout(timer);
   }, [onComplete, responsePromise]);
+
+  const handlePlay = () => {
+    const video = videoRef.current;
+    if (video) {
+      video.play().catch(() => {});
+      setShowPlayButton(false);
+    }
+  };
 
   return (
     <div className="receive-anim">
       {!ready && <LoadingIndicator />}
       <div ref={containerRef} style={{ display: ready ? 'contents' : 'none' }} />
+      {showPlayButton && (
+        <button className="receive-anim__play-btn" onClick={handlePlay} aria-label="Play video">
+          ▶️
+        </button>
+      )}
     </div>
   );
 }
