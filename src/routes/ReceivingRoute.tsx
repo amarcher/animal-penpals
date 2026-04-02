@@ -1,5 +1,4 @@
-import { useParams, Navigate } from 'react-router';
-import { useOutletContext } from 'react-router';
+import { useParams, Navigate, useOutletContext } from 'react-router';
 import { ReceiveAnimation } from '../components/animation/ReceiveAnimation.tsx';
 import { useTransitionContext } from '../contexts/TransitionContext.tsx';
 import type { AppOutletContext } from '../types/outlet.ts';

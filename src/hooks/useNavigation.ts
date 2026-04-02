@@ -65,8 +65,8 @@ export function useNavigation() {
     routerNavigate(`/sending/${animalId}/${threadId}`);
   }, [routerNavigate, ctx.letterContentRef]);
 
-  const goToReceiving = useCallback((animalId: string, threadId: string) => {
-    routerNavigate(`/receiving/${animalId}/${threadId}`);
+  const goToReceiving = useCallback((animalId: string, threadId: string, options?: { viewTransition?: boolean }) => {
+    routerNavigate(`/receiving/${animalId}/${threadId}`, options?.viewTransition ? { viewTransition: true } : undefined);
   }, [routerNavigate]);
 
   const goToReading = useCallback((animalId: string, letterId: string, threadId: string) => {
