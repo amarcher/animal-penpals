@@ -35,10 +35,10 @@ describe('ReadingView', () => {
   });
 
   it('renders letter content', () => {
-    render(<ReadingView {...defaultProps} />);
-    // Text is split into words by HighlightedText
-    expect(screen.getByText(/Hello/)).toBeInTheDocument();
-    expect(screen.getByText(/swimming/)).toBeInTheDocument();
+    const { container } = render(<ReadingView {...defaultProps} />);
+    // Text is rendered character-by-character by HighlightedText
+    expect(container.textContent).toContain('Hello friend');
+    expect(container.textContent).toContain('swimming');
   });
 
   it('renders animal name in header', () => {
