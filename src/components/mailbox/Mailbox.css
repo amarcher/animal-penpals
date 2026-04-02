@@ -31,6 +31,15 @@
   gap: 20px;
 }
 
+/* Ensure motion.div wrappers and cards stretch to fill the grid row height */
+.mailbox__grid > * {
+  display: flex;
+}
+
+.mailbox__grid > * > .animal-card {
+  width: 100%;
+}
+
 @media (max-width: 900px) {
   .mailbox__grid {
     grid-template-columns: repeat(3, 1fr);
