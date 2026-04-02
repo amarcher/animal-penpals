@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { WordTiming } from '../../hooks/useTtsPlayback.ts';
 import './HighlightedText.css';
 
@@ -10,13 +10,62 @@ interface HighlightedTextProps {
   animalColor: string;
 }
 
+/**
+ * Strip ElevenLabs Audio Tags (e.g. [laughs], [whispers]) from text and
+ * build a mapping from source char indices to display char indices.
+ * Returns the clean display text and a lookup array where
+ * sourceToDisplay[sourceIdx] = displayIdx (or -1 if inside a tag).
+ */
+function stripAudioTags(text: string): { displayText: string; sourceToDisplay: number[] } {
+  const sourceToDisplay: number[] = [];
+  let displayText = '';
+  let inTag = false;
+
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '[') {
+      inTag = true;
+      sourceToDisplay.push(-1);
+    } else if (text[i] === ']') {
+      inTag = false;
+      sourceToDisplay.push(-1);
+      // Skip trailing space after a tag
+      if (i + 1 < text.length && text[i + 1] === ' ') {
+        i++;
+        sourceToDisplay.push(-1);
+      }
+    } else if (inTag) {
+      sourceToDisplay.push(-1);
+    } else {
+      sourceToDisplay.push(displayText.length);
+      displayText += text[i];
+    }
+  }
+
+  return { displayText, sourceToDisplay };
+}
+
 export function HighlightedText({ text, currentCharIndex, animalColor }: HighlightedTextProps) {
   const containerRef = useRef<HTMLParagraphElement>(null);
   const activeCharRef = useRef<HTMLSpanElement>(null);
 
-  // Auto-scroll the paper to keep the active word visible
+  const { displayText, sourceToDisplay } = useMemo(() => stripAudioTags(text), [text]);
+
+  // Map the source-level currentCharIndex to a display-level index
+  const displayCharIndex = useMemo(() => {
+    if (currentCharIndex < 0) return -1;
+    // Find the display index for the current source char, or the nearest
+    // previous display char if we're inside a tag
+    for (let i = currentCharIndex; i >= 0; i--) {
+      if (i < sourceToDisplay.length && sourceToDisplay[i] >= 0) {
+        return sourceToDisplay[i];
+      }
+    }
+    return -1;
+  }, [currentCharIndex, sourceToDisplay]);
+
+  // Auto-scroll the paper to keep the active character visible
   useEffect(() => {
-    if (currentCharIndex < 0 || !activeCharRef.current || !containerRef.current) return;
+    if (displayCharIndex < 0 || !activeCharRef.current || !containerRef.current) return;
     const container = containerRef.current.closest('.reading__paper');
     if (!container) return;
 
@@ -24,15 +73,13 @@ export function HighlightedText({ text, currentCharIndex, animalColor }: Highlig
     const containerRect = container.getBoundingClientRect();
     const charRect = charEl.getBoundingClientRect();
 
-    // If the active character is below the visible area, scroll smoothly
     if (charRect.bottom > containerRect.bottom - 40) {
       container.scrollBy({ top: charRect.bottom - containerRect.bottom + 80, behavior: 'smooth' });
     }
-  }, [currentCharIndex]);
+  }, [displayCharIndex]);
 
-  // Build character spans with coloring based on read position
-  const chars = text.split('');
-  const hasHighlight = currentCharIndex >= 0;
+  const chars = displayText.split('');
+  const hasHighlight = displayCharIndex >= 0;
 
   return (
     <p
@@ -41,8 +88,8 @@ export function HighlightedText({ text, currentCharIndex, animalColor }: Highlig
       ref={containerRef}
     >
       {chars.map((char, i) => {
-        const isRead = hasHighlight && i < currentCharIndex;
-        const isActive = hasHighlight && i === currentCharIndex;
+        const isRead = hasHighlight && i < displayCharIndex;
+        const isActive = hasHighlight && i === displayCharIndex;
 
         if (isActive) {
           return (
