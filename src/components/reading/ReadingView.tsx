@@ -22,17 +22,17 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
   const animal = getAnimalById(animalId);
   const videoEntry = getAnimalVideo(animalId, 'receive');
   const tts = useTtsPlayback();
-  const hasAutoPlayed = useRef(false);
   const lastTtsSeq = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     onMarkRead();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-play TTS once on mount
+  // Auto-play TTS on mount. No hasAutoPlayed guard needed — play() already
+  // deduplicates via playIdRef, and the guard breaks under StrictMode
+  // (which unmounts/remounts route components, leaving the ref stale).
   useEffect(() => {
-    if (!hasAutoPlayed.current && animal && letterContent) {
-      hasAutoPlayed.current = true;
+    if (animal && letterContent) {
       tts.play(letterContent, animal.voiceId).then(started => {
         if (started) onTtsAutoPlayStarted?.();
         else onTtsAutoPlayFailed?.();
@@ -85,17 +85,7 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
 
       <div className="reading__body">
         {videoEntry && (
-          <div className="reading__video-wrap">
-            <video
-              className="reading__video"
-              src={videoEntry.url}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-            />
-          </div>
+          <MutedVideo className="reading__video" src={videoEntry.url} loop />
         )}
 
         <div className="reading__letter">
@@ -140,4 +130,34 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
       </div>
     </motion.div>
   );
+}
+
+/** Renders a video element that is guaranteed muted before playback starts. */
+function MutedVideo({ className, src, loop }: { className: string; src: string; loop?: boolean }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const video = document.createElement('video');
+    video.className = className;
+    video.muted = true;
+    video.volume = 0;
+    video.loop = !!loop;
+    video.playsInline = true;
+    video.preload = 'auto';
+    // Set src AFTER muted + volume=0 so the browser never plays audio
+    video.src = src;
+    container.appendChild(video);
+    video.play().catch(() => {});
+
+    return () => {
+      video.pause();
+      video.removeAttribute('src');
+      if (container.contains(video)) container.removeChild(video);
+    };
+  }, [className, src, loop]);
+
+  return <div className="reading__video-wrap" ref={containerRef} />;
 }

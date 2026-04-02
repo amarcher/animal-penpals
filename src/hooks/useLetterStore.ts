@@ -96,3 +96,5 @@ export function useLetterStore() {
 
   return { threads, addLetter, getThread, getThreadByAnimal, getUnreadCount, markRead, getLetterById };
 }
+
+export type LetterStore = ReturnType<typeof useLetterStore>;

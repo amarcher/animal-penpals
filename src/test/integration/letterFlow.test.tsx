@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import App from '../../App.tsx';
+import { renderWithRouter } from '../renderWithRouter.tsx';
 
 // Mock ElevenLabs voice agent (deeply tied to SDK + mic)
 vi.mock('../../hooks/usePenpalConversation.ts', () => ({
@@ -83,7 +83,7 @@ describe('Letter Flow Integration', () => {
   });
 
   it('completes full mailbox → compose → send → receive → reading flow', async () => {
-    render(<App />);
+    renderWithRouter('/mailbox');
 
     // 1. Mailbox renders with all animals
     expect(screen.getByText('Animal Penpals')).toBeInTheDocument();
@@ -128,7 +128,7 @@ describe('Letter Flow Integration', () => {
   });
 
   it('thread history persists between sends', async () => {
-    render(<App />);
+    renderWithRouter('/mailbox');
 
     // First letter
     await user.click(screen.getByLabelText('Write to Ella the Elephant'));
@@ -156,7 +156,7 @@ describe('Letter Flow Integration', () => {
   });
 
   it('unread badge appears for new animal response', async () => {
-    render(<App />);
+    renderWithRouter('/mailbox');
 
     // Send a letter to elephant
     await user.click(screen.getByLabelText('Write to Ella the Elephant'));
