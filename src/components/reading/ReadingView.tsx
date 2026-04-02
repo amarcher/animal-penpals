@@ -85,22 +85,7 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
 
       <div className="reading__body">
         {videoEntry && (
-          <div className="reading__video-wrap">
-            <video
-              className="reading__video"
-              src={videoEntry.url}
-              muted
-              loop
-              playsInline
-              preload="auto"
-              ref={(el) => {
-                if (el) {
-                  el.muted = true;
-                  el.play().catch(() => {});
-                }
-              }}
-            />
-          </div>
+          <MutedVideo className="reading__video" src={videoEntry.url} loop />
         )}
 
         <div className="reading__letter">
@@ -145,4 +130,33 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
       </div>
     </motion.div>
   );
+}
+
+/** Renders a video element that is guaranteed muted before playback starts. */
+function MutedVideo({ className, src, loop }: { className: string; src: string; loop?: boolean }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const video = document.createElement('video');
+    video.className = className;
+    video.muted = true;
+    video.loop = !!loop;
+    video.playsInline = true;
+    video.preload = 'auto';
+    // Set src AFTER muted so the browser never begins unmuted playback
+    video.src = src;
+    container.appendChild(video);
+    video.play().catch(() => {});
+
+    return () => {
+      video.pause();
+      video.removeAttribute('src');
+      if (container.contains(video)) container.removeChild(video);
+    };
+  }, [className, src, loop]);
+
+  return <div className="reading__video-wrap" ref={containerRef} />;
 }
