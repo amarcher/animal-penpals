@@ -73,7 +73,7 @@ export function useNavigation() {
     const params = new URLSearchParams();
     if (threadId) params.set('thread', threadId);
     const query = params.toString();
-    routerNavigate(`/reading/${animalId}/${letterId}${query ? `?${query}` : ''}`);
+    routerNavigate(`/reading/${animalId}/${letterId}${query ? `?${query}` : ''}`, { viewTransition: true });
   }, [routerNavigate]);
 
   return { nav, goToMailbox, goToCompose, goToSending, goToReceiving, goToReading };

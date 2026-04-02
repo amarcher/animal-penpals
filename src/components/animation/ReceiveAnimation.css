@@ -15,6 +15,7 @@
   max-width: 100%;
   border-radius: 20px;
   object-fit: contain;
+  view-transition-name: animal-video;
 }
 
 /* Loading indicator while video buffers */
