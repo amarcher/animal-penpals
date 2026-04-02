@@ -42,45 +42,60 @@ body {
 }
 
 /* ── View Transitions ── */
+/* Sequential: old page fades to white → then new elements animate in.
+   Phase 1 (0–0.25s): old root fades out, compose content/actions exit
+   Phase 2 (0.25–0.6s): new root fades in, compose content/actions enter
+   The shared video element morphs across both phases. */
 
-/* Shared element: animal video morphs between mailbox card and compose */
+/* --- Root page (everything not named) --- */
+::view-transition-old(root) {
+  animation: vt-fade-out 0.25s ease-in forwards;
+}
+
+::view-transition-new(root) {
+  animation: vt-fade-in 0.3s ease-out 0.25s both;
+}
+
+/* --- Shared element: animal video --- */
 ::view-transition-group(animal-video) {
-  animation-duration: 0.4s;
+  animation-duration: 0.5s;
   animation-timing-function: ease-in-out;
 }
 
-/* Cross-fade the old/new snapshots of the shared video */
 ::view-transition-old(animal-video),
 ::view-transition-new(animal-video) {
+  /* No cross-fade — just show the new snapshot immediately */
   animation: none;
   mix-blend-mode: normal;
 }
 
-/* Compose letter content slides in/out from right */
-::view-transition-new(compose-content):only-child {
-  animation: vt-slide-in-right 0.35s ease-out;
-}
-
+/* --- Compose content: slides in/out from right --- */
 ::view-transition-old(compose-content):only-child {
-  animation: vt-slide-out-right 0.35s ease-in;
+  animation: vt-slide-out-right 0.25s ease-in forwards;
 }
 
-/* Compose actions slide up/down */
-::view-transition-new(compose-actions):only-child {
-  animation: vt-slide-up-fade-in 0.35s ease-out;
+::view-transition-new(compose-content):only-child {
+  animation: vt-slide-in-right 0.3s ease-out 0.25s both;
 }
 
+/* --- Compose actions: slides up/down --- */
 ::view-transition-old(compose-actions):only-child {
-  animation: vt-slide-down-fade-out 0.35s ease-in;
+  animation: vt-slide-down-fade-out 0.25s ease-in forwards;
 }
 
-/* Default page cross-fade (fast) */
-::view-transition-old(root) {
-  animation-duration: 0.2s;
+::view-transition-new(compose-actions):only-child {
+  animation: vt-slide-up-fade-in 0.3s ease-out 0.25s both;
 }
 
-::view-transition-new(root) {
-  animation-duration: 0.2s;
+/* --- Keyframes --- */
+@keyframes vt-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes vt-slide-in-right {
