@@ -146,6 +146,24 @@ body {
   overflow: visible;
 }
 
+/* On mobile the letter is already centered, so skip the translate animation
+   to avoid a jarring jump before the Star Wars recede effect.
+   Start the Star Wars send + subsequent animations 0.4s earlier to compensate. */
+@media (max-width: 700px) {
+  ::view-transition-group(sending-letter) {
+    animation: none;
+  }
+  ::view-transition-old(sending-letter):only-child {
+    animation: vt-letter-send 0.9s ease-in 0.3s both;
+  }
+  ::view-transition-new(receive-page):only-child {
+    animation: vt-fade-in 0.4s ease-out 1.3s both;
+  }
+  ::view-transition-new(animal-video):only-child {
+    animation: vt-spring-pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.3s both;
+  }
+}
+
 /* Letter Star Wars recede into the distance */
 ::view-transition-old(sending-letter):only-child {
   animation: vt-letter-send 0.9s ease-in 0.7s both;
