@@ -49,7 +49,7 @@ export function useNavigation() {
   }, [location.pathname, params, searchParams, ctx.letterContentRef]);
 
   const goToMailbox = useCallback(() => {
-    routerNavigate('/mailbox');
+    routerNavigate('/mailbox', { viewTransition: true });
   }, [routerNavigate]);
 
   const goToCompose = useCallback((animalId: string, threadId?: string, animalLetterCount?: number) => {
@@ -57,7 +57,7 @@ export function useNavigation() {
     if (threadId) params.set('thread', threadId);
     if (animalLetterCount !== undefined) params.set('count', String(animalLetterCount));
     const query = params.toString();
-    routerNavigate(`/compose/${animalId}${query ? `?${query}` : ''}`);
+    routerNavigate(`/compose/${animalId}${query ? `?${query}` : ''}`, { viewTransition: true });
   }, [routerNavigate]);
 
   const goToSending = useCallback((animalId: string, threadId: string, letterContent: string) => {

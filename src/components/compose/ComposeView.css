@@ -73,6 +73,7 @@
   gap: 16px;
   min-width: 0;
   min-height: 0;
+  view-transition-name: compose-content;
 }
 
 /* Thread history */
@@ -200,6 +201,7 @@
 /* Actions */
 .compose__actions {
   flex-shrink: 0;
+  view-transition-name: compose-actions;
 }
 
 .compose__send {

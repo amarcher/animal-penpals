@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
 import { preloadVideo } from '../../utils/videoPreloadCache.ts';
@@ -77,12 +76,9 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
   const previousLetters = thread?.letters ?? [];
 
   return (
-    <motion.div
+    <div
       className="compose"
       style={{ '--animal-color': animal.color } as React.CSSProperties}
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
     >
       <header className="compose__header">
         <button className="compose__back" onClick={onBack} type="button" aria-label="Back to mailbox">
@@ -96,7 +92,7 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
 
       <div className="compose__body">
         {videoEntry && (
-          <div className="compose__video-wrap">
+          <div className="compose__video-wrap" style={{ viewTransitionName: 'animal-video' }}>
             <video
               className="compose__video"
               src={videoEntry.url}
@@ -169,6 +165,6 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

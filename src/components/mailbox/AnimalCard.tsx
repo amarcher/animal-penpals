@@ -10,9 +10,10 @@ interface AnimalCardProps {
   unreadCount: number;
   hasThread: boolean;
   onClick: (animalId: string) => void;
+  viewTransitionName?: string;
 }
 
-export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThread, onClick }: AnimalCardProps) {
+export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThread, onClick, viewTransitionName }: AnimalCardProps) {
   const videoEntry = getAnimalVideo(animal.id, 'idle');
   const [videoError, setVideoError] = useState(false);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -56,7 +57,7 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
         </span>
       )}
 
-      <div className="animal-card__visual">
+      <div className="animal-card__visual" style={viewTransitionName ? { viewTransitionName } : undefined}>
         {showVideo ? (
           <video
             className="animal-card__video"

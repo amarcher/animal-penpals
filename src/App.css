@@ -40,3 +40,73 @@ body {
     right: 16px;
   }
 }
+
+/* ── View Transitions ── */
+
+/* Shared element: animal video morphs between mailbox card and compose */
+::view-transition-group(animal-video) {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-in-out;
+}
+
+/* Cross-fade the old/new snapshots of the shared video */
+::view-transition-old(animal-video),
+::view-transition-new(animal-video) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Compose letter content slides in/out from right */
+::view-transition-new(compose-content):only-child {
+  animation: vt-slide-in-right 0.35s ease-out;
+}
+
+::view-transition-old(compose-content):only-child {
+  animation: vt-slide-out-right 0.35s ease-in;
+}
+
+/* Compose actions slide up/down */
+::view-transition-new(compose-actions):only-child {
+  animation: vt-slide-up-fade-in 0.35s ease-out;
+}
+
+::view-transition-old(compose-actions):only-child {
+  animation: vt-slide-down-fade-out 0.35s ease-in;
+}
+
+/* Default page cross-fade (fast) */
+::view-transition-old(root) {
+  animation-duration: 0.2s;
+}
+
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+}
+
+@keyframes vt-slide-in-right {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes vt-slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(30px); }
+}
+
+@keyframes vt-slide-up-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vt-slide-down-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
