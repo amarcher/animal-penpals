@@ -5,6 +5,8 @@ import { useNavigation } from '../../hooks/useNavigation.ts';
 import { useLetterStore } from '../../hooks/useLetterStore.ts';
 import { usePenpalConversation } from '../../hooks/usePenpalConversation.ts';
 import { useTransitionContext } from '../../contexts/TransitionContext.tsx';
+import { getAnimalById } from '../../data/animals.ts';
+import { prefetchTts } from '../../utils/ttsPrefetchCache.ts';
 import { VoiceAgent } from '../ui/VoiceAgent.tsx';
 import type { AppOutletContext } from '../../types/outlet.ts';
 
@@ -136,12 +138,47 @@ export function AppLayout() {
   const handleComposeSend = useCallback((content: string) => {
     const current = navRef.current;
     if (current.view !== 'compose') return;
+
     // Clear stale pending response from previous send
     ctx.pendingResponseRef.current = null;
     ctx.setPendingResponse(null);
+
     const { threadId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
-    goToSending(current.animalId, threadId, content);
-  }, [goToSending, ctx]);
+    const animal = getAnimalById(current.animalId);
+
+    // Fire the API call (moved from SendAnimation)
+    const thread = storeRef.current.getThread(threadId);
+    const priorHistory = (thread?.letters ?? [])
+      .filter(l => !(l.from === 'child' && l.content === content))
+      .map(l => ({ from: l.from, content: l.content }));
+
+    ctx.responsePromiseRef.current = fetch('/api/generate-response', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        animalId: current.animalId,
+        childLetter: content,
+        threadId,
+        threadHistory: priorHistory,
+      }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (animal) prefetchTts(data.response, animal.voiceId);
+        return data.response as string;
+      })
+      .catch(() => "Oh no, my quill broke! I'll write back soon, I promise!");
+
+    // Clear compose video transition name so it fades out with root
+    const videoWrap = document.querySelector('.compose__video-wrap');
+    if (videoWrap) (videoWrap as HTMLElement).style.viewTransitionName = '';
+
+    // Tag the transition type for CSS scoping
+    document.documentElement.dataset.vtType = 'send-letter';
+
+    // Navigate directly to receiving (skip sending interstitial)
+    goToReceiving(current.animalId, threadId, { viewTransition: true });
+  }, [goToReceiving, ctx]);
 
   const handleDraftChange = useCallback((animalId: string, content: string) => {
     ctx.currentDraftRef.current = content;
