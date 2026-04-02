@@ -92,6 +92,7 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
               text={letterContent}
               wordTimings={tts.wordTimings}
               currentWordIndex={tts.currentWordIndex}
+              currentCharIndex={tts.currentCharIndex}
               animalColor={animal.color}
             />
           </div>

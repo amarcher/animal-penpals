@@ -6,24 +6,20 @@
   white-space: pre-wrap;
 }
 
-.highlighted-text__word {
-  transition: box-shadow 0.15s, color 0.15s;
-  border-radius: 6px;
-  padding: 2px 4px;
-  box-shadow: 0 0 0 0 transparent;
+.highlighted-text__char {
+  transition: color 0.1s ease-out;
 }
 
-.highlighted-text__word--active {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--animal-color) 35%, transparent);
+.highlighted-text__char--read {
   color: color-mix(in srgb, var(--animal-color) 70%, black);
 }
 
-.highlighted-text__word--read {
-  color: rgba(0, 0, 0, 0.7);
+.highlighted-text__char--active {
+  color: color-mix(in srgb, var(--animal-color) 70%, black);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .highlighted-text__word {
+  .highlighted-text__char {
     transition: none;
   }
 }

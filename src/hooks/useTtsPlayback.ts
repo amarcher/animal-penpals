@@ -11,7 +11,9 @@ interface TtsPlaybackState {
   isPlaying: boolean;
   isLoading: boolean;
   currentWordIndex: number;
+  currentCharIndex: number;
   wordTimings: WordTiming[];
+  charCount: number;
 }
 
 interface TtsAlignment {
@@ -60,8 +62,11 @@ export function useTtsPlayback() {
     isPlaying: false,
     isLoading: false,
     currentWordIndex: -1,
+    currentCharIndex: -1,
     wordTimings: [],
+    charCount: 0,
   });
+  const charTimesRef = useRef<number[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animFrameRef = useRef<number>(0);
   const playIdRef = useRef(0);
@@ -78,7 +83,7 @@ export function useTtsPlayback() {
   const stop = useCallback(() => {
     playIdRef.current += 1;
     stopAudio();
-    setState({ isPlaying: false, isLoading: false, currentWordIndex: -1, wordTimings: [] });
+    setState({ isPlaying: false, isLoading: false, currentWordIndex: -1, currentCharIndex: -1, wordTimings: [], charCount: 0 });
   }, [stopAudio]);
 
   const play = useCallback(async (text: string, voiceId: string): Promise<boolean> => {
@@ -89,7 +94,7 @@ export function useTtsPlayback() {
     // Stop any current playback
     stopAudio();
 
-    setState(s => ({ ...s, isLoading: true, isPlaying: false, currentWordIndex: -1 }));
+    setState(s => ({ ...s, isLoading: true, isPlaying: false, currentWordIndex: -1, currentCharIndex: -1, charCount: 0 }));
 
     try {
       // Use prefetched TTS data if available, otherwise fetch fresh
@@ -111,22 +116,30 @@ export function useTtsPlayback() {
       if (thisPlayId !== playIdRef.current) return false;
 
       const wordTimings = buildWordTimings(text, data.alignment);
+      charTimesRef.current = data.alignment.character_start_times_seconds;
       const audio = new Audio(`data:audio/mpeg;base64,${data.audio_base64}`);
       audioRef.current = audio;
 
-      setState({ isLoading: false, isPlaying: true, wordTimings, currentWordIndex: 0 });
+      setState({ isLoading: false, isPlaying: true, wordTimings, currentWordIndex: 0, currentCharIndex: 0, charCount: data.alignment.characters.length });
 
       await audio.play();
 
       if (thisPlayId !== playIdRef.current) return false;
 
+      const charStarts = charTimesRef.current;
       const tick = () => {
         if (!audioRef.current || thisPlayId !== playIdRef.current) return;
         const t = audioRef.current.currentTime;
-        const idx = wordTimings.findIndex(w => t >= w.startTime && t < w.endTime);
-        if (idx >= 0) {
-          setState(s => ({ ...s, currentWordIndex: idx }));
+        const wordIdx = wordTimings.findIndex(w => t >= w.startTime && t < w.endTime);
+        // Binary-ish search for current character: find last char whose start ≤ t
+        let charIdx = -1;
+        for (let i = charStarts.length - 1; i >= 0; i--) {
+          if (charStarts[i] <= t) { charIdx = i; break; }
         }
+        setState(s => {
+          if (s.currentWordIndex === wordIdx && s.currentCharIndex === charIdx) return s;
+          return { ...s, currentWordIndex: wordIdx >= 0 ? wordIdx : s.currentWordIndex, currentCharIndex: charIdx };
+        });
         if (!audioRef.current.paused && !audioRef.current.ended) {
           animFrameRef.current = requestAnimationFrame(tick);
         }
@@ -139,6 +152,7 @@ export function useTtsPlayback() {
           ...s,
           isPlaying: false,
           currentWordIndex: s.wordTimings.length - 1,
+          currentCharIndex: s.charCount - 1,
         }));
         cancelAnimationFrame(animFrameRef.current);
       };
@@ -147,7 +161,7 @@ export function useTtsPlayback() {
     } catch (err) {
       if (thisPlayId !== playIdRef.current) return false;
       console.error('[TTS] playback failed:', err);
-      setState({ isPlaying: false, isLoading: false, currentWordIndex: -1, wordTimings: [] });
+      setState({ isPlaying: false, isLoading: false, currentWordIndex: -1, currentCharIndex: -1, wordTimings: [], charCount: 0 });
       return false;
     }
   }, [stopAudio]);
