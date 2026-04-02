@@ -11,6 +11,7 @@
 .reading__header {
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
 .reading__back {
@@ -62,16 +63,9 @@
   min-width: 0;
 }
 
-.reading__from {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .reading__from-name {
-  font-family: 'Patrick Hand', cursive;
-  font-size: 1.6rem;
-  font-weight: 400;
+  font-size: 1.2rem;
+  font-weight: 700;
   color: color-mix(in srgb, var(--animal-color) 80%, black);
 }
 

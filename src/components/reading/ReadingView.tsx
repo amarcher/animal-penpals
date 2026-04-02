@@ -81,6 +81,7 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
           </svg>
           Mailbox
         </button>
+        <span className="reading__from-name">From {animal.name}</span>
       </header>
 
       <div className="reading__body">
@@ -89,9 +90,6 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
         )}
 
         <div className="reading__letter">
-          <div className="reading__from">
-            <span className="reading__from-name">From {animal.name}</span>
-          </div>
 
           <div className="reading__paper">
             <HighlightedText
