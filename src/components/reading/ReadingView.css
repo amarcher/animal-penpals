@@ -1,7 +1,7 @@
 .reading {
   height: 100dvh;
   padding: 24px;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -48,14 +48,15 @@
   flex: none;
   border-radius: 16px;
   overflow: hidden;
-  align-self: flex-start;
+  align-self: stretch;
 }
 
 .reading__video {
   display: block;
   border-radius: 16px;
-  height: 60vh;
+  height: 100%;
   width: auto;
+  object-fit: cover;
 }
 
 .reading__letter {
