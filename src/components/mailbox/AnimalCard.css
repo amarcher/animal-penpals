@@ -43,10 +43,11 @@
   z-index: 2;
 }
 
-/* Video / emoji area */
+/* Video / emoji area — flex: 1 so all cards in the same grid row share height */
 .animal-card__visual {
   width: 100%;
-  aspect-ratio: 9 / 16;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   border-radius: 18px 18px 0 0;
   display: flex;
