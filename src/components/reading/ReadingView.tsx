@@ -143,10 +143,11 @@ function MutedVideo({ className, src, loop }: { className: string; src: string; 
     const video = document.createElement('video');
     video.className = className;
     video.muted = true;
+    video.volume = 0;
     video.loop = !!loop;
     video.playsInline = true;
     video.preload = 'auto';
-    // Set src AFTER muted so the browser never begins unmuted playback
+    // Set src AFTER muted + volume=0 so the browser never plays audio
     video.src = src;
     container.appendChild(video);
     video.play().catch(() => {});

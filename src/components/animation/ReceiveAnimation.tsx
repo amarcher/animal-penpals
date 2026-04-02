@@ -102,6 +102,8 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
     return () => {
       cancelled = true;
       video.pause();
+      video.muted = true;
+      video.volume = 0;
       if (container.contains(video)) container.removeChild(video);
       evictVideo(videoUrl);
     };
