@@ -117,9 +117,6 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
                 Read aloud
               </button>
             )}
-            <button className="reading__action-btn" onClick={onBack} type="button">
-              Choose another animal
-            </button>
           </div>
         </div>
       </div>
