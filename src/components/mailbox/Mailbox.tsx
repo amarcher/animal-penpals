@@ -14,7 +14,9 @@ export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread, selectedAni
   return (
     <div className="mailbox">
       <header className="mailbox__header">
-        <h1 className="mailbox__title">Animal Penpals</h1>
+        <h1 className="mailbox__title">
+          <img src="/logo.png" alt="Animal Penpals" className="mailbox__logo" />
+        </h1>
         <p className="mailbox__subtitle">Pick an animal friend to write to!</p>
       </header>
 
