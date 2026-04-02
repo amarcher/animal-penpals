@@ -1,11 +1,12 @@
 .compose {
-  min-height: 100dvh;
+  height: 100dvh;
   padding: 24px;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow: hidden;
 }
 
 .compose__header {
@@ -46,20 +47,22 @@
   display: flex;
   gap: 24px;
   flex: 1;
+  min-height: 0;
 }
 
 .compose__video-wrap {
   flex: none;
   border-radius: 16px;
   overflow: hidden;
-  align-self: flex-start;
+  align-self: stretch;
 }
 
 .compose__video {
   display: block;
   border-radius: 16px;
-  height: 60vh;
+  height: 100%;
   width: auto;
+  object-fit: cover;
 }
 
 .compose__content {
@@ -68,6 +71,7 @@
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+  min-height: 0;
 }
 
 /* Thread history */
@@ -150,18 +154,21 @@
 
 .compose__paper-lines {
   position: absolute;
-  inset: 0;
+  /* Start the overlay at the first baseline so no stray line appears above
+     the greeting. First baseline = 28px padding + 52px * 0.75 ≈ 67px. */
+  top: 67px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   pointer-events: none;
-  background-image: linear-gradient(
+  background-image: repeating-linear-gradient(
     to bottom,
-    transparent 41px,
-    rgba(0, 0, 0, 0.06) 41px,
-    rgba(0, 0, 0, 0.06) 42px,
-    transparent 42px
+    rgba(0, 0, 0, 0.06) 0px,
+    rgba(0, 0, 0, 0.06) 1px,
+    transparent 1px,
+    transparent 52px
   );
-  background-size: 100% 52px;
-  background-position-y: 28px;
-  border-radius: 12px;
+  border-radius: 0 0 12px 12px;
 }
 
 .compose__greeting {
@@ -191,7 +198,7 @@
 
 /* Actions */
 .compose__actions {
-  padding-bottom: 100px;
+  flex-shrink: 0;
 }
 
 .compose__send {

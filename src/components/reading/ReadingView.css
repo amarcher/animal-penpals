@@ -1,16 +1,18 @@
 .reading {
-  min-height: 100dvh;
+  height: 100dvh;
   padding: 24px;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow: hidden;
 }
 
 .reading__header {
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
 .reading__back {
@@ -38,20 +40,23 @@
 .reading__body {
   display: flex;
   gap: 24px;
+  flex: 1;
+  min-height: 0;
 }
 
 .reading__video-wrap {
   flex: none;
   border-radius: 16px;
   overflow: hidden;
-  align-self: flex-start;
+  align-self: stretch;
 }
 
 .reading__video {
   display: block;
   border-radius: 16px;
-  height: 60vh;
+  height: 100%;
   width: auto;
+  object-fit: cover;
 }
 
 .reading__letter {
@@ -60,18 +65,13 @@
   flex-direction: column;
   gap: 16px;
   min-width: 0;
-}
-
-.reading__from {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .reading__from-name {
-  font-family: 'Patrick Hand', cursive;
-  font-size: 1.6rem;
-  font-weight: 400;
+  font-size: 1.2rem;
+  font-weight: 700;
   color: color-mix(in srgb, var(--animal-color) 80%, black);
 }
 
@@ -118,7 +118,7 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  padding-bottom: 100px;
+  flex-shrink: 0;
 }
 
 .reading__reply {
@@ -180,7 +180,6 @@
 
   .reading__actions {
     flex-direction: column;
-    padding-bottom: 120px;
   }
 
   .reading__reply,
