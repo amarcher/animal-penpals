@@ -100,27 +100,24 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
             />
           </div>
 
-          <div className="reading__tts-controls">
-            {tts.isLoading && (
-              <span className="reading__tts-status">Loading voice...</span>
-            )}
-            {tts.isPlaying && (
-              <button className="reading__tts-btn" onClick={tts.stop} type="button">
-                Pause
-              </button>
-            )}
-            {!tts.isPlaying && !tts.isLoading && (
-              <button className="reading__tts-btn" onClick={handleReplay} type="button">
-                Read aloud
-              </button>
-            )}
-          </div>
-
           <div className="reading__actions">
             <button className="reading__reply" onClick={onReply} type="button">
               Write Back
             </button>
-            <button className="reading__other" onClick={onBack} type="button">
+            {tts.isLoading ? (
+              <button className="reading__action-btn reading__action-btn--loading" type="button" disabled>
+                Loading voice...
+              </button>
+            ) : tts.isPlaying ? (
+              <button className="reading__action-btn" onClick={tts.stop} type="button">
+                Pause
+              </button>
+            ) : (
+              <button className="reading__action-btn" onClick={handleReplay} type="button">
+                Read aloud
+              </button>
+            )}
+            <button className="reading__action-btn" onClick={onBack} type="button">
               Choose another animal
             </button>
           </div>
