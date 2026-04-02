@@ -115,16 +115,16 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
               </button>
             )}
           </div>
-        </div>
-      </div>
 
-      <div className="reading__actions">
-        <button className="reading__reply" onClick={onReply} type="button">
-          Write Back
-        </button>
-        <button className="reading__other" onClick={onBack} type="button">
-          Choose another animal
-        </button>
+          <div className="reading__actions">
+            <button className="reading__reply" onClick={onReply} type="button">
+              Write Back
+            </button>
+            <button className="reading__other" onClick={onBack} type="button">
+              Choose another animal
+            </button>
+          </div>
+        </div>
       </div>
     </motion.div>
   );
