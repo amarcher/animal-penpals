@@ -5,6 +5,8 @@ import { preloadVideo } from '../../utils/videoPreloadCache.ts';
 import type { Thread } from '../../types/app.ts';
 import './ComposeView.css';
 
+const showsVideo = window.matchMedia('(min-width: 701px)');
+
 interface ComposeViewProps {
   animalId: string;
   thread?: Thread;
@@ -92,7 +94,7 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
 
       <div className="compose__body">
         {videoEntry && (
-          <div className="compose__video-wrap" style={{ viewTransitionName: 'animal-video' }}>
+          <div className="compose__video-wrap" style={showsVideo.matches ? { viewTransitionName: 'animal-video' } : undefined}>
             <video
               className="compose__video"
               src={videoEntry.url}
