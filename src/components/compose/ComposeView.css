@@ -155,18 +155,17 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  /* Lines at text baselines: 28px padding + 52px line-height, baseline ~75%.
+     First ruled line at 28 + 52*0.75 ≈ 67px, repeating every 52px.
+     The 1px line is at the start of each 52px tile, offset by 67px. */
   background-image: repeating-linear-gradient(
     to bottom,
-    transparent 0px,
-    transparent 51px,
-    rgba(0, 0, 0, 0.06) 51px,
-    rgba(0, 0, 0, 0.06) 52px
+    rgba(0, 0, 0, 0.06) 0px,
+    rgba(0, 0, 0, 0.06) 1px,
+    transparent 1px,
+    transparent 52px
   );
-  /* Align ruled lines with text baselines. The paper has 28px top padding
-     and text has 52px line-height. The baseline of Patrick Hand sits ~75%
-     through line-height, so the first line should be at 28 + 52*0.75 = 67px.
-     The gradient draws its line at 51px, so offset by 67 - 51 = 16px. */
-  background-position-y: 16px;
+  background-position-y: 67px;
   border-radius: 12px;
 }
 
