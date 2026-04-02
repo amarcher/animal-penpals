@@ -169,27 +169,19 @@ export function AppLayout() {
       })
       .catch(() => "Oh no, my quill broke! I'll write back soon, I promise!");
 
-    // Clear compose video transition name so it fades out with root
+    // Swap view-transition-names before the snapshot so the send-letter
+    // CSS rules match. The unique name "sending-letter" scopes the animation
+    // without needing view transition types.
     const videoWrap = document.querySelector('.compose__video-wrap');
-    if (videoWrap) (videoWrap as HTMLElement).style.viewTransitionName = '';
+    if (videoWrap) (videoWrap as HTMLElement).style.viewTransitionName = 'none';
 
-    // Use manual startViewTransition with types so we can scope the
-    // send-letter CSS via :active-view-transition-type()
-    const animalId = current.animalId;
-    if (document.startViewTransition) {
-      document.startViewTransition({
-        update: () => {
-          goToReceiving(animalId, threadId);
-          // Wait for React to commit the new DOM
-          return new Promise(resolve =>
-            requestAnimationFrame(() => requestAnimationFrame(resolve))
-          );
-        },
-        types: ['send-letter'],
-      });
-    } else {
-      goToReceiving(animalId, threadId);
-    }
+    const composeContent = document.querySelector('.compose__content');
+    if (composeContent) (composeContent as HTMLElement).style.viewTransitionName = 'sending-letter';
+
+    const composeActions = document.querySelector('.compose__actions');
+    if (composeActions) (composeActions as HTMLElement).style.viewTransitionName = 'none';
+
+    goToReceiving(current.animalId, threadId, { viewTransition: true });
   }, [goToReceiving, ctx]);
 
   const handleDraftChange = useCallback((animalId: string, content: string) => {

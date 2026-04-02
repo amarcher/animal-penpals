@@ -132,46 +132,33 @@ body {
 }
 
 /* ── Send Letter transition (compose → receiving) ── */
-/* Uses :active-view-transition-type(send-letter) for proper scoping.
+/* Scoped by the unique "sending-letter" view-transition-name that is only
+   set on compose-content right before navigating to receiving.
    Timeline:
-   0–0.3s:    Root + actions fade out
+   0–0.25s:   Root fades out (video, header, actions disappear)
    0.3–0.7s:  Letter group moves to center of screen
    0.7–1.6s:  Letter does Star Wars rotation/recede into distance
-   1.7–2.3s:  Receive video springs in, root fades in */
+   1.7–2.3s:  Receive page + video spring in */
 
-html:active-view-transition-type(send-letter)::view-transition-old(root) {
-  animation: vt-fade-out 0.3s ease-in forwards;
-}
-
-html:active-view-transition-type(send-letter)::view-transition-new(root) {
-  animation: vt-fade-in 0.4s ease-out 1.7s both;
-}
-
-/* Move the letter group to the center of the viewport after root fades */
-html:active-view-transition-type(send-letter)::view-transition-group(compose-content) {
+/* Letter group moves to center after root fades */
+::view-transition-group(sending-letter) {
   animation: vt-letter-group-center 0.4s ease-out 0.3s both;
   overflow: visible;
 }
 
-/* Letter image: hold still during centering, then Star Wars recede */
-html:active-view-transition-type(send-letter)::view-transition-old(compose-content) {
+/* Letter Star Wars recede into the distance */
+::view-transition-old(sending-letter):only-child {
   animation: vt-letter-send 0.9s ease-in 0.7s both;
 }
 
-/* Hide compose actions with root */
-html:active-view-transition-type(send-letter)::view-transition-old(compose-actions) {
-  animation: vt-fade-out 0.3s ease-in forwards;
+/* Receive page fades in after letter is gone */
+::view-transition-new(receive-page):only-child {
+  animation: vt-fade-in 0.4s ease-out 1.7s both;
 }
 
-/* Receive video: delayed spring pop-in after letter has gone */
-html:active-view-transition-type(send-letter)::view-transition-new(animal-video) {
+/* Receive video: delayed spring pop-in */
+::view-transition-new(animal-video):only-child {
   animation: vt-spring-pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.7s both;
-}
-
-/* Prevent the shared element group morph for the video */
-html:active-view-transition-type(send-letter)::view-transition-group(animal-video) {
-  animation: none;
-  animation-fill-mode: none;
 }
 
 @keyframes vt-letter-group-center {
