@@ -153,11 +153,13 @@
 
 .compose__paper-lines {
   position: absolute;
-  inset: 0;
+  /* Start the overlay at the first baseline so no stray line appears above
+     the greeting. First baseline = 28px padding + 52px * 0.75 ≈ 67px. */
+  top: 67px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   pointer-events: none;
-  /* Lines at text baselines: 28px padding + 52px line-height, baseline ~75%.
-     First ruled line at 28 + 52*0.75 ≈ 67px, repeating every 52px.
-     The 1px line is at the start of each 52px tile, offset by 67px. */
   background-image: repeating-linear-gradient(
     to bottom,
     rgba(0, 0, 0, 0.06) 0px,
@@ -165,8 +167,7 @@
     transparent 1px,
     transparent 52px
   );
-  background-position-y: 67px;
-  border-radius: 12px;
+  border-radius: 0 0 12px 12px;
 }
 
 .compose__greeting {
