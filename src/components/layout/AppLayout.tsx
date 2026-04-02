@@ -173,11 +173,23 @@ export function AppLayout() {
     const videoWrap = document.querySelector('.compose__video-wrap');
     if (videoWrap) (videoWrap as HTMLElement).style.viewTransitionName = '';
 
-    // Tag the transition type for CSS scoping
-    document.documentElement.dataset.vtType = 'send-letter';
-
-    // Navigate directly to receiving (skip sending interstitial)
-    goToReceiving(current.animalId, threadId, { viewTransition: true });
+    // Use manual startViewTransition with types so we can scope the
+    // send-letter CSS via :active-view-transition-type()
+    const animalId = current.animalId;
+    if (document.startViewTransition) {
+      document.startViewTransition({
+        update: () => {
+          goToReceiving(animalId, threadId);
+          // Wait for React to commit the new DOM
+          return new Promise(resolve =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve))
+          );
+        },
+        types: ['send-letter'],
+      });
+    } else {
+      goToReceiving(animalId, threadId);
+    }
   }, [goToReceiving, ctx]);
 
   const handleDraftChange = useCallback((animalId: string, content: string) => {

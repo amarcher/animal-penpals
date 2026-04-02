@@ -1,13 +1,9 @@
-import { useEffect } from 'react';
 import { useParams, Navigate, useOutletContext } from 'react-router';
 import { ReceiveAnimation } from '../components/animation/ReceiveAnimation.tsx';
 import { useTransitionContext } from '../contexts/TransitionContext.tsx';
 import type { AppOutletContext } from '../types/outlet.ts';
 
 export function ReceivingRoute() {
-  useEffect(() => {
-    delete document.documentElement.dataset.vtType;
-  }, []);
   const { animalId, threadId } = useParams<{ animalId: string; threadId: string }>();
   const { handleReceiveComplete } = useOutletContext<AppOutletContext>();
   const { responsePromiseRef } = useTransitionContext();
