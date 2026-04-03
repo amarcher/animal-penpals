@@ -39,6 +39,9 @@ public/animal-videos/*.mp4
 # Claude worktrees
 .claude/worktrees/
 
+# Marketing plans (strategy — not for public repos)
+MARKETING-PLAN.md
+
 # Vercel
 .vercel/
 .vercel
