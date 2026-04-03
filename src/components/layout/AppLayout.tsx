@@ -8,6 +8,7 @@ import { useTransitionContext } from '../../contexts/TransitionContext.tsx';
 import { getAnimalById } from '../../data/animals.ts';
 import { prefetchTts } from '../../utils/ttsPrefetchCache.ts';
 import { VoiceAgent } from '../ui/VoiceAgent.tsx';
+import { trackAnimalSelected, trackLetterSent, trackLetterReceived, trackTtsPlaybackStarted } from '../../utils/analytics.ts';
 import type { AppOutletContext } from '../../types/outlet.ts';
 
 export function AppLayout() {
@@ -34,6 +35,7 @@ export function AppLayout() {
   const ttsSeq = useRef(0);
 
   const handleSelectAnimal = useCallback((animalId: string) => {
+    trackAnimalSelected(animalId);
     ctx.setSelectedAnimalId(animalId);
     const existingThread = storeRef.current.getThreadByAnimal(animalId);
     const animalLetterCount = existingThread?.letters.filter(l => l.from === 'animal').length ?? 0;
@@ -90,6 +92,7 @@ export function AppLayout() {
   const handleTtsAutoPlayStarted = useCallback(() => {
     const current = navRef.current;
     if (current.view !== 'reading') return;
+    trackTtsPlaybackStarted(current.animalId);
     voice.muteAgent();
     const letter = storeRef.current.getLetterById(current.letterId);
     const content = letter?.content ?? ctx.pendingResponseRef.current;
@@ -138,6 +141,8 @@ export function AppLayout() {
   const handleComposeSend = useCallback((content: string) => {
     const current = navRef.current;
     if (current.view !== 'compose') return;
+
+    trackLetterSent(current.animalId, content.length, !!current.threadId);
 
     // Clear stale pending response from previous send
     ctx.pendingResponseRef.current = null;
@@ -202,6 +207,7 @@ export function AppLayout() {
   const handleReceiveComplete = useCallback((animalResponse: string) => {
     const current = navRef.current;
     if (current.view !== 'receiving') return;
+    trackLetterReceived(current.animalId);
     const { letterId } = storeRef.current.addLetter(current.animalId, 'animal', animalResponse, current.threadId);
     ctx.pendingResponseRef.current = animalResponse;
     ctx.setPendingResponse(animalResponse);

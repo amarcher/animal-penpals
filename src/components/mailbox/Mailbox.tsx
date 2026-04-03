@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { animals } from '../../data/animals.ts';
+import { trackMailboxOpened } from '../../utils/analytics.ts';
 import { AnimalCard } from './AnimalCard.tsx';
 import './Mailbox.css';
 
@@ -11,6 +13,8 @@ interface MailboxProps {
 }
 
 export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread, selectedAnimalId }: MailboxProps) {
+  useEffect(() => { trackMailboxOpened(); }, []);
+
   return (
     <div className="mailbox">
       <header className="mailbox__header">
