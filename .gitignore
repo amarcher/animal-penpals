@@ -42,6 +42,9 @@ public/animal-videos/*.mp4
 # Marketing plans (strategy — not for public repos)
 MARKETING-PLAN.md
 
+# Generated animal landing pages (built from src/data/animals.ts)
+public/animals/
+
 # Vercel
 .vercel/
 .vercel

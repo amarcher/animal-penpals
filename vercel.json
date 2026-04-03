@@ -1,4 +1,4 @@
 {
   "framework": "vite",
-  "rewrites": [{ "source": "/((?!api/|sitemap\\.xml|robots\\.txt).*)", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/((?!api/|animals/|sitemap\\.xml|robots\\.txt).*)", "destination": "/index.html" }]
 }
