@@ -91,7 +91,7 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
       if (!cancelled) onComplete(animalResponse);
     });
 
-    // Mount the (already-buffered) element into the DOM
+    // Mount the (already-buffered) element into the DOM but don't play yet
     container.appendChild(video);
 
     const attemptPlay = () => {
@@ -100,17 +100,32 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
       });
     };
 
-    // If already buffered, play immediately; otherwise wait for canplay
-    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-      setReady(true);
-      attemptPlay();
-    } else {
-      const onCanPlay = () => {
+    const startPlaybackWhenReady = () => {
+      if (cancelled) return;
+      // If already buffered, play immediately; otherwise wait for canplay
+      if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
         setReady(true);
         attemptPlay();
-        video.removeEventListener('canplay', onCanPlay);
-      };
-      video.addEventListener('canplay', onCanPlay);
+      } else {
+        const onCanPlay = () => {
+          setReady(true);
+          attemptPlay();
+          video.removeEventListener('canplay', onCanPlay);
+        };
+        video.addEventListener('canplay', onCanPlay);
+      }
+    };
+
+    // Wait for any active view transition to finish before playing,
+    // so the video doesn't start while the compose exit animation is still running.
+    // View transition animations run on ::view-transition pseudo-elements.
+    const vtAnimations = document.getAnimations?.()?.filter(
+      a => a.effect instanceof KeyframeEffect && a.effect.pseudoElement?.startsWith('::view-transition')
+    ) ?? [];
+    if (vtAnimations.length > 0) {
+      Promise.allSettled(vtAnimations.map(a => a.finished)).then(startPlaybackWhenReady);
+    } else {
+      startPlaybackWhenReady();
     }
 
     return () => {
