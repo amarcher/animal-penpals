@@ -54,6 +54,10 @@ function AnimalLandingHead({ animal }: Props) {
         gtag('config', 'G-HVZKSLGSF0');
       ` }} />
 
+      {/* Instant redirect to the compose view for real users */}
+      <meta httpEquiv="refresh" content={`0;url=/compose/${animal.id}`} />
+      <script dangerouslySetInnerHTML={{ __html: `window.location.replace('/compose/${animal.id}');` }} />
+
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'WebPage',
@@ -74,83 +78,24 @@ function AnimalLandingHead({ animal }: Props) {
       }) }} />
 
       <style dangerouslySetInnerHTML={{ __html: `
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          background: #faf5ef;
-          color: #3a3226;
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        .landing { max-width: 640px; width: 100%; padding: 2rem 1.5rem; text-align: center; }
-        .landing__back { display: inline-block; margin-bottom: 1.5rem; color: #8b7d6b; text-decoration: none; font-size: 0.9rem; }
-        .landing__back:hover { text-decoration: underline; }
-        .landing__emoji { font-size: 5rem; line-height: 1; margin-bottom: 1rem; }
-        .landing__name { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; color: ${animal.color}; }
-        .landing__species { font-size: 1rem; color: #8b7d6b; margin-bottom: 1.5rem; }
-        .landing__greeting {
-          font-size: 1.15rem; line-height: 1.6; background: white; border-radius: 16px;
-          padding: 1.5rem; margin-bottom: 1.5rem; border: 2px solid ${animal.color}33; font-style: italic;
-        }
-        .landing__traits { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 2rem; }
-        .landing__trait {
-          background: ${animal.color}1a; color: ${animal.color}; border: 1px solid ${animal.color}44;
-          border-radius: 999px; padding: 0.4rem 1rem; font-size: 0.9rem; font-weight: 500;
-        }
-        .landing__cta {
-          display: inline-block; background: ${animal.color}; color: white; text-decoration: none;
-          font-size: 1.2rem; font-weight: 600; padding: 1rem 2.5rem; border-radius: 999px;
-          transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 4px 12px ${animal.color}44;
-        }
-        .landing__cta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px ${animal.color}55; }
-        .landing__about { margin-top: 2.5rem; font-size: 0.95rem; line-height: 1.6; color: #6b5e4f; }
-        .landing__about p { margin-bottom: 0.75rem; }
-        .landing__about a { color: ${animal.color}; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #faf5ef; color: #3a3226; text-align: center; padding: 2rem; }
+        a { color: ${animal.color}; }
       ` }} />
     </head>
   );
 }
 
 function AnimalLandingBody({ animal }: Props) {
-  const firstName = animal.name.split(' ')[0];
-
   return (
     <body>
-      <main className="landing">
-        <a href="/" className="landing__back">&larr; All Animal Penpals</a>
-        <div className="landing__emoji">{animal.emoji}</div>
-        <h1 className="landing__name">{animal.name}</h1>
-        <p className="landing__species">{animal.species}</p>
-
-        <blockquote className="landing__greeting">
-          &ldquo;{animal.greeting}&rdquo;
-        </blockquote>
-
-        <ul className="landing__traits">
-          {animal.traits.map(trait => (
-            <li key={trait} className="landing__trait">{trait}</li>
-          ))}
-        </ul>
-
-        <a href={`/compose/${animal.id}`} className="landing__cta">
-          Write to {firstName}
-        </a>
-
-        <div className="landing__about">
-          <p>
-            {animal.name} is {animal.personality}. Write a letter and {firstName} will
-            write back in character, with the reply read aloud word by word so kids can
-            follow along.
-          </p>
-          <p>
-            A voice writing coach named Scribbles can help kids who get stuck composing
-            their letter.
-          </p>
-          <p><a href="/">Meet all 12 animal penpals &rarr;</a></p>
-        </div>
-      </main>
+      {/* Minimal body for crawlers / noscript fallback — users get redirected instantly */}
+      <noscript>
+        <h1>Write to {animal.name}</h1>
+        <p>{animal.name} is {animal.personality}.</p>
+        <p>{animal.greeting}</p>
+        <p><a href={`/compose/${animal.id}`}>Write to {animal.name} &rarr;</a></p>
+        <p><a href="/">Meet all 12 animal penpals</a></p>
+      </noscript>
     </body>
   );
 }
