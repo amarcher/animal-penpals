@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useConversation } from '@elevenlabs/react';
-import type { AppState } from '../types/app.ts';
+import type { AppState, Thread } from '../types/app.ts';
 import { animals, getAnimalById } from '../data/animals.ts';
+
+export interface SessionContext {
+  nav: AppState;
+  draft: string;
+  thread: Thread | undefined;
+}
 
 interface ConversationCallbacks {
   onSelectAnimal: (animalId: string) => void;
@@ -10,18 +16,19 @@ interface ConversationCallbacks {
   onWriteText: (text: string) => void;
   onReadAloud: () => string;
   onReadPreviousLetter: (letterIndex: number) => string;
+  getSessionContext: () => SessionContext;
 }
 
 export type VoiceStatus = 'off' | 'connecting' | 'connected' | 'error';
 export type MicError = 'timeout' | 'not-allowed' | 'device' | 'no-input' | null;
 
-export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMailbox, onWriteText, onReadAloud, onReadPreviousLetter }: ConversationCallbacks) {
+export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMailbox, onWriteText, onReadAloud, onReadPreviousLetter, getSessionContext }: ConversationCallbacks) {
   const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID as string | undefined;
   const [sessionStarted, setSessionStarted] = useState(false);
   const [micError, setMicError] = useState<MicError>(null);
   const [agentVolume, setAgentVolume] = useState(1);
   const muteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingNavRef = useRef<AppState | null>(null);
+  const pendingContextRef = useRef<string | null>(null);
   const currentNavRef = useRef<string | null>(null);
   const inputVolumeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -58,10 +65,9 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
       },
     },
     onConnect: () => {
-      if (pendingNavRef.current) {
-        const ctx = buildContextForView(pendingNavRef.current);
-        if (ctx) conversation.sendContextualUpdate(ctx);
-        pendingNavRef.current = null;
+      if (pendingContextRef.current) {
+        conversation.sendContextualUpdate(pendingContextRef.current);
+        pendingContextRef.current = null;
       }
     },
     onError: (error: unknown) => {
@@ -132,32 +138,41 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
     setSessionStarted(true);
 
     try {
+      const sessionCtx = getSessionContext();
+      const firstMessage = buildFirstMessage(sessionCtx);
+      pendingContextRef.current = buildRichContext(sessionCtx);
+
       await conversation.startSession({
         agentId,
         connectionType: 'websocket',
+        overrides: {
+          agent: {
+            ...(firstMessage ? { firstMessage } : {}),
+          },
+        },
       });
     } catch (err) {
       console.error('[VoiceAgent] startSession failed:', err);
       setSessionStarted(false);
     }
-  }, [agentId, sessionStarted, conversation]);
+  }, [agentId, sessionStarted, conversation, getSessionContext]);
 
   const clearMicError = useCallback(() => setMicError(null), []);
 
-  const notifyViewChange = useCallback((nav: AppState) => {
+  const notifyViewChange = useCallback((nav: AppState, thread?: Thread, draft?: string) => {
     if (!agentId) return;
 
     const key = JSON.stringify(nav);
     if (currentNavRef.current === key) return;
     currentNavRef.current = key;
 
-    const ctx = buildContextForView(nav);
+    const ctx = buildRichContext({ nav, draft: draft ?? '', thread });
     if (!ctx) return;
 
     if (conversation.status === 'connected') {
       conversation.sendContextualUpdate(ctx);
     } else {
-      pendingNavRef.current = nav;
+      pendingContextRef.current = ctx;
     }
   }, [agentId, conversation]);
 
@@ -246,8 +261,48 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
   };
 }
 
-function buildContextForView(nav: AppState): string | null {
-  switch (nav.view) {
+export function formatConversationHistory(thread: Thread | undefined, animalName: string): string | null {
+  if (!thread || thread.letters.length === 0) return null;
+  const lines = [`[CONVERSATION HISTORY with ${animalName}]`];
+  for (const letter of thread.letters) {
+    const sender = letter.from === 'child' ? 'Child' : animalName;
+    lines.push(`${sender}: "${letter.content}"`);
+  }
+  return lines.join('\n');
+}
+
+export function buildFirstMessage(ctx: SessionContext): string | null {
+  switch (ctx.nav.view) {
+    case 'mailbox':
+      return "Hey, I'm back! Which animal friend should we write to?";
+    case 'compose': {
+      const animal = getAnimalById(ctx.nav.animalId);
+      if (!animal) return null;
+      if (ctx.draft) {
+        return `Welcome back! I see you're writing to ${animal.name}. Your letter's coming along — want some help with it?`;
+      }
+      if (ctx.thread && ctx.thread.letters.length > 0) {
+        return `Hey! Ready to write back to ${animal.name}? I remember what you two have been talking about!`;
+      }
+      return `Hi there! Let's write a letter to ${animal.name}! What would you like to say?`;
+    }
+    case 'sending': {
+      const animal = getAnimalById(ctx.nav.animalId);
+      if (!animal) return null;
+      return `Ooh, your letter to ${animal.name} is on its way! I wonder what they'll say back!`;
+    }
+    case 'reading': {
+      const animal = getAnimalById(ctx.nav.animalId);
+      if (!animal) return null;
+      return `Oh look, a letter from ${animal.name}! Want me to read it to you?`;
+    }
+    default:
+      return null;
+  }
+}
+
+export function buildRichContext(ctx: SessionContext): string | null {
+  switch (ctx.nav.view) {
     case 'mailbox':
       return [
         '[MAILBOX] The child is at the animal selection screen.',
@@ -255,31 +310,46 @@ function buildContextForView(nav: AppState): string | null {
         'Encourage them to pick an animal to write to!',
       ].join('\n');
     case 'compose': {
-      const animal = getAnimalById(nav.animalId);
+      const animal = getAnimalById(ctx.nav.animalId);
       if (!animal) return null;
       const lines = [
         `[COMPOSE] The child is writing a letter to ${animal.name} (${animal.species}).`,
         `${animal.name}'s personality: ${animal.personality}`,
-        'Help them write their letter! Suggest fun things to ask or share.',
-        'When they seem done, suggest sending it.',
       ];
-      if (nav.threadId && nav.animalLetterCount && nav.animalLetterCount > 0) {
-        lines.push(`There are ${nav.animalLetterCount} previous letter(s) from ${animal.name} in the conversation history. Use read_previous_letter to open one if the child wants to re-read or hear a previous response.`);
+      const history = formatConversationHistory(ctx.thread, animal.name);
+      if (history) {
+        lines.push('', history, '');
+        lines.push(`Use this conversation history to help the child continue their pen pal relationship. Reference things they've talked about before!`);
+      }
+      if (ctx.draft) {
+        lines.push(`Current draft: "${ctx.draft}"`);
+        lines.push('Help them continue or improve their letter.');
+      } else {
+        lines.push('The letter is empty — help them get started! Suggest fun things to ask or share.');
+      }
+      lines.push('When they seem done, suggest sending it.');
+      if (ctx.nav.threadId && ctx.nav.animalLetterCount && ctx.nav.animalLetterCount > 0) {
+        lines.push(`Use read_previous_letter to open a previous response if the child wants to re-read or hear one.`);
       }
       return lines.join('\n');
     }
     case 'sending': {
-      const animal = getAnimalById(nav.animalId);
+      const animal = getAnimalById(ctx.nav.animalId);
       if (!animal) return null;
       return `[SENDING] The letter to ${animal.name} is flying away! Build excitement about what ${animal.name} will write back.`;
     }
     case 'reading': {
-      const animal = getAnimalById(nav.animalId);
+      const animal = getAnimalById(ctx.nav.animalId);
       if (!animal) return null;
-      return [
+      const lines = [
         `[READING] The child is reading a letter from ${animal.name}.`,
-        'Let them enjoy reading. If they want, they can write back or choose a different animal.',
-      ].join('\n');
+      ];
+      const history = formatConversationHistory(ctx.thread, animal.name);
+      if (history) {
+        lines.push('', history, '');
+      }
+      lines.push('Let them enjoy reading. If they want, they can write back or choose a different animal.');
+      return lines.join('\n');
     }
     default:
       return null;
