@@ -17,7 +17,7 @@
 .mailbox__logo {
   max-width: min(600px, 90vw);
   height: auto;
-  aspect-ratio: 1728 / 228;
+  aspect-ratio: 1200 / 177;
 }
 
 .mailbox__subtitle {
