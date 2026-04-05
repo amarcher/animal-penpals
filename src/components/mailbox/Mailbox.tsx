@@ -28,8 +28,8 @@ export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread, selectedAni
         {animals.map((animal, i) => (
           <motion.div
             key={animal.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: i * 0.06, duration: 0.4 }}
           >
             <AnimalCard
