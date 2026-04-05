@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useNavigation } from '../../hooks/useNavigation.ts';
 import { useLetterStore } from '../../hooks/useLetterStore.ts';
 import { usePenpalConversation } from '../../hooks/usePenpalConversation.ts';
@@ -274,6 +275,7 @@ export function AppLayout() {
       )}
 
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }

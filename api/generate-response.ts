@@ -1,5 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Anthropic from '@anthropic-ai/sdk';
+import { neon } from '@neondatabase/serverless';
+
+function logUsage(tokensIn: number, tokensOut: number, model: string, animalId: string) {
+  const dbUrl = process.env.DASHBOARD_DATABASE_URL;
+  if (!dbUrl) return;
+  const sql = neon(dbUrl);
+  sql`INSERT INTO api_usage (project, service, endpoint, tokens_in, tokens_out, model, metadata)
+    VALUES ('animal-penpals', 'anthropic', 'generate-response', ${tokensIn}, ${tokensOut}, ${model}, ${JSON.stringify({ animalId })})`.catch((e) =>
+    console.error('[generate-response] usage log failed:', e)
+  );
+}
 
 interface AnimalDef {
   id: string;
@@ -78,6 +89,7 @@ them. The tags produce actual vocal sounds — they are not displayed as text.`;
     });
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
+    logUsage(response.usage.input_tokens, response.usage.output_tokens, 'claude-sonnet-4-20250514', animalId);
     return res.status(200).json({ response: text });
   } catch (err) {
     console.error('[generate-response] error:', err);

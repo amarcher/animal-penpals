@@ -14,7 +14,9 @@
   },
   "dependencies": {
     "@elevenlabs/react": "^0.14.2",
+    "@neondatabase/serverless": "^1.0.2",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "framer-motion": "^12.36.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
