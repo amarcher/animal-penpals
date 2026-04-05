@@ -138,18 +138,19 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
     setSessionStarted(true);
 
     try {
-      const sessionCtx = getSessionContext();
-      const firstMessage = buildFirstMessage(sessionCtx);
-      pendingContextRef.current = buildRichContext(sessionCtx);
+      let firstMessage: string | null = null;
+      try {
+        const sessionCtx = getSessionContext();
+        firstMessage = buildFirstMessage(sessionCtx);
+        pendingContextRef.current = buildRichContext(sessionCtx);
+      } catch (e) {
+        console.warn('[VoiceAgent] failed to build session context:', e);
+      }
 
       await conversation.startSession({
         agentId,
         connectionType: 'websocket',
-        overrides: {
-          agent: {
-            ...(firstMessage ? { firstMessage } : {}),
-          },
-        },
+        ...(firstMessage ? { overrides: { agent: { firstMessage } } } : {}),
       });
     } catch (err) {
       console.error('[VoiceAgent] startSession failed:', err);
