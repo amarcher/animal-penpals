@@ -81,6 +81,20 @@ export function AppLayout() {
     return `Opening letter #${letterIndex} from the animal. The child can read it and use "Write Back" to return to composing.`;
   }, [goToReading]);
 
+  const getSessionContext = useCallback(() => {
+    const current = navRef.current;
+    const animalId = 'animalId' in current ? current.animalId : undefined;
+    const threadId = 'threadId' in current ? current.threadId : undefined;
+    const thread = threadId ? storeRef.current.getThread(threadId)
+      : animalId ? storeRef.current.getThreadByAnimal(animalId)
+      : undefined;
+    return {
+      nav: current,
+      draft: ctx.currentDraftRef.current ?? '',
+      thread,
+    };
+  }, [ctx.currentDraftRef]);
+
   const voice = usePenpalConversation({
     onSelectAnimal: handleSelectAnimal,
     onSendLetter: handleSendLetter,
@@ -88,6 +102,7 @@ export function AppLayout() {
     onWriteText: handleWriteText,
     onReadAloud: handleReadAloud,
     onReadPreviousLetter: handleReadPreviousLetter,
+    getSessionContext,
   });
 
   const handleTtsAutoPlayStarted = useCallback(() => {
@@ -114,7 +129,12 @@ export function AppLayout() {
 
   // Notify agent of view changes
   useEffect(() => {
-    voice.notifyViewChange(nav);
+    const animalId = 'animalId' in nav ? nav.animalId : undefined;
+    const threadId = 'threadId' in nav ? nav.threadId : undefined;
+    const thread = threadId ? store.getThread(threadId)
+      : animalId ? store.getThreadByAnimal(animalId)
+      : undefined;
+    voice.notifyViewChange(nav, thread, ctx.currentDraftRef.current ?? '');
     if (nav.view === 'compose') {
       ctx.currentDraftRef.current = '';
     }
