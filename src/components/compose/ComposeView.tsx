@@ -98,6 +98,7 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
             <video
               className="compose__video"
               src={videoEntry.url}
+              poster={videoEntry.poster}
               autoPlay
               muted
               loop

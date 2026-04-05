@@ -19,7 +19,7 @@ export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread, selectedAni
     <div className="mailbox">
       <header className="mailbox__header">
         <h1 className="mailbox__title">
-          <img src="/logo.png" alt="Animal Penpals" className="mailbox__logo" />
+          <img src={`${import.meta.env.VITE_VIDEO_CDN_URL || ''}/logo-wide.png`} alt="Animal Penpals" className="mailbox__logo" width="1731" height="136" />
         </h1>
         <p className="mailbox__subtitle">Pick an animal friend to write to!</p>
       </header>
