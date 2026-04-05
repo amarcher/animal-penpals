@@ -62,6 +62,7 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
           <video
             className="animal-card__video"
             src={videoEntry.url}
+            poster={videoEntry.poster}
             autoPlay
             muted
             loop
