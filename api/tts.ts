@@ -1,4 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { neon } from '@neondatabase/serverless';
+
+function logUsage(characters: number, voiceId: string) {
+  const dbUrl = process.env.DASHBOARD_DATABASE_URL;
+  if (!dbUrl) return;
+  const sql = neon(dbUrl);
+  sql`INSERT INTO api_usage (project, service, endpoint, characters, metadata)
+    VALUES ('animal-penpals', 'elevenlabs', 'tts', ${characters}, ${JSON.stringify({ voiceId })})`.catch((e) =>
+    console.error('[tts] usage log failed:', e)
+  );
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -40,6 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const data = await response.json();
+    logUsage(text.length, voiceId);
     return res.status(200).json(data);
   } catch (err) {
     console.error('[tts] error:', err);
