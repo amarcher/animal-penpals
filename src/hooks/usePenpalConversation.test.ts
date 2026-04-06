@@ -51,7 +51,7 @@ describe('buildFirstMessage', () => {
     expect(msg).toContain('animal friend');
   });
 
-  it('returns compose greeting for new letter (no thread)', () => {
+  it('returns compose greeting with transcription instructions (no thread)', () => {
     const ctx: SessionContext = {
       nav: { view: 'compose', animalId: 'elephant' },
       draft: '',
@@ -59,7 +59,7 @@ describe('buildFirstMessage', () => {
     };
     const msg = buildFirstMessage(ctx);
     expect(msg).toContain('Ella the Elephant');
-    expect(msg).toContain('write a letter');
+    expect(msg).toContain('send it');
   });
 
   it('returns compose greeting referencing existing draft', () => {
@@ -70,7 +70,7 @@ describe('buildFirstMessage', () => {
     };
     const msg = buildFirstMessage(ctx);
     expect(msg).toContain('Ella the Elephant');
-    expect(msg).toContain('coming along');
+    expect(msg).toContain('listening');
   });
 
   it('returns compose greeting referencing prior conversation', () => {
@@ -85,7 +85,7 @@ describe('buildFirstMessage', () => {
     };
     const msg = buildFirstMessage(ctx);
     expect(msg).toContain('Ella the Elephant');
-    expect(msg).toContain('remember');
+    expect(msg).toContain('send it');
   });
 
   it('returns sending greeting', () => {
@@ -96,7 +96,7 @@ describe('buildFirstMessage', () => {
     };
     const msg = buildFirstMessage(ctx);
     expect(msg).toContain('Ella the Elephant');
-    expect(msg).toContain('on its way');
+    expect(msg).toContain('write back');
   });
 
   it('returns reading greeting', () => {
@@ -128,7 +128,7 @@ describe('buildRichContext', () => {
     expect(result).toContain('Ella');
   });
 
-  it('includes personality for compose view', () => {
+  it('includes transcription mode for compose view', () => {
     const ctx: SessionContext = {
       nav: { view: 'compose', animalId: 'elephant' },
       draft: '',
@@ -136,8 +136,8 @@ describe('buildRichContext', () => {
     };
     const result = buildRichContext(ctx);
     expect(result).toContain('[COMPOSE]');
-    expect(result).toContain('personality');
-    expect(result).toContain('empty');
+    expect(result).toContain('TRANSCRIPTION MODE');
+    expect(result).toContain('write_text');
   });
 
   it('includes draft content in compose context', () => {
@@ -148,7 +148,6 @@ describe('buildRichContext', () => {
     };
     const result = buildRichContext(ctx);
     expect(result).toContain('Current draft: "I love elephants!"');
-    expect(result).toContain('continue or improve');
   });
 
   it('includes conversation history in compose context', () => {
@@ -183,7 +182,7 @@ describe('buildRichContext', () => {
     expect(result).toContain('[CONVERSATION HISTORY with Ella the Elephant]');
   });
 
-  it('returns sending context', () => {
+  it('returns sending context that tells agent to wait', () => {
     const ctx: SessionContext = {
       nav: { view: 'sending', animalId: 'elephant', threadId: 't1', letterContent: 'Hi!' },
       draft: '',
@@ -192,6 +191,8 @@ describe('buildRichContext', () => {
     const result = buildRichContext(ctx);
     expect(result).toContain('[SENDING]');
     expect(result).toContain('Ella the Elephant');
+    expect(result).toContain('STAY QUIET');
+    expect(result).toContain('Do NOT suggest');
   });
 
   it('returns null for unknown animal in compose', () => {

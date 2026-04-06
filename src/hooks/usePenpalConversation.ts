@@ -280,17 +280,17 @@ export function buildFirstMessage(ctx: SessionContext): string | null {
       const animal = getAnimalById(ctx.nav.animalId);
       if (!animal) return null;
       if (ctx.draft) {
-        return `Welcome back! I see you're writing to ${animal.name}. Your letter's coming along — want some help with it?`;
+        return `I see you're writing to ${animal.name}. Go ahead, I'm listening! Tell me when you want to send it.`;
       }
       if (ctx.thread && ctx.thread.letters.length > 0) {
-        return `Hey! Ready to write back to ${animal.name}? I remember what you two have been talking about!`;
+        return `Let's write back to ${animal.name}! Just tell me what you want to say and I'll write it down. Say "send it" when you're done!`;
       }
-      return `Hi there! Let's write a letter to ${animal.name}! What would you like to say?`;
+      return `Let's write to ${animal.name}! Just say what you want to tell them and I'll write it down. Say "send it" when you're done!`;
     }
     case 'sending': {
       const animal = getAnimalById(ctx.nav.animalId);
       if (!animal) return null;
-      return `Ooh, your letter to ${animal.name} is on its way! I wonder what they'll say back!`;
+      return `Off it goes! I wonder what ${animal.name} will write back!`;
     }
     case 'reading': {
       const animal = getAnimalById(ctx.nav.animalId);
@@ -315,29 +315,27 @@ export function buildRichContext(ctx: SessionContext): string | null {
       if (!animal) return null;
       const lines = [
         `[COMPOSE] The child is writing a letter to ${animal.name} (${animal.species}).`,
+        `TRANSCRIPTION MODE: Write everything the child says using write_text. Do NOT ask for confirmation. Do NOT repeat back what they said. Just write it and stay quiet.`,
+        `Only speak during long pauses to ask "Anything else, or should I send it?"`,
         `${animal.name}'s personality: ${animal.personality}`,
       ];
       const history = formatConversationHistory(ctx.thread, animal.name);
       if (history) {
         lines.push('', history, '');
-        lines.push(`Use this conversation history to help the child continue their pen pal relationship. Reference things they've talked about before!`);
+        lines.push(`Use this history for context only if the child asks for help with ideas.`);
       }
       if (ctx.draft) {
         lines.push(`Current draft: "${ctx.draft}"`);
-        lines.push('Help them continue or improve their letter.');
-      } else {
-        lines.push('The letter is empty — help them get started! Suggest fun things to ask or share.');
       }
-      lines.push('When they seem done, suggest sending it.');
       if (ctx.nav.threadId && ctx.nav.animalLetterCount && ctx.nav.animalLetterCount > 0) {
-        lines.push(`Use read_previous_letter to open a previous response if the child wants to re-read or hear one.`);
+        lines.push(`Use read_previous_letter if the child asks to re-read a previous response.`);
       }
       return lines.join('\n');
     }
     case 'sending': {
       const animal = getAnimalById(ctx.nav.animalId);
       if (!animal) return null;
-      return `[SENDING] The letter to ${animal.name} is flying away! Build excitement about what ${animal.name} will write back.`;
+      return `[SENDING] The letter to ${animal.name} is flying away! Say something brief and excited, then STAY QUIET. ${animal.name}'s response is coming in a few seconds. Do NOT suggest going to the mailbox or picking another animal. Just wait.`;
     }
     case 'reading': {
       const animal = getAnimalById(ctx.nav.animalId);
