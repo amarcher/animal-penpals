@@ -2,14 +2,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 20px 0;
+  gap: 8px;
 }
 
 .voice-agent__orb-container {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,8 +20,8 @@
   padding: 0;
   font: inherit;
   outline: 2px solid transparent;
-  width: 64px;
-  height: 64px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: radial-gradient(
     circle at 35% 35%,
@@ -36,15 +35,16 @@
   z-index: 1;
   transition: transform 0.2s;
   box-shadow:
-    0 0 20px hsla(160, 55%, 42%, 0.3),
-    0 0 40px hsla(160, 55%, 42%, 0.15);
+    0 0 14px hsla(160, 55%, 42%, 0.3),
+    0 0 28px hsla(160, 55%, 42%, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .voice-agent__orb:hover {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .voice-agent__orb:focus-visible {
@@ -67,7 +67,7 @@
 /* Speaking wave rings */
 .voice-agent__wave {
   position: absolute;
-  inset: -8px;
+  inset: -6px;
   border-radius: 50%;
   border: 2px solid hsl(160, 55%, 42%);
   opacity: 0;
@@ -86,17 +86,9 @@
   animation: wave-expand 1.5s ease-out infinite 1s;
 }
 
-.voice-agent__status {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.45);
-  letter-spacing: 0.05em;
-  text-align: center;
-}
-
-.voice-agent__mic-icon {
-  width: 24px;
-  height: 24px;
-  fill: rgba(255, 255, 255, 0.9);
+.voice-agent__sparkle-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .voice-agent__error {
@@ -107,8 +99,8 @@
   padding: 0;
   font: inherit;
   cursor: pointer;
-  max-width: 300px;
-  font-size: 0.75rem;
+  max-width: 240px;
+  font-size: 0.7rem;
   color: #e74c3c;
   text-align: center;
   line-height: 1.4;
@@ -135,18 +127,23 @@
 
 @keyframes wave-expand {
   0% { transform: scale(1); opacity: 0.5; }
-  100% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2); opacity: 0; }
 }
 
 @media (max-width: 560px) {
   .voice-agent__orb {
-    width: 56px;
-    height: 56px;
+    width: 40px;
+    height: 40px;
   }
 
   .voice-agent__orb-container {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .voice-agent__sparkle-icon {
+    width: 18px;
+    height: 18px;
   }
 }
 
