@@ -55,16 +55,15 @@
   flex: none;
   border-radius: 16px;
   overflow: hidden;
-  align-self: start;
+  align-self: stretch;
 }
 
 .compose__video {
   display: block;
   border-radius: 16px;
-  max-height: 40dvh;
-  height: auto;
+  height: 100%;
   width: auto;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .compose__content {
