@@ -46,7 +46,7 @@
 /* Side-by-side: video + letter */
 .compose__body {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   flex: 1;
   min-height: 0;
 }
@@ -201,6 +201,7 @@
 /* Actions */
 .compose__actions {
   flex-shrink: 0;
+  display: flex;
   view-transition-name: compose-actions;
 }
 
@@ -209,12 +210,12 @@
   -webkit-appearance: none;
   font: inherit;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  width: 100%;
-  padding: 14px 0;
+  margin-left: auto;
+  padding: 14px 28px;
   border-radius: 14px;
   border: none;
   background: var(--animal-color);
@@ -248,7 +249,7 @@
   }
 
   .compose__actions {
-    padding-bottom: 120px;
+    padding-bottom: 0;
   }
 }
 

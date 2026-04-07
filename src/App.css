@@ -29,15 +29,15 @@ body {
 /* Floating voice agent orb */
 .app__voice-float {
   position: fixed;
-  bottom: 28px;
-  right: 28px;
+  top: 20px;
+  right: 20px;
   z-index: 120;
 }
 
 @media (max-width: 560px) {
   .app__voice-float {
-    bottom: 16px;
-    right: 16px;
+    top: 12px;
+    right: 12px;
   }
 }
 
