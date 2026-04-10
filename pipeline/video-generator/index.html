@@ -899,32 +899,13 @@ const VIDEO_PROMPTS = {
   }
 };
 
-// Transition prompts for storyboard extend pipeline (between adjacent beats)
-const STORYBOARD_TRANSITIONS = {
-  swan: [
-    'A photorealistic Mute Swan on a calm lake gracefully lowers its neck to examine a piece of paper floating on the water, gently nudging it with its orange-black bill. Golden hour lighting. Wildlife footage.',
-    'A photorealistic Mute Swan on a calm lake with its head lowered, intently reading a letter on the water surface. Its neck curves into an elegant S-shape as it studies the paper. Golden hour lighting. Wildlife footage.',
-    'A photorealistic Mute Swan on a calm lake presses its bill against a piece of paper on the water, carefully writing a reply letter. Its neck curves down gracefully, focused on the paper. Golden hour. Wildlife footage.',
-    'A photorealistic Mute Swan on a calm lake spreads its wings triumphantly, rising up with a proud posture as if having finished writing a response. Wings catch golden light. Wildlife footage.',
-  ],
-  pig: [
-    'A photorealistic Kunekune pig in a grassy paddock trots forward excitedly and lowers its snout to sniff at a piece of paper on the grass. Patchy ginger and white coat. Sunny day. Wildlife footage.',
-    'A photorealistic Kunekune pig in a grassy paddock with its head down, focused on reading a letter on the grass. Attentive expression, ears forward. Patchy ginger and white coat. Sunny day. Wildlife footage.',
-    'A photorealistic Kunekune pig in a grassy paddock with its snout pressed down against a piece of paper on the grass, writing a reply letter. Focused determined expression. Patchy ginger and white coat. Sunny day. Wildlife footage.',
-    'A photorealistic Kunekune pig in a grassy paddock trots forward energetically with a happy proud expression, mouth open in a cheerful snort, as if having finished its response. Sunny day. Wildlife footage.',
-  ],
-  narwhal: [
-    'A photorealistic narwhal at the surface of Arctic waters gently nudges a piece of paper floating on the water with the tip of its spiral tusk. Mottled grey-blue skin. Cold Arctic light. Wildlife footage.',
-    'A photorealistic narwhal at the surface of Arctic waters with its head turned, one eye looking down at a letter floating on the water. Curious intent expression. Spiral tusk visible. Arctic light. Wildlife footage.',
-    'A photorealistic narwhal at the surface of Arctic waters, using the tip of its spiral tusk to press against a piece of paper floating on the water, carefully writing a reply letter. Mottled grey-blue skin. Cold Arctic light. Wildlife footage.',
-    'A photorealistic narwhal breaching slightly at the surface of Arctic waters, creating a splash, looking energetic and triumphant after finishing its response. Spiral tusk catching light. Wildlife footage.',
-  ],
-  axolotl: [
-    'A photorealistic leucistic pink axolotl in clear freshwater paddles over to a piece of paper on the sandy bottom, tiny front legs touching it. Feathery gills fluttering with excitement. Macro aquatic footage.',
-    'A photorealistic leucistic pink axolotl in clear freshwater with head lowered, looking down at a letter on the sandy bottom. Feathery pink-red gills relaxed. Gentle smile. Soft aquatic lighting. Macro footage.',
-    'A photorealistic leucistic pink axolotl in clear freshwater, hovering over a piece of paper on the sandy bottom with one tiny front leg pressed against it, writing a reply letter. Feathery pink-red gills relaxed. Focused smile. Soft aquatic lighting. Macro footage.',
-    'A photorealistic leucistic pink axolotl in clear freshwater swimming forward actively with all four legs extended, gills streaming behind, looking energetic and happy. Dynamic macro aquatic footage.',
-  ],
+// Narrative prompts for the single first+last frame receive video per animal.
+// These tell a full story arc: receive letter → open it in a funny animal-specific way → read → write reply → send it off.
+const RECEIVE_NARRATIVES = {
+  swan: `A photorealistic Mute Swan on a calm golden-hour lake discovers a letter floating on the water. She delicately scoops it up with her bill, holds it aloft like a prima ballerina presenting a rose, and reads it with her neck in an exaggerated dramatic S-curve. She composes a reply by dipping her bill in the water like a quill pen and writing on a lily pad. Finally she tucks the finished letter under her wing, then releases it onto the water with a graceful wing flourish, watching it float away proudly. Wildlife documentary footage.`,
+  pig: `A photorealistic Kunekune pig in a sunny grassy paddock spots a letter on the ground and charges over with an excited snort. She tears it open with her teeth, gets the envelope stuck on her snout, shakes it off comically, then reads the letter with her head tilted sideways. She writes her reply by holding a stick in her mouth and scratching on a piece of paper, snorting with concentration. When finished she nudges the folded reply forward with her muddy snout, giving it a proud oink. Patchy ginger and white coat. Wildlife footage.`,
+  narwhal: `A photorealistic narwhal in Arctic waters surfaces to find a letter floating among the ice. He spears it perfectly on the tip of his spiral tusk like a letter opener, then flicks it into the air to read it as it floats back down. He writes his reply by using his tusk as a pen, carefully scratching on a piece of paper balanced on a flat chunk of ice. When done he slides the finished letter off the ice into the current with a splash of his tail, watching it drift away. Cold Arctic light. Wildlife footage.`,
+  axolotl: `A photorealistic pink axolotl in clear freshwater notices a letter sinking slowly through the water. He catches it with his tiny front legs and does a little spin of excitement, gills fluttering wildly. He reads it hovering upside-down with the paper held above him. He writes his reply by gripping a tiny twig and carefully scratching on a piece of paper on the sandy bottom, his permanent smile extra wide. When finished he pushes the reply letter upward through the water with both front legs, watching it float to the surface. Soft aquatic macro footage.`,
 };
 
 const MODELS = [
@@ -1067,27 +1048,55 @@ function renderVideoSection(animal, type) {
 
   const s = state[animal.id][type];
   const prompts = VIDEO_PROMPTS[animal.id] || {};
-  const prompt = prompts[type] || '';
   const hasImage = !!animal.characterImageBase64;
   const imgSrc = hasImage
     ? `data:${animal.characterImageMimeType};base64,${animal.characterImageBase64}`
     : null;
+  const hasBeatsForManual = type === 'receive' && animal.storyboardBeats && Object.keys(animal.storyboardBeats).length >= 2;
+  const prompt = (type === 'receive' && RECEIVE_NARRATIVES[animal.id])
+    ? RECEIVE_NARRATIVES[animal.id]
+    : (prompts[type] || '');
 
   const labelText = type === 'idle' ? 'Idle Video' : 'Receive Video';
 
   let actionHTML = '';
 
   if (mode === 'manual') {
+    // For receive with storyboard beats, show start/end frames
+    let frameStripHTML = '';
+    if (hasBeatsForManual) {
+      const beatKeys = Object.keys(animal.storyboardBeats).map(Number).sort((a, b) => a - b);
+      const firstBeat = animal.storyboardBeats[beatKeys[0]];
+      const lastBeat = animal.storyboardBeats[beatKeys[beatKeys.length - 1]];
+      frameStripHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="text-align:center;">
+            <img src="data:${firstBeat.mimeType};base64,${firstBeat.base64}" style="width:60px;aspect-ratio:9/16;object-fit:cover;border-radius:6px;border:1.5px solid var(--border);" alt="Start frame">
+            <div style="font-size:9px;color:var(--text-muted);margin-top:3px;">Start frame</div>
+          </div>
+          <span style="color:var(--text-muted);font-size:16px;">→</span>
+          <div style="text-align:center;">
+            <img src="data:${lastBeat.mimeType};base64,${lastBeat.base64}" style="width:60px;aspect-ratio:9/16;object-fit:cover;border-radius:6px;border:1.5px solid var(--border);" alt="End frame">
+            <div style="font-size:9px;color:var(--text-muted);margin-top:3px;">End frame</div>
+          </div>
+          <div style="flex:1;font-size:11px;color:var(--text-muted);line-height:1.5;">
+            Upload both frames + paste the prompt in <a href="https://labs.google/fx/tools/flow" target="_blank" rel="noopener" style="color:#7ab0ff;">VideoFX</a> to generate an 8s first→last frame video.
+          </div>
+        </div>
+      `;
+    }
+
     actionHTML = `
-      <div class="instructions">
+      ${frameStripHTML}
+      ${!hasBeatsForManual ? `<div class="instructions">
         <ol>
           <li>Download the character image below</li>
-          <li>Open <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a> or <a href="https://labs.google/videofx" target="_blank" rel="noopener">VideoFX</a></li>
+          <li>Open <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a> or <a href="https://labs.google/fx/tools/flow" target="_blank" rel="noopener">VideoFX</a></li>
           <li>Upload the image and paste the prompt</li>
           <li>Download the generated video</li>
           <li>Drop it here &#x2193;</li>
         </ol>
-      </div>
+      </div>` : ''}
       <div class="prompt-copy-wrap">
         <div class="prompt-copy-box" id="pcb-${animal.id}-${type}" title="Click to select all">${escapeHtml(prompt)}</div>
         <button class="copy-btn" id="cpbtn-${animal.id}-${type}">Copy</button>
@@ -1426,6 +1435,9 @@ function handleVideoFile(animalId, type, file) {
   state[animalId][type].videoUrl = url;
   state[animalId][type].videoPicked = false;
 
+  // Auto-save dropped video to disk
+  saveVideoToDisk(file, `${animalId}_${type}.mp4`);
+
   const animal = animals.find(a => a.id === animalId);
   renderVideoSection(animal, type);
   refreshCardStatus(animal);
@@ -1695,9 +1707,7 @@ async function generateStoryboardVideo(animal) {
   if (ss.generating) return;
 
   const beatKeys = Object.keys(animal.storyboardBeats).map(Number).sort((a, b) => a - b);
-  const transitions = STORYBOARD_TRANSITIONS[animal.id] || [];
   const model = MODELS[selectedModel.index];
-  const totalSteps = beatKeys.length - 1;
 
   ss.generating = true;
   ss.currentStep = 0;
@@ -1712,7 +1722,7 @@ async function generateStoryboardVideo(animal) {
     // Single first+last frame: first beat → last beat (8s)
     const firstBeat = animal.storyboardBeats[beatKeys[0]];
     const lastBeat = animal.storyboardBeats[beatKeys[beatKeys.length - 1]];
-    const prompt = transitions.join(' Then, ');
+    const prompt = RECEIVE_NARRATIVES[animal.id] || VIDEO_PROMPTS[animal.id]?.receive || '';
 
     addStoryboardLog(animal.id, `Generating ${firstBeat.label}→${lastBeat.label} (8s, first+last frame)...`, 'active');
 

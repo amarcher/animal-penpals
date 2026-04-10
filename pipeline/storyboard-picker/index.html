@@ -826,40 +826,25 @@
   // ── Constants ─────────────────────────────────────────────────────────────
   const BEATS = [
     { id: 'receiving', label: 'Receiving' },
-    { id: 'opening',   label: 'Opening' },
-    { id: 'reading',   label: 'Reading' },
-    { id: 'composing', label: 'Composing' },
-    { id: 'sending',   label: 'Sending' },
+    { id: 'sent',      label: 'Sent' },
   ];
 
   const STORYBOARD_PROMPTS = {
     swan: [
-      "A photorealistic Mute Swan on a calm lake at golden hour. The swan has noticed something floating toward it on the water — its neck is extended forward, head tilted with curiosity. Pure white plumage, orange-black bill. Telephoto lens, shallow depth of field. National Geographic wildlife photography.",
-      "A photorealistic Mute Swan on a calm lake gently nudging an envelope or piece of paper on the water surface with its orange-black bill. The swan's neck is curved downward examining the letter closely. Pure white plumage, golden hour lighting. Wildlife photography.",
-      "A photorealistic Mute Swan on a calm lake with a piece of paper or letter visible on the water in front of it. The swan's head is lowered, looking down at the letter intently, as if reading. Pure white plumage, S-curved neck bent down. Golden hour. Wildlife photography.",
-      "A photorealistic Mute Swan on a calm lake with its bill pressed against a piece of paper on the water, as if carefully writing a reply letter. The swan's neck curves down gracefully, focused on the paper. A second sheet with writing sits nearby on the water. Pure white plumage, golden hour. Wildlife photography.",
-      "A photorealistic Mute Swan on a calm lake pushing a folded letter away across the water with its orange-black bill, sending it off. Wings slightly raised in a proud posture, watching the letter float away. Pure white plumage catching golden light. Telephoto lens. National Geographic wildlife photography.",
+      "A photorealistic Mute Swan on a calm lake at golden hour. The swan has just noticed a letter floating toward it on the water — neck extended forward, head tilted with curiosity, about to pick it up with its orange-black bill. Pure white plumage. Telephoto lens, shallow depth of field. National Geographic wildlife photography.",
+      "A photorealistic Mute Swan on a calm lake at golden hour, watching a folded reply letter float away across the water. Wings slightly raised in a proud, satisfied flourish. The swan has just released the letter from its bill. Pure white plumage catching golden light. Telephoto lens. National Geographic wildlife photography.",
     ],
     pig: [
-      "A photorealistic Kunekune pig in a green grassy paddock, ears perked up, head raised alertly, noticing something in the distance. Patchy ginger and white coat, short upturned snout, piri piri tassels. Sunny day, rural farm background. Wildlife photography.",
-      "A photorealistic Kunekune pig in a grassy paddock, snout down sniffing at a piece of paper or envelope on the grass. Patchy ginger and white coat, curious excited expression. Sunny day. Sharp detail on bristly coat. Wildlife photography.",
-      "A photorealistic Kunekune pig in a grassy paddock with its head lowered, looking down at a letter or piece of paper on the grass in front of it. Focused attentive expression. Patchy ginger and white coat. Sunny day. Wildlife photography.",
-      "A photorealistic Kunekune pig in a grassy paddock with its snout pressed down against a piece of paper on the grass, as if writing a reply letter. A pencil or quill rests nearby. Patchy ginger and white coat, focused determined expression. Sunny day. Wildlife photography.",
-      "A photorealistic Kunekune pig in a grassy paddock nudging a folded letter forward with its snout, sending it off. Happy proud expression, mouth open in a cheerful snort. Patchy ginger and white coat, ears bouncing. Sunny day. Wildlife photography.",
+      "A photorealistic Kunekune pig in a green grassy paddock on a sunny day, ears perked up, head raised alertly — it has just spotted a letter on the grass nearby. Excited curious expression, about to trot over. Patchy ginger and white coat, short upturned snout, piri piri tassels. Rural farm background. Wildlife photography.",
+      "A photorealistic Kunekune pig in a grassy paddock on a sunny day, nudging a folded reply letter forward across the grass with its muddy snout, sending it off. Happy proud expression, mouth open in a cheerful snort. Patchy ginger and white coat, ears bouncing. Wildlife photography.",
     ],
     narwhal: [
-      "A photorealistic narwhal at the surface of Arctic waters among ice chunks, turning its head to notice something floating on the water nearby. Mottled grey-blue skin, long spiral ivory tusk. Cold Arctic light. Underwater wildlife photography.",
-      "A photorealistic narwhal at the surface of Arctic waters, gently nudging a piece of paper floating on the water with the tip of its spiral tusk. Mottled grey-blue skin. Ice chunks nearby. Cold Arctic light. Wildlife photography.",
-      "A photorealistic narwhal at the surface of Arctic waters with its head turned to one side, one eye visible looking down at a letter floating on the water surface. Mottled grey-blue skin, long spiral tusk. Curious intent expression. Arctic light. Wildlife photography.",
-      "A photorealistic narwhal at the surface of Arctic waters, using the tip of its spiral tusk to press against a piece of paper floating on the water, as if carefully writing a reply letter. Mottled grey-blue skin. Focused, deliberate posture. Cold Arctic light. Wildlife photography.",
-      "A photorealistic narwhal at the surface of Arctic waters, using its spiral tusk to push a folded letter across the water surface, sending it off. Mottled grey-blue skin. Looking proud and satisfied. Ice in background. Cold Arctic light. Wildlife photography.",
+      "A photorealistic narwhal at the surface of Arctic waters among ice chunks, turning to notice a letter floating on the water nearby. Mottled grey-blue skin, long spiral ivory tusk. Curious expression, about to swim toward it. Cold Arctic light. Wildlife photography.",
+      "A photorealistic narwhal at the surface of Arctic waters, sliding a folded reply letter off a chunk of ice into the current with a flick of its tail. Spiral tusk catching the light. Looking proud and satisfied, watching the letter drift away. Ice in background. Cold Arctic light. Wildlife photography.",
     ],
     axolotl: [
-      "A photorealistic leucistic pink axolotl in clear freshwater, turning to notice something sinking slowly through the water nearby. Wide head, feathery pink-red external gills alert and spread wide. Dark eyes looking to the side. Aquatic macro photography.",
-      "A photorealistic leucistic pink axolotl in clear freshwater, positioned directly over a piece of paper on the sandy bottom, tiny front legs touching it. Feathery gills fluttering with excitement. Wide head, permanent smile. Macro aquatic photography.",
-      "A photorealistic leucistic pink axolotl in clear freshwater, head lowered looking down at a letter on the sandy bottom. Feathery pink-red gills relaxed. Tiny dark eyes focused downward. Gentle smile. Soft aquatic lighting. Macro photography.",
-      "A photorealistic leucistic pink axolotl in clear freshwater, hovering over a piece of paper on the sandy bottom with one tiny front leg pressed against it, as if writing a reply letter. Feathery pink-red gills relaxed. Focused expression with permanent smile. Soft aquatic lighting. Macro photography.",
-      "A photorealistic leucistic pink axolotl in clear freshwater, pushing a folded letter forward through the water with its tiny front legs, sending it off. Feathery gills streaming behind. Wide smile, looking proud and happy. Clear water with light caustics. Macro aquatic photography.",
+      "A photorealistic leucistic pink axolotl in clear freshwater, turning to notice a letter sinking slowly through the water nearby. Wide head, feathery pink-red external gills alert and spread wide with excitement. Dark eyes looking to the side. Soft aquatic lighting. Macro photography.",
+      "A photorealistic leucistic pink axolotl in clear freshwater, pushing a folded reply letter upward through the water with both tiny front legs, sending it toward the surface. Feathery gills streaming behind. Wide smile, looking proud and happy. Clear water with light caustics. Macro aquatic photography.",
     ],
   };
 
