@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Generator — Animal Penpals</title>
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-2: #21263a;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e8eaf0;
+      --text-muted: #8b90a8;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --green: #7fff9a;
+      --green-bg: rgba(127, 255, 154, 0.08);
+      --green-border: rgba(127, 255, 154, 0.3);
+    }
+
+    html { color-scheme: dark; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(15, 17, 23, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .header__title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header__title h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header__subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 1px;
+    }
+
+    .header__actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .summary-pill {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+    }
+
+    .summary-pill.has-picks {
+      color: var(--green);
+      border-color: var(--green-border);
+      background: var(--green-bg);
+    }
+
+    .copy-all-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .copy-all-btn:hover {
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text);
+    }
+
+    .copy-all-btn.copied {
+      border-color: var(--green-border);
+      color: var(--green);
+      background: var(--green-bg);
+    }
+
+    /* ── Mode Toggle ── */
+    .mode-toggle-wrapper {
+      max-width: 900px;
+      margin: 24px auto 0;
+      padding: 0 24px;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .mode-btn {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .mode-btn.is-active {
+      background: var(--surface-2);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .mode-btn.is-active.mode-api {
+      color: #f0b060;
+    }
+
+    .mode-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .mode-cost-note {
+      display: inline-block;
+      margin-left: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      vertical-align: middle;
+    }
+
+    /* ── Main ── */
+    .main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 24px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Animal Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .card__header {
+      padding: 16px 20px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .card__header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--animal-color);
+      opacity: 0.1;
+      pointer-events: none;
+    }
+
+    .card__emoji {
+      font-size: 30px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      position: relative;
+    }
+
+    .card__animal-info {
+      flex: 1;
+      position: relative;
+    }
+
+    .card__name {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .card__status {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .card__status .done-count {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .card__color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--animal-color);
+      box-shadow: 0 0 8px var(--animal-color);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .card__body {
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 680px) {
+      .card__body {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Video Section ── */
+    .video-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .video-section__label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .video-section__label .type-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      font-size: 10px;
+    }
+
+    .section-divider {
+      width: 1px;
+      background: var(--border);
+      margin: 0 -4px;
+    }
+
+    /* ── Character image row ── */
+    .char-image-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .char-thumb-wrap {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .char-thumb {
+      width: 64px;
+      height: auto;
+      border-radius: 8px;
+      object-fit: contain;
+      border: 1.5px solid var(--border);
+      background: var(--surface-2);
+      display: block;
+    }
+
+    .char-thumb.is-missing {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 24px;
+    }
+
+    .download-img-btn {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      width: 64px;
+      text-align: center;
+    }
+
+    .download-img-btn:hover {
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text);
+    }
+
+    /* ── Instructions (manual mode) ── */
+    .instructions {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .instructions ol {
+      padding-left: 16px;
+    }
+
+    .instructions li {
+      margin-bottom: 1px;
+    }
+
+    /* ── Prompt copy box (manual mode) ── */
+    .prompt-copy-wrap {
+      position: relative;
+    }
+
+    .prompt-copy-box {
+      background: #1c2030;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      padding: 10px 44px 10px 12px;
+      font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #c8d0e8;
+      width: 100%;
+      cursor: text;
+      white-space: pre-wrap;
+      word-break: break-word;
+      user-select: all;
+      min-height: 72px;
+      transition: border-color 0.2s;
+    }
+
+    .prompt-copy-box:hover {
+      border-color: rgba(255,255,255,0.22);
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text);
+    }
+
+    .copy-btn.copied {
+      border-color: var(--green-border);
+      color: var(--green);
+      background: var(--green-bg);
+    }
+
+    /* ── Drop zone (manual mode) ── */
+    .drop-zone {
+      border: 2px dashed rgba(255,255,255,0.15);
+      border-radius: var(--radius-sm);
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--animal-color);
+      background: color-mix(in srgb, var(--animal-color) 5%, transparent);
+    }
+
+    .drop-zone__text {
+      font-size: 13px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .drop-zone__sub {
+      font-size: 11px;
+      color: rgba(139, 144, 168, 0.6);
+      margin-top: 4px;
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Video player ── */
+    .video-preview-wrap {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .video-preview-wrap.is-visible {
+      display: flex;
+    }
+
+    .video-preview {
+      width: auto;
+      max-width: 100%;
+      max-height: 320px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: #000;
+      display: block;
+      object-fit: contain;
+      margin: 0 auto;
+    }
+
+    .video-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pick-btn {
+      flex: 1;
+      padding: 7px 12px;
+      border-radius: 7px;
+      border: 1.5px solid var(--border);
+      background: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .pick-btn:hover {
+      border-color: var(--animal-color);
+      color: var(--animal-color);
+    }
+
+    .pick-btn.is-picked {
+      background: var(--animal-color);
+      border-color: var(--animal-color);
+      color: #0f1117;
+    }
+
+    .redo-btn {
+      padding: 7px 12px;
+      border-radius: 7px;
+      border: 1.5px solid var(--border);
+      background: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .redo-btn:hover {
+      border-color: rgba(255,100,100,0.4);
+      color: #ff7070;
+    }
+
+    /* ── API Mode ── */
+    .api-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .model-select-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .model-select {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 7px 10px;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .model-select:focus {
+      border-color: var(--animal-color);
+    }
+
+    .cost-estimate {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .generate-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--animal-color);
+      color: #0f1117;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      width: 100%;
+    }
+
+    .generate-btn:hover:not(:disabled) { opacity: 0.88; }
+    .generate-btn:active:not(:disabled) { transform: scale(0.97); }
+    .generate-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .api-disabled-msg {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .api-disabled-msg a {
+      color: #7ab0ff;
+      text-decoration: none;
+    }
+
+    .api-disabled-msg a:hover { text-decoration: underline; }
+
+    /* ── Progress ── */
+    .progress-wrap {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .progress-wrap.is-visible { display: flex; }
+
+    .progress-bar-track {
+      height: 4px;
+      background: var(--surface-2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--animal-color);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(15, 17, 23, 0.3);
+      border-top-color: #0f1117;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Summary Panel ── */
+    .summary-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .summary-panel__title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .summary-animals {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .summary-animal {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      min-width: 140px;
+      transition: border-color 0.2s;
+    }
+
+    .summary-animal.all-done {
+      border-color: var(--animal-color);
+      background: color-mix(in srgb, var(--animal-color) 8%, var(--surface-2));
+    }
+
+    .summary-animal__emoji { font-size: 20px; }
+
+    .summary-animal__info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .summary-animal__name {
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .summary-animal__status {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .summary-animal.all-done .summary-animal__status {
+      color: var(--animal-color);
+    }
+
+    .summary-panel__actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .download-all-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--green-border);
+      background: var(--green-bg);
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .download-all-btn:hover:not(:disabled) {
+      background: rgba(127, 255, 154, 0.15);
+      border-color: rgba(127, 255, 154, 0.6);
+    }
+
+    .download-all-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .download-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Storyboard Extend ── */
+    .beat-strip {
+      display: flex;
+      gap: 4px;
+      align-items: flex-end;
+      overflow-x: auto;
+      padding: 4px 0;
+    }
+
+    .beat-strip__item {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .beat-strip__img {
+      width: 52px;
+      aspect-ratio: 9 / 16;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 2px solid var(--border);
+      transition: border-color 0.2s;
+    }
+
+    .beat-strip__img.is-active {
+      border-color: var(--animal-color);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--animal-color) 40%, transparent);
+    }
+
+    .beat-strip__img.is-done {
+      border-color: var(--green);
+    }
+
+    .beat-strip__arrow {
+      flex-shrink: 0;
+      color: var(--text-muted);
+      font-size: 16px;
+      align-self: center;
+      padding: 0 2px;
+    }
+
+    .beat-strip__label {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      text-align: center;
+      max-width: 52px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .storyboard-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .step-log {
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      max-height: 120px;
+      overflow-y: auto;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .step-log .step-done { color: var(--green); }
+    .step-log .step-active { color: #f0b060; }
+    .step-log .step-error { color: #ff7070; }
+
+    .segment-previews {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .segment-preview {
+      flex: 1;
+      min-width: 120px;
+      max-width: 200px;
+    }
+
+    .segment-preview video {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #000;
+    }
+
+    .segment-preview__label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header__title">
+    <span>🎬</span>
+    <div>
+      <h1>Video Generator</h1>
+      <div class="header__subtitle">Animal Penpals</div>
+    </div>
+  </div>
+  <div class="header__actions">
+    <div class="summary-pill" id="headerPill">0 of 8 videos picked</div>
+    <button class="copy-all-btn" id="copyAllBtn" title="Copy all prompts for all animals">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy All Prompts
+    </button>
+  </div>
+</header>
+
+<div class="mode-toggle-wrapper">
+  <div class="mode-toggle">
+    <button class="mode-btn is-active" id="modeManualBtn">Manual (Free)</button>
+    <button class="mode-btn mode-api" id="modeApiBtn">API (Paid)</button>
+  </div>
+  <span class="mode-cost-note" id="modeCostNote">~$0.05–0.40 per second of video</span>
+</div>
+
+<main class="main" id="main"></main>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const apiKey = window.__GOOGLE_AI_API_KEY__ || '';
+const animals = window.__ANIMALS__ || [];
+
+const VIDEO_PROMPTS = {
+  swan: {
+    idle: `A photorealistic Mute Swan floating serenely on a calm lake. Gentle ripples in the water. The swan slowly turns its head, preens a wing feather, then returns to a resting position. Soft golden hour lighting. Minimal camera movement. Wildlife documentary footage.`,
+    receive: `A photorealistic Mute Swan on a calm lake notices something floating toward it. It gracefully extends its neck to examine a piece of paper on the water, gently nudges it with its bill, then looks up with a bright pleased expression. Golden hour lighting. Wildlife documentary style.`
+  },
+  pig: {
+    idle: `A photorealistic Kunekune pig standing in a grassy paddock, gently sniffing the air and flicking its ears. It shifts its weight slightly, lets out a small snort, then settles back contentedly. Warm natural daylight. Wildlife footage style.`,
+    receive: `A photorealistic Kunekune pig in a grassy paddock perks up as something catches its attention. It trots over curiously, sniffs at a piece of paper on the grass excitedly, nudges it with its snout, then looks up at the camera with a happy expression. Warm daylight. Wildlife footage.`
+  },
+  narwhal: {
+    idle: `A photorealistic narwhal gently bobbing at the surface of Arctic waters among small ice chunks. Its tusk catches the light as it slowly rises and dips. A subtle exhale sends a small spray of mist. Cold blue Arctic light. Wildlife documentary footage.`,
+    receive: `A photorealistic narwhal at the surface of Arctic waters notices something floating nearby. It swims toward a piece of paper, nudges it gently with its tusk, examines it by turning its head, then surfaces higher with an alert happy demeanor. Cold Arctic light. Wildlife documentary style.`
+  },
+  axolotl: {
+    idle: `A photorealistic pink axolotl floating gently in clear freshwater. Its feathery gills sway slowly in the current. It blinks and shifts slightly, tiny legs paddling imperceptibly. Soft aquatic lighting with caustic light patterns. Macro aquatic footage.`,
+    receive: `A photorealistic pink axolotl in clear freshwater notices something sinking slowly through the water nearby. It paddles toward it with gills fluttering excitedly, examines a piece of paper on the sandy bottom, then looks up at the camera with its wide characteristic smile. Soft aquatic lighting. Macro footage.`
+  }
+};
+
+// Narrative prompts for the single first+last frame receive video per animal.
+// These tell a full story arc: receive letter → open it in a funny animal-specific way → read → write reply → send it off.
+const RECEIVE_NARRATIVES = {
+  swan: `A photorealistic Mute Swan on a calm golden-hour lake discovers a letter floating on the water. She delicately scoops it up with her bill, holds it aloft like a prima ballerina presenting a rose, and reads it with her neck in an exaggerated dramatic S-curve. She composes a reply by dipping her bill in the water like a quill pen and writing on a lily pad. Finally she tucks the finished letter under her wing, then releases it onto the water with a graceful wing flourish, watching it float away proudly. Wildlife documentary footage.`,
+  pig: `A photorealistic Kunekune pig in a sunny grassy paddock spots a letter on the ground and charges over with an excited snort. She tears it open with her teeth, gets the envelope stuck on her snout, shakes it off comically, then reads the letter with her head tilted sideways. She writes her reply by holding a stick in her mouth and scratching on a piece of paper, snorting with concentration. When finished she nudges the folded reply forward with her muddy snout, giving it a proud oink. Patchy ginger and white coat. Wildlife footage.`,
+  narwhal: `A photorealistic narwhal in Arctic waters surfaces to find a letter floating among the ice. He spears it perfectly on the tip of his spiral tusk like a letter opener, then flicks it into the air to read it as it floats back down. He writes his reply by using his tusk as a pen, carefully scratching on a piece of paper balanced on a flat chunk of ice. When done he slides the finished letter off the ice into the current with a splash of his tail, watching it drift away. Cold Arctic light. Wildlife footage.`,
+  axolotl: `A photorealistic pink axolotl in clear freshwater notices a letter sinking slowly through the water. He catches it with his tiny front legs and does a little spin of excitement, gills fluttering wildly. He reads it hovering upside-down with the paper held above him. He writes his reply by gripping a tiny twig and carefully scratching on a piece of paper on the sandy bottom, his permanent smile extra wide. When finished he pushes the reply letter upward through the water with both front legs, watching it float to the surface. Soft aquatic macro footage.`,
+};
+
+const MODELS = [
+  { id: 'veo-3.1-lite-generate-preview', label: 'Lite', costPerSec: 0.05 },
+  { id: 'veo-3.1-generate-preview', label: 'Fast', costPerSec: 0.10 },
+  { id: 'veo-3.1-generate-preview', label: 'Standard', costPerSec: 0.40 }
+];
+
+const VIDEO_DURATION = 8; // seconds
+const PROMPT_SUFFIX = ' Full-bleed 9:16 vertical frame — the subject and background must fill the entire frame edge to edge. No letterboxing, no black bars, no borders.';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+// state[animalId][type] = { videoBlob, videoUrl, videoPicked, generating, progress, progressText, operationName }
+const state = {};
+animals.forEach(a => {
+  state[a.id] = {
+    idle: { videoBlob: null, videoUrl: null, videoPicked: false, generating: false, progress: 0, progressText: '', operationName: null },
+    receive: { videoBlob: null, videoUrl: null, videoPicked: false, generating: false, progress: 0, progressText: '', operationName: null }
+  };
+});
+
+// Storyboard extend state per animal
+const storyboardState = {};
+animals.forEach(a => {
+  storyboardState[a.id] = {
+    generating: false,
+    currentStep: 0,       // 0-3 (4 transitions between 5 beats)
+    totalSteps: 4,
+    segments: [],          // array of { blob, url } for each generated segment
+    finalBlob: null,
+    finalUrl: null,
+    log: [],               // array of { text, status: 'done'|'active'|'error' }
+  };
+});
+
+// Selected model index per animal+type (shared: use one global for simplicity)
+// Default to Fast (index 1) since Lite doesn't support extend
+const selectedModel = { index: 1 };
+let mode = 'manual'; // 'manual' | 'api'
+
+// ── Mode toggle ───────────────────────────────────────────────────────────────
+const modeManualBtn = document.getElementById('modeManualBtn');
+const modeApiBtn = document.getElementById('modeApiBtn');
+const modeCostNote = document.getElementById('modeCostNote');
+
+function setMode(m) {
+  mode = m;
+  modeManualBtn.classList.toggle('is-active', m === 'manual');
+  modeApiBtn.classList.toggle('is-active', m === 'api');
+  modeCostNote.style.display = m === 'api' ? 'inline-block' : 'none';
+  renderAll();
+}
+
+modeManualBtn.addEventListener('click', () => setMode('manual'));
+modeApiBtn.addEventListener('click', () => setMode('api'));
+
+// Hide cost note initially (manual is default)
+modeCostNote.style.display = 'none';
+
+// ── Copy All Prompts ──────────────────────────────────────────────────────────
+document.getElementById('copyAllBtn').addEventListener('click', function() {
+  const lines = [];
+  animals.forEach(animal => {
+    const prompts = VIDEO_PROMPTS[animal.id];
+    if (!prompts) return;
+    lines.push(`=== ${animal.name} ===`);
+    lines.push('');
+    lines.push('-- IDLE --');
+    lines.push(prompts.idle);
+    lines.push('');
+    lines.push('-- RECEIVE --');
+    lines.push(prompts.receive);
+    lines.push('');
+  });
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    const btn = document.getElementById('copyAllBtn');
+    btn.classList.add('copied');
+    btn.querySelector('svg').style.display = 'none';
+    btn.childNodes[btn.childNodes.length - 1].textContent = ' Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.querySelector('svg').style.display = '';
+      btn.childNodes[btn.childNodes.length - 1].textContent = ' Copy All Prompts';
+    }, 2000);
+  });
+});
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderAll() {
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  animals.forEach(animal => {
+    main.appendChild(renderAnimalCard(animal));
+  });
+
+  main.appendChild(renderSummaryPanel());
+  updateHeaderPill();
+}
+
+function renderAnimalCard(animal) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.setProperty('--animal-color', animal.color);
+  card.id = `card-${animal.id}`;
+
+  const idleState = state[animal.id].idle;
+  const receiveState = state[animal.id].receive;
+  const doneCount = [idleState, receiveState].filter(s => s.videoPicked).length;
+
+  card.innerHTML = `
+    <div class="card__header">
+      <span class="card__emoji">${animal.emoji}</span>
+      <div class="card__animal-info">
+        <div class="card__name">${animal.name}</div>
+        <div class="card__status">
+          <span class="done-count">${doneCount}</span> of 2 videos picked
+        </div>
+      </div>
+      <div class="card__color-dot"></div>
+    </div>
+    <div class="card__body">
+      <div class="video-section" id="vs-${animal.id}-idle"></div>
+      <div class="video-section" id="vs-${animal.id}-receive"></div>
+    </div>
+  `;
+
+  // Render each video section after inserting
+  setTimeout(() => {
+    renderVideoSection(animal, 'idle');
+    renderVideoSection(animal, 'receive');
+  }, 0);
+
+  return card;
+}
+
+function renderVideoSection(animal, type) {
+  const el = document.getElementById(`vs-${animal.id}-${type}`);
+  if (!el) return;
+
+  const s = state[animal.id][type];
+  const prompts = VIDEO_PROMPTS[animal.id] || {};
+  const hasImage = !!animal.characterImageBase64;
+  const imgSrc = hasImage
+    ? `data:${animal.characterImageMimeType};base64,${animal.characterImageBase64}`
+    : null;
+  const hasBeatsForManual = type === 'receive' && animal.storyboardBeats && Object.keys(animal.storyboardBeats).length >= 2;
+  const prompt = (type === 'receive' && RECEIVE_NARRATIVES[animal.id])
+    ? RECEIVE_NARRATIVES[animal.id]
+    : (prompts[type] || '');
+
+  const labelText = type === 'idle' ? 'Idle Video' : 'Receive Video';
+
+  let actionHTML = '';
+
+  if (mode === 'manual') {
+    // For receive with storyboard beats, show start/end frames
+    let frameStripHTML = '';
+    if (hasBeatsForManual) {
+      const beatKeys = Object.keys(animal.storyboardBeats).map(Number).sort((a, b) => a - b);
+      const firstBeat = animal.storyboardBeats[beatKeys[0]];
+      const lastBeat = animal.storyboardBeats[beatKeys[beatKeys.length - 1]];
+      frameStripHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="text-align:center;">
+            <img src="data:${firstBeat.mimeType};base64,${firstBeat.base64}" style="width:60px;aspect-ratio:9/16;object-fit:cover;border-radius:6px;border:1.5px solid var(--border);" alt="Start frame">
+            <div style="font-size:9px;color:var(--text-muted);margin-top:3px;">Start frame</div>
+          </div>
+          <span style="color:var(--text-muted);font-size:16px;">→</span>
+          <div style="text-align:center;">
+            <img src="data:${lastBeat.mimeType};base64,${lastBeat.base64}" style="width:60px;aspect-ratio:9/16;object-fit:cover;border-radius:6px;border:1.5px solid var(--border);" alt="End frame">
+            <div style="font-size:9px;color:var(--text-muted);margin-top:3px;">End frame</div>
+          </div>
+          <div style="flex:1;font-size:11px;color:var(--text-muted);line-height:1.5;">
+            Upload both frames + paste the prompt in <a href="https://labs.google/fx/tools/flow" target="_blank" rel="noopener" style="color:#7ab0ff;">VideoFX</a> to generate an 8s first→last frame video.
+          </div>
+        </div>
+      `;
+    }
+
+    actionHTML = `
+      ${frameStripHTML}
+      ${!hasBeatsForManual ? `<div class="instructions">
+        <ol>
+          <li>Download the character image below</li>
+          <li>Open <a href="https://gemini.google.com" target="_blank" rel="noopener">Gemini</a> or <a href="https://labs.google/fx/tools/flow" target="_blank" rel="noopener">VideoFX</a></li>
+          <li>Upload the image and paste the prompt</li>
+          <li>Download the generated video</li>
+          <li>Drop it here &#x2193;</li>
+        </ol>
+      </div>` : ''}
+      <div class="prompt-copy-wrap">
+        <div class="prompt-copy-box" id="pcb-${animal.id}-${type}" title="Click to select all">${escapeHtml(prompt)}</div>
+        <button class="copy-btn" id="cpbtn-${animal.id}-${type}">Copy</button>
+      </div>
+      <div class="drop-zone ${s.videoUrl ? 'has-video' : ''}" id="dz-${animal.id}-${type}">
+        <div class="drop-zone__text">Drop MP4 here or click to browse</div>
+        <div class="drop-zone__sub">video/mp4 accepted</div>
+        <input type="file" accept="video/mp4,video/*" id="fi-${animal.id}-${type}">
+      </div>
+    `;
+  } else {
+    // API mode
+    const hasBeats = type === 'receive' && animal.storyboardBeats && Object.keys(animal.storyboardBeats).length >= 2;
+
+    if (!apiKey) {
+      actionHTML = `
+        <div class="api-disabled-msg">
+          No Google AI API key found. Add <code>GOOGLE_AI_API_KEY=...</code> to your <code>.env</code> file and restart the server. Get a key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>.
+        </div>
+      `;
+    } else if (hasBeats) {
+      // Storyboard extend mode for receive videos
+      const ss = storyboardState[animal.id];
+      const beatKeys = Object.keys(animal.storyboardBeats).map(Number).sort((a, b) => a - b);
+      const beatLabels = ['Receiving', 'Opening', 'Reading', 'Composing', 'Sending'];
+
+      const firstKey = beatKeys[0];
+      const lastKey = beatKeys[beatKeys.length - 1];
+      const firstBeat = animal.storyboardBeats[firstKey];
+      const lastBeat = animal.storyboardBeats[lastKey];
+      const isDone = !ss.generating && ss.finalUrl;
+      const isActive = ss.generating;
+
+      const beatStripHTML = `
+        <div class="beat-strip__item">
+          <img class="beat-strip__img ${isDone ? 'is-done' : isActive ? 'is-active' : ''}" src="data:${firstBeat.mimeType};base64,${firstBeat.base64}" alt="First beat">
+          <span class="beat-strip__label">${firstBeat.label || beatLabels[0]}</span>
+        </div>
+        <span class="beat-strip__arrow">→</span>
+        <div class="beat-strip__item">
+          <img class="beat-strip__img ${isDone ? 'is-done' : ''}" src="data:${lastBeat.mimeType};base64,${lastBeat.base64}" alt="Last beat">
+          <span class="beat-strip__label">${lastBeat.label || beatLabels[beatKeys.length - 1]}</span>
+        </div>
+      `;
+
+      const logHTML = ss.log.length > 0
+        ? ss.log.map(l => `<span class="step-${l.status}">${l.text}</span>`).join('\n')
+        : 'Ready to generate 8s receive video...';
+
+      const modelOpts = MODELS.map((m, i) => `<option value="${i}" ${i === selectedModel.index ? 'selected' : ''}>${m.label} — $${m.costPerSec}/s</option>`).join('');
+
+      const costEst = (MODELS[selectedModel.index].costPerSec * 8).toFixed(2);
+
+      actionHTML = `
+        <div class="storyboard-controls">
+          <div class="beat-strip">${beatStripHTML}</div>
+          <div class="model-select-row">
+            <select class="model-select" id="ms-${animal.id}-${type}">
+              ${modelOpts}
+            </select>
+            <span class="cost-estimate" id="ce-${animal.id}-${type}">~$${costEst} (8s clip)</span>
+          </div>
+          <button class="generate-btn" id="genbtn-${animal.id}-${type}" ${ss.generating ? 'disabled' : ''}>
+            ${ss.generating ? '<span class="spinner"></span> Generating...' : 'Generate Receive Video'}
+          </button>
+          <div class="step-log" id="steplog-${animal.id}">${logHTML}</div>
+        </div>
+      `;
+    } else {
+      const modelOpts = MODELS.map((m, i) => `<option value="${i}" ${i === selectedModel.index ? 'selected' : ''}>${m.label} — $${m.costPerSec}/s</option>`).join('');
+      const costEst = (MODELS[selectedModel.index].costPerSec * VIDEO_DURATION).toFixed(2);
+      actionHTML = `
+        <div class="api-controls">
+          <div class="model-select-row">
+            <select class="model-select" id="ms-${animal.id}-${type}">
+              ${modelOpts}
+            </select>
+            <span class="cost-estimate" id="ce-${animal.id}-${type}">~$${costEst}</span>
+          </div>
+          <button class="generate-btn" id="genbtn-${animal.id}-${type}" ${s.generating ? 'disabled' : ''}>
+            ${s.generating ? '<span class="spinner"></span> Generating...' : 'Generate Video'}
+          </button>
+          <div class="progress-wrap ${s.generating ? 'is-visible' : ''}" id="prog-${animal.id}-${type}">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="progbar-${animal.id}-${type}" style="width:${s.progress}%"></div>
+            </div>
+            <div class="progress-text" id="progtext-${animal.id}-${type}">${s.progressText || 'Submitting...'}</div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  const videoWrapClass = s.videoUrl ? 'is-visible' : '';
+
+  el.innerHTML = `
+    <div class="video-section__label">
+      <span class="type-badge">${labelText}</span>
+    </div>
+    <div class="char-image-row">
+      <div class="char-thumb-wrap">
+        ${hasImage
+          ? `<img class="char-thumb" src="${imgSrc}" alt="${animal.name} reference">`
+          : `<div class="char-thumb is-missing">${animal.emoji}</div>`}
+        ${hasImage
+          ? `<button class="download-img-btn" id="dl-img-${animal.id}-${type}">Download</button>`
+          : `<span style="font-size:11px;color:var(--text-muted);text-align:center;width:64px">No image</span>`}
+      </div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">
+        ${actionHTML}
+      </div>
+    </div>
+    <div class="video-preview-wrap ${videoWrapClass}" id="vp-${animal.id}-${type}">
+      <video class="video-preview" id="vid-${animal.id}-${type}" src="${s.videoUrl || ''}" controls playsinline></video>
+      <div class="video-actions">
+        <button class="pick-btn ${s.videoPicked ? 'is-picked' : ''}" id="pickbtn-${animal.id}-${type}">
+          ${s.videoPicked ? 'Picked' : 'Pick this video'}
+        </button>
+        <button class="redo-btn" id="redobtn-${animal.id}-${type}">Re-do</button>
+      </div>
+    </div>
+  `;
+
+  // ── Bind events ──
+  // Download character image
+  const dlImgBtn = document.getElementById(`dl-img-${animal.id}-${type}`);
+  if (dlImgBtn && hasImage) {
+    dlImgBtn.addEventListener('click', () => downloadImage(animal));
+  }
+
+  if (mode === 'manual') {
+    // Prompt copy box — click to select all
+    const pcb = document.getElementById(`pcb-${animal.id}-${type}`);
+    if (pcb) {
+      pcb.addEventListener('click', () => {
+        const sel = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(pcb);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      });
+    }
+
+    // Copy button
+    const cpbtn = document.getElementById(`cpbtn-${animal.id}-${type}`);
+    if (cpbtn) {
+      cpbtn.addEventListener('click', () => copyPrompt(animal.id, type, prompt, cpbtn));
+    }
+
+    // Drop zone
+    const dz = document.getElementById(`dz-${animal.id}-${type}`);
+    const fi = document.getElementById(`fi-${animal.id}-${type}`);
+    if (dz && fi) {
+      dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+      dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+      dz.addEventListener('drop', e => {
+        e.preventDefault();
+        dz.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) handleVideoFile(animal.id, type, file);
+      });
+      fi.addEventListener('change', () => {
+        if (fi.files[0]) handleVideoFile(animal.id, type, fi.files[0]);
+      });
+    }
+  } else if (apiKey) {
+    const hasBeats = type === 'receive' && animal.storyboardBeats && Object.keys(animal.storyboardBeats).length >= 2;
+
+    // Model selector
+    const ms = document.getElementById(`ms-${animal.id}-${type}`);
+    if (ms) {
+      ms.addEventListener('change', () => {
+        selectedModel.index = parseInt(ms.value, 10);
+        // Update cost estimate for all sections
+        document.querySelectorAll('[id^="ce-"]').forEach(el => {
+          const cost = (MODELS[selectedModel.index].costPerSec * VIDEO_DURATION).toFixed(2);
+          el.textContent = `~$${cost}`;
+        });
+        document.querySelectorAll('[id^="ms-"]').forEach(sel => {
+          sel.value = String(selectedModel.index);
+        });
+      });
+    }
+
+    // Generate button
+    const genbtn = document.getElementById(`genbtn-${animal.id}-${type}`);
+    if (genbtn) {
+      if (hasBeats) {
+        genbtn.addEventListener('click', () => generateStoryboardVideo(animal));
+      } else {
+        genbtn.addEventListener('click', () => generateVideo(animal, type));
+      }
+    }
+  }
+
+  // Pick / redo
+  const pickbtn = document.getElementById(`pickbtn-${animal.id}-${type}`);
+  if (pickbtn) {
+    pickbtn.addEventListener('click', () => {
+      state[animal.id][type].videoPicked = !state[animal.id][type].videoPicked;
+      refreshCardStatus(animal);
+      refreshSummary();
+      updateHeaderPill();
+      // Just update pick button
+      pickbtn.classList.toggle('is-picked', state[animal.id][type].videoPicked);
+      pickbtn.textContent = state[animal.id][type].videoPicked ? 'Picked' : 'Pick this video';
+    });
+  }
+
+  const redobtn = document.getElementById(`redobtn-${animal.id}-${type}`);
+  if (redobtn) {
+    redobtn.addEventListener('click', () => {
+      state[animal.id][type].videoUrl = null;
+      state[animal.id][type].videoBlob = null;
+      state[animal.id][type].videoPicked = false;
+      renderVideoSection(animal, type);
+      refreshCardStatus(animal);
+      refreshSummary();
+      updateHeaderPill();
+    });
+  }
+}
+
+function refreshCardStatus(animal) {
+  const idleState = state[animal.id].idle;
+  const receiveState = state[animal.id].receive;
+  const doneCount = [idleState, receiveState].filter(s => s.videoPicked).length;
+  const statusEl = document.querySelector(`#card-${animal.id} .done-count`);
+  if (statusEl) statusEl.textContent = doneCount;
+}
+
+function refreshSummary() {
+  const panel = document.getElementById('summary-panel');
+  if (!panel) return;
+  animals.forEach(animal => {
+    const el = document.getElementById(`sum-${animal.id}`);
+    if (!el) return;
+    const idleState = state[animal.id].idle;
+    const receiveState = state[animal.id].receive;
+    const doneCount = [idleState, receiveState].filter(s => s.videoPicked).length;
+    const allDone = doneCount === 2;
+    el.classList.toggle('all-done', allDone);
+    el.style.setProperty('--animal-color', animal.color);
+    const statusEl = el.querySelector('.summary-animal__status');
+    if (statusEl) statusEl.textContent = allDone ? 'Both videos picked' : `${doneCount} of 2 picked`;
+  });
+
+  const totalPicked = animals.reduce((acc, a) => {
+    return acc + [state[a.id].idle, state[a.id].receive].filter(s => s.videoPicked).length;
+  }, 0);
+  const dlBtn = document.getElementById('downloadAllBtn');
+  if (dlBtn) dlBtn.disabled = totalPicked === 0;
+}
+
+function updateHeaderPill() {
+  const totalPicked = animals.reduce((acc, a) => {
+    return acc + [state[a.id].idle, state[a.id].receive].filter(s => s.videoPicked).length;
+  }, 0);
+  const pill = document.getElementById('headerPill');
+  pill.textContent = `${totalPicked} of ${animals.length * 2} videos picked`;
+  pill.classList.toggle('has-picks', totalPicked > 0);
+}
+
+function renderSummaryPanel() {
+  const panel = document.createElement('div');
+  panel.className = 'summary-panel';
+  panel.id = 'summary-panel';
+
+  const totalPicked = animals.reduce((acc, a) => {
+    return acc + [state[a.id].idle, state[a.id].receive].filter(s => s.videoPicked).length;
+  }, 0);
+
+  const animalsHTML = animals.map(animal => {
+    const idleState = state[animal.id].idle;
+    const receiveState = state[animal.id].receive;
+    const doneCount = [idleState, receiveState].filter(s => s.videoPicked).length;
+    const allDone = doneCount === 2;
+    return `
+      <div class="summary-animal ${allDone ? 'all-done' : ''}" id="sum-${animal.id}" style="--animal-color:${animal.color}">
+        <span class="summary-animal__emoji">${animal.emoji}</span>
+        <div class="summary-animal__info">
+          <div class="summary-animal__name">${animal.name}</div>
+          <div class="summary-animal__status">${allDone ? 'Both videos picked' : `${doneCount} of 2 picked`}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="summary-panel__title">Summary</div>
+    <div class="summary-animals">${animalsHTML}</div>
+    <div class="summary-panel__actions">
+      <button class="download-all-btn" id="downloadAllBtn" ${totalPicked === 0 ? 'disabled' : ''}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download All Picked
+      </button>
+      <span class="download-hint">${totalPicked} video${totalPicked !== 1 ? 's' : ''} ready</span>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const dlBtn = document.getElementById('downloadAllBtn');
+    if (dlBtn) dlBtn.addEventListener('click', downloadAllPicked);
+  }, 0);
+
+  return panel;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function copyPrompt(animalId, type, text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function downloadImage(animal) {
+  if (!animal.characterImageBase64) return;
+  const a = document.createElement('a');
+  a.href = `data:${animal.characterImageMimeType};base64,${animal.characterImageBase64}`;
+  a.download = `${animal.id}_character.png`;
+  a.click();
+}
+
+function handleVideoFile(animalId, type, file) {
+  const url = URL.createObjectURL(file);
+  state[animalId][type].videoBlob = file;
+  state[animalId][type].videoUrl = url;
+  state[animalId][type].videoPicked = false;
+
+  // Auto-save dropped video to disk
+  saveVideoToDisk(file, `${animalId}_${type}.mp4`);
+
+  const animal = animals.find(a => a.id === animalId);
+  renderVideoSection(animal, type);
+  refreshCardStatus(animal);
+}
+
+function downloadAllPicked() {
+  let delay = 0;
+  animals.forEach(animal => {
+    ['idle', 'receive'].forEach(type => {
+      const s = state[animal.id][type];
+      if (s.videoPicked && s.videoUrl) {
+        setTimeout(() => {
+          const a = document.createElement('a');
+          a.href = s.videoUrl;
+          a.download = `${animal.id}_${type}.mp4`;
+          a.click();
+        }, delay);
+        delay += 300;
+      }
+    });
+  });
+}
+
+// ── API Mode: Video Generation ────────────────────────────────────────────────
+async function generateVideo(animal, type) {
+  const s = state[animal.id][type];
+  if (s.generating) return;
+
+  const model = MODELS[selectedModel.index];
+  const prompt = (VIDEO_PROMPTS[animal.id] || {})[type] || '';
+
+  s.generating = true;
+  s.progress = 10;
+  s.progressText = 'Submitting to Veo API...';
+  renderVideoSection(animal, type);
+
+  try {
+    // Submit generation request
+    const imageRef = animal.characterImageBase64
+      ? { bytesBase64Encoded: animal.characterImageBase64, mimeType: animal.characterImageMimeType }
+      : undefined;
+
+    const reqBody = {
+      instances: [{
+        prompt: prompt + PROMPT_SUFFIX,
+        image: imageRef
+      }],
+      parameters: {
+        aspectRatio: '9:16',
+        resolution: '720p',
+        durationSeconds: 8
+      }
+    };
+    // Remove undefined image if no character image
+    if (!animal.characterImageBase64) {
+      delete reqBody.instances[0].image;
+    }
+
+    const submitRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model.id}:predictLongRunning?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reqBody)
+      }
+    );
+
+    if (!submitRes.ok) {
+      const errText = await submitRes.text();
+      throw new Error(`API error ${submitRes.status}: ${errText}`);
+    }
+
+    const operation = await submitRes.json();
+    s.operationName = operation.name;
+    s.progress = 20;
+    s.progressText = 'Generation in progress...';
+    updateProgressUI(animal.id, type, s);
+
+    // Poll for completion
+    const result = await pollOperation(operation.name, (elapsed) => {
+      const pct = Math.min(20 + Math.floor(elapsed / 3000) * 2, 85);
+      s.progress = pct;
+      s.progressText = `Generating video... (${Math.floor(elapsed / 1000)}s elapsed)`;
+      updateProgressUI(animal.id, type, s);
+    });
+
+    s.progress = 90;
+    s.progressText = 'Downloading video...';
+    updateProgressUI(animal.id, type, s);
+
+    // Extract video URI
+    const videoUri = result.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
+    if (!videoUri) throw new Error('No video URI in response');
+
+    // Fetch video
+    let videoRes = await fetch(`${videoUri}&key=${apiKey}`);
+    if (!videoRes.ok) {
+      videoRes = await fetch(videoUri, { headers: { 'x-goog-api-key': apiKey } });
+    }
+    if (!videoRes.ok) throw new Error(`Failed to download video: ${videoRes.status}`);
+
+    const blob = await videoRes.blob();
+    const url = URL.createObjectURL(blob);
+
+    s.videoBlob = blob;
+    s.videoUrl = url;
+    s.generating = false;
+    s.progress = 100;
+    s.progressText = 'Done! Saving...';
+
+    // Auto-save to disk
+    await saveVideoToDisk(blob, `${animal.id}_${type}.mp4`);
+    s.progressText = `Saved to pipeline/generated-videos/${animal.id}_${type}.mp4`;
+
+    renderVideoSection(animal, type);
+    refreshCardStatus(animal);
+    refreshSummary();
+    updateHeaderPill();
+
+  } catch (err) {
+    s.generating = false;
+    s.progress = 0;
+    s.progressText = `Error: ${err.message}`;
+    updateProgressUI(animal.id, type, s);
+    const genbtn = document.getElementById(`genbtn-${animal.id}-${type}`);
+    if (genbtn) {
+      genbtn.disabled = false;
+      genbtn.innerHTML = 'Retry Generation';
+    }
+    const progwrap = document.getElementById(`prog-${animal.id}-${type}`);
+    if (progwrap) {
+      progwrap.classList.add('is-visible');
+      const progtext = document.getElementById(`progtext-${animal.id}-${type}`);
+      if (progtext) {
+        progtext.textContent = `Error: ${err.message}`;
+        progtext.style.color = '#ff7070';
+      }
+    }
+  }
+}
+
+async function pollOperation(operationName, onProgress) {
+  const start = Date.now();
+  while (true) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${apiKey}`
+    );
+    if (!res.ok) throw new Error(`Poll error ${res.status}`);
+    const status = await res.json();
+    if (status.done) return status;
+    onProgress(Date.now() - start);
+    await new Promise(r => setTimeout(r, 10000));
+  }
+}
+
+function updateProgressUI(animalId, type, s) {
+  const progbar = document.getElementById(`progbar-${animalId}-${type}`);
+  if (progbar) progbar.style.width = `${s.progress}%`;
+  const progtext = document.getElementById(`progtext-${animalId}-${type}`);
+  if (progtext) progtext.textContent = s.progressText;
+  const progwrap = document.getElementById(`prog-${animalId}-${type}`);
+  if (progwrap) progwrap.classList.toggle('is-visible', s.generating);
+}
+
+// ── Files API Upload ─────────────────────────────────────────────────────────
+// Veo models require media to be uploaded via the Files API, not passed inline.
+async function uploadToFilesAPI(base64Data, mimeType, displayName) {
+  // Convert base64 to binary
+  const byteStr = atob(base64Data);
+  const bytes = new Uint8Array(byteStr.length);
+  for (let i = 0; i < byteStr.length; i++) bytes[i] = byteStr.charCodeAt(i);
+  const blob = new Blob([bytes], { type: mimeType });
+
+  // Step 1: Initiate resumable upload
+  const initRes = await fetch(
+    `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: {
+        'X-Goog-Upload-Protocol': 'resumable',
+        'X-Goog-Upload-Command': 'start',
+        'X-Goog-Upload-Header-Content-Length': String(blob.size),
+        'X-Goog-Upload-Header-Content-Type': mimeType,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ file: { display_name: displayName } }),
+    }
+  );
+
+  if (!initRes.ok) {
+    const errText = await initRes.text();
+    throw new Error(`Files API init error ${initRes.status}: ${errText}`);
+  }
+
+  const uploadUrl = initRes.headers.get('X-Goog-Upload-URL');
+  if (!uploadUrl) throw new Error('No upload URL returned from Files API');
+
+  // Step 2: Upload file bytes
+  const uploadRes = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Length': String(blob.size),
+      'X-Goog-Upload-Offset': '0',
+      'X-Goog-Upload-Command': 'upload, finalize',
+    },
+    body: blob,
+  });
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text();
+    throw new Error(`Files API upload error ${uploadRes.status}: ${errText}`);
+  }
+
+  const fileInfo = await uploadRes.json();
+  const fileUri = fileInfo.file?.uri;
+  if (!fileUri) throw new Error('No file URI in upload response');
+
+  // Poll until file is ACTIVE (processing may take a moment for videos)
+  const fileName = fileInfo.file?.name;
+  if (fileName) {
+    let attempts = 0;
+    while (attempts < 30) {
+      const statusRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`
+      );
+      if (statusRes.ok) {
+        const status = await statusRes.json();
+        if (status.state === 'ACTIVE') break;
+        if (status.state === 'FAILED') throw new Error('File processing failed');
+      }
+      await new Promise(r => setTimeout(r, 2000));
+      attempts++;
+    }
+  }
+
+  return { fileUri, mimeType };
+}
+
+// ── Save video to disk via server ────────────────────────────────────────────
+async function saveVideoToDisk(blob, filename) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result.split(',')[1];
+      try {
+        await fetch('/save-video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, base64 }),
+        });
+        resolve();
+      } catch (err) {
+        console.warn(`Failed to save ${filename}:`, err);
+        resolve(); // Don't fail the pipeline on save errors
+      }
+    };
+    reader.onerror = () => resolve();
+    reader.readAsDataURL(blob);
+  });
+}
+
+// ── Storyboard Pipeline (First+Last Frame per segment) ──────────────────────
+const CLIP_DURATION = 5; // seconds per segment (API min: 4, max: 8)
+
+async function generateStoryboardVideo(animal) {
+  const ss = storyboardState[animal.id];
+  if (ss.generating) return;
+
+  const beatKeys = Object.keys(animal.storyboardBeats).map(Number).sort((a, b) => a - b);
+  const model = MODELS[selectedModel.index];
+
+  ss.generating = true;
+  ss.currentStep = 0;
+  ss.segments = [];
+  ss.finalBlob = null;
+  ss.finalUrl = null;
+  ss.log = [];
+
+  renderVideoSection(animal, 'receive');
+
+  try {
+    // Single first+last frame: first beat → last beat (8s)
+    const firstBeat = animal.storyboardBeats[beatKeys[0]];
+    const lastBeat = animal.storyboardBeats[beatKeys[beatKeys.length - 1]];
+    const prompt = RECEIVE_NARRATIVES[animal.id] || VIDEO_PROMPTS[animal.id]?.receive || '';
+
+    addStoryboardLog(animal.id, `Generating ${firstBeat.label}→${lastBeat.label} (8s, first+last frame)...`, 'active');
+
+    const clip = await generateFirstLastFrame(model, prompt, firstBeat, lastBeat, animal.id);
+    ss.segments.push(clip);
+    ss.currentStep = 1;
+
+    // Auto-save to disk
+    await saveVideoToDisk(clip.blob, `${animal.id}_receive.mp4`);
+
+    ss.finalBlob = clip.blob;
+    ss.finalUrl = clip.url;
+    ss.generating = false;
+
+    // Set as the receive video
+    state[animal.id].receive.videoBlob = clip.blob;
+    state[animal.id].receive.videoUrl = clip.url;
+
+    updateStoryboardLog(animal.id, ss.log.length - 1, `Generated ✓`, 'done');
+    addStoryboardLog(animal.id, `Saved to pipeline/generated-videos/${animal.id}_receive.mp4`, 'done');
+    renderVideoSection(animal, 'receive');
+    refreshCardStatus(animal);
+    refreshSummary();
+    updateHeaderPill();
+
+  } catch (err) {
+    ss.generating = false;
+    addStoryboardLog(animal.id, `Error: ${err.message}`, 'error');
+    renderVideoSection(animal, 'receive');
+  }
+}
+
+async function generateFirstLastFrame(model, prompt, firstBeat, lastBeat, logAnimalId) {
+  addStoryboardLog(logAnimalId, `  Submitting clip to Veo API (${model.label})...`, 'active');
+
+  const reqBody = {
+    instances: [{
+      prompt: prompt + PROMPT_SUFFIX,
+      image: {
+        bytesBase64Encoded: firstBeat.base64,
+        mimeType: firstBeat.mimeType
+      },
+      lastFrame: {
+        bytesBase64Encoded: lastBeat.base64,
+        mimeType: lastBeat.mimeType
+      }
+    }],
+    parameters: {
+      aspectRatio: '9:16',
+      resolution: '720p',
+      durationSeconds: 8
+    }
+  };
+
+  const submitRes = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model.id}:predictLongRunning?key=${apiKey}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) }
+  );
+
+  if (!submitRes.ok) {
+    const errText = await submitRes.text();
+    throw new Error(`API error ${submitRes.status}: ${errText}`);
+  }
+
+  const operation = await submitRes.json();
+  const logIdx = storyboardState[logAnimalId].log.length - 1;
+  const result = await pollOperation(operation.name, (elapsed) => {
+    updateStoryboardLog(logAnimalId, logIdx, `  Generating video... (${Math.floor(elapsed / 1000)}s elapsed)`, 'active');
+  });
+
+  const videoUri = result.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
+  if (!videoUri) throw new Error('No video URI in response');
+
+  let videoRes = await fetch(`${videoUri}&key=${apiKey}`);
+  if (!videoRes.ok) {
+    videoRes = await fetch(videoUri, { headers: { 'x-goog-api-key': apiKey } });
+  }
+  if (!videoRes.ok) throw new Error(`Failed to download video: ${videoRes.status}`);
+
+  const blob = await videoRes.blob();
+  const url = URL.createObjectURL(blob);
+
+  return { blob, url };
+}
+
+// Concatenate MP4 blobs by appending media segments.
+// For clean concatenation we use MediaSource if available, otherwise simple blob concat.
+async function concatenateVideos(blobs) {
+  // Simple approach: use a hidden video + MediaRecorder to re-encode
+  // For MVP, just concatenate the blobs (works for same-codec same-resolution MP4s)
+  return new Blob(blobs, { type: 'video/mp4' });
+}
+
+function addStoryboardLog(animalId, text, status) {
+  storyboardState[animalId].log.push({ text, status });
+  updateStoryboardLogUI(animalId);
+}
+
+function updateStoryboardLog(animalId, index, text, status) {
+  const ss = storyboardState[animalId];
+  if (index >= 0 && index < ss.log.length) {
+    ss.log[index] = { text, status };
+  }
+  updateStoryboardLogUI(animalId);
+}
+
+function updateStoryboardLogUI(animalId) {
+  const logEl = document.getElementById(`steplog-${animalId}`);
+  if (!logEl) return;
+  const ss = storyboardState[animalId];
+  logEl.innerHTML = ss.log.map(l => `<span class="step-${l.status}">${l.text}</span>`).join('\n');
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+// Pre-populate state from previously generated videos on disk
+const existingVideos = window.__EXISTING_VIDEOS__ || {};
+Object.entries(existingVideos).forEach(([animalId, types]) => {
+  Object.entries(types).forEach(([type, url]) => {
+    if (state[animalId] && state[animalId][type]) {
+      state[animalId][type].videoUrl = url;
+      state[animalId][type].videoPicked = true;
+    }
+    // Also set storyboard state if it's a receive video with beats
+    if (type === 'receive' && storyboardState[animalId]) {
+      storyboardState[animalId].finalUrl = url;
+    }
+  });
+});
+
+renderAll();
+</script>
+</body>
+</html>

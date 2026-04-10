@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Storyboard Picker — Animal Penpals</title>
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-2: #21263a;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e8eaf0;
+      --text-muted: #8b90a8;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(15, 17, 23, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header__title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header__title h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header__subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 1px;
+    }
+
+    .header__summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .summary-pill {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+    }
+
+    .summary-pill.has-picks {
+      color: #7fff9a;
+      border-color: rgba(127, 255, 154, 0.3);
+      background: rgba(127, 255, 154, 0.08);
+    }
+
+    /* ── Main layout ── */
+    .main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── Animal card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card__header {
+      padding: 16px 20px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .card__header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--animal-color);
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    .card__emoji {
+      font-size: 30px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      position: relative;
+    }
+
+    .card__animal-info {
+      flex: 1;
+      position: relative;
+    }
+
+    .card__name {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .card__picked-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--animal-color);
+      margin-top: 2px;
+      display: none;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card__picked-badge.is-visible {
+      display: flex;
+    }
+
+    .card__color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--animal-color);
+      box-shadow: 0 0 8px var(--animal-color);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .card__header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+
+    .generate-all-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--animal-color);
+      background: rgba(255,255,255,0.05);
+      color: var(--animal-color);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .generate-all-btn:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--animal-color) 15%, transparent);
+    }
+
+    .generate-all-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .generate-all-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .generate-all-progress {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      position: relative;
+    }
+
+    /* ── Card body with reference + beats ── */
+    .card__body {
+      padding: 16px 20px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    /* ── Reference thumbnail ── */
+    .reference-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      width: 90px;
+    }
+
+    .reference-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .reference-thumb {
+      width: 90px;
+      height: 90px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      border: 2px solid var(--border);
+      background: var(--surface-2);
+      display: block;
+    }
+
+    .reference-placeholder {
+      width: 90px;
+      height: 90px;
+      border-radius: var(--radius-sm);
+      border: 2px dashed rgba(255,255,255,0.1);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+      color: rgba(255,255,255,0.2);
+    }
+
+    .reference-placeholder span {
+      font-size: 9px;
+      text-align: center;
+    }
+
+    /* ── Beats scroll container ── */
+    .beats-scroll {
+      flex: 1;
+      overflow-x: auto;
+      min-width: 0;
+    }
+
+    .beats-row {
+      display: flex;
+      gap: 12px;
+      min-width: max-content;
+    }
+
+    /* ── Beat column ── */
+    .beat-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 200px;
+      flex-shrink: 0;
+    }
+
+    .beat-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--animal-color);
+      padding-bottom: 6px;
+      border-bottom: 1px solid color-mix(in srgb, var(--animal-color) 25%, transparent);
+    }
+
+    .beat-label-num {
+      opacity: 0.6;
+    }
+
+    /* ── Prompt textarea ── */
+    .prompt-textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--text);
+      font-family: inherit;
+      resize: vertical;
+      min-height: 60px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .prompt-textarea:focus {
+      border-color: var(--animal-color);
+    }
+
+    /* ── Beat action row ── */
+    .beat-action-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .beat-generate-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--animal-color);
+      color: #0f1117;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .beat-generate-btn:hover:not(:disabled) {
+      opacity: 0.85;
+    }
+
+    .beat-generate-btn:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+
+    .beat-generate-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .beat-cost {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .beat-status {
+      font-size: 10px;
+      color: var(--text-muted);
+      min-height: 14px;
+    }
+
+    .beat-status.is-error {
+      color: #ff7070;
+    }
+
+    /* ── Image mini-grid ── */
+    .beat-grid-wrapper {
+      position: relative;
+    }
+
+    .beat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+
+    /* ── Loading overlay ── */
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 17, 23, 0.8);
+      border-radius: var(--radius-sm);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10;
+      backdrop-filter: blur(2px);
+    }
+
+    .loading-overlay.is-visible {
+      display: flex;
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--animal-color);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* ── Image slot ── */
+    .image-slot {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .image-frame {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      background: var(--surface-2);
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .image-frame:hover .image-hover-hint.has-image {
+      opacity: 1;
+    }
+
+    .image-frame.is-picked {
+      border-color: var(--animal-color);
+      box-shadow: 0 0 0 2px var(--animal-color), 0 0 14px rgba(0,0,0,0.4);
+    }
+
+    .image-frame.is-empty {
+      cursor: default;
+    }
+
+    /* ── Placeholder ── */
+    .placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border: 1.5px dashed rgba(255,255,255,0.1);
+      border-radius: 7px;
+      color: rgba(255,255,255,0.2);
+    }
+
+    .placeholder svg {
+      width: 20px;
+      height: 20px;
+      opacity: 0.5;
+    }
+
+    .placeholder span {
+      font-size: 10px;
+    }
+
+    /* ── Generated image ── */
+    .generated-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .image-frame.has-image .generated-img {
+      display: block;
+    }
+
+    .image-frame.has-image .placeholder {
+      display: none;
+    }
+
+    /* ── Hover hint ── */
+    .image-hover-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.35);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .image-hover-hint span {
+      font-size: 10px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(0,0,0,0.5);
+      padding: 4px 8px;
+      border-radius: 16px;
+    }
+
+    /* ── Picked checkmark overlay ── */
+    .picked-overlay {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--animal-color);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    }
+
+    .image-frame.is-picked .picked-overlay {
+      display: flex;
+    }
+
+    .picked-overlay svg {
+      width: 11px;
+      height: 11px;
+      color: #0f1117;
+    }
+
+    /* ── Pick button ── */
+    .pick-btn {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 0;
+      border-radius: 5px;
+      border: 1.5px solid var(--border);
+      background: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      width: 100%;
+      text-align: center;
+    }
+
+    .pick-btn:hover:not(:disabled) {
+      border-color: var(--animal-color);
+      color: var(--animal-color);
+    }
+
+    .pick-btn.is-picked {
+      background: var(--animal-color);
+      border-color: var(--animal-color);
+      color: #0f1117;
+    }
+
+    .pick-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* ── Summary panel ── */
+    .summary-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .summary-panel__title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    /* ── Summary grid (animals × beats) ── */
+    .summary-grid {
+      overflow-x: auto;
+    }
+
+    .summary-table {
+      border-collapse: collapse;
+      min-width: 100%;
+    }
+
+    .summary-table th {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .summary-table th:first-child {
+      text-align: left;
+      padding-left: 0;
+    }
+
+    .summary-table td {
+      padding: 6px 14px;
+      text-align: center;
+    }
+
+    .summary-table td:first-child {
+      padding-left: 0;
+      text-align: left;
+    }
+
+    .summary-animal-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .summary-animal-cell__emoji {
+      font-size: 18px;
+    }
+
+    .summary-animal-cell__name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .summary-check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--surface-2);
+      color: rgba(255,255,255,0.2);
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .summary-check.is-picked {
+      border-color: var(--animal-color);
+      background: color-mix(in srgb, var(--animal-color) 15%, var(--surface-2));
+      color: var(--animal-color);
+    }
+
+    .summary-panel__actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .download-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid rgba(127, 255, 154, 0.4);
+      background: rgba(127, 255, 154, 0.08);
+      color: #7fff9a;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .download-btn:hover:not(:disabled) {
+      background: rgba(127, 255, 154, 0.15);
+      border-color: rgba(127, 255, 154, 0.6);
+    }
+
+    .download-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .download-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.88);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      backdrop-filter: blur(6px);
+    }
+
+    .lightbox.is-open {
+      display: flex;
+    }
+
+    .lightbox__close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      font-size: 18px;
+    }
+
+    .lightbox__close:hover {
+      background: var(--surface-2);
+    }
+
+    .lightbox__img {
+      max-width: 100%;
+      max-height: 85vh;
+      object-fit: contain;
+      border-radius: var(--radius);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+
+    .lightbox__label {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      background: rgba(0,0,0,0.5);
+      padding: 5px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .lightbox__actions {
+      position: absolute;
+      bottom: 24px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .lightbox__pick-btn {
+      padding: 9px 20px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--lb-animal-color, rgba(255,255,255,0.3));
+      background: rgba(0,0,0,0.5);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .lightbox__pick-btn:hover {
+      background: var(--lb-animal-color, rgba(255,255,255,0.2));
+      color: #0f1117;
+    }
+
+    .lightbox__pick-btn.is-picked {
+      background: var(--lb-animal-color, rgba(255,255,255,0.3));
+      color: #0f1117;
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header__title">
+    <span>🎬</span>
+    <div>
+      <h1>Storyboard Picker</h1>
+      <div class="header__subtitle">Animal Penpals</div>
+    </div>
+  </div>
+  <div class="header__summary">
+    <div class="summary-pill" id="headerPill">0 of 0 beats picked</div>
+  </div>
+</header>
+
+<main class="main" id="main"></main>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image preview">
+  <button class="lightbox__close" id="lightboxClose" aria-label="Close">&#x2715;</button>
+  <div class="lightbox__label" id="lightboxLabel"></div>
+  <img class="lightbox__img" id="lightboxImg" src="" alt="Full size preview">
+  <div class="lightbox__actions">
+    <button class="lightbox__pick-btn" id="lightboxPickBtn">Pick this image</button>
+  </div>
+</div>
+
+<script>
+  // ── Constants ─────────────────────────────────────────────────────────────
+  const BEATS = [
+    { id: 'receiving', label: 'Receiving' },
+    { id: 'sent',      label: 'Sent' },
+  ];
+
+  const STORYBOARD_PROMPTS = {
+    swan: [
+      "A photorealistic Mute Swan on a calm lake at golden hour. The swan has just noticed a letter floating toward it on the water — neck extended forward, head tilted with curiosity, about to pick it up with its orange-black bill. Pure white plumage. Telephoto lens, shallow depth of field. National Geographic wildlife photography.",
+      "A photorealistic Mute Swan on a calm lake at golden hour, watching a folded reply letter float away across the water. Wings slightly raised in a proud, satisfied flourish. The swan has just released the letter from its bill. Pure white plumage catching golden light. Telephoto lens. National Geographic wildlife photography.",
+    ],
+    pig: [
+      "A photorealistic Kunekune pig in a green grassy paddock on a sunny day, ears perked up, head raised alertly — it has just spotted a letter on the grass nearby. Excited curious expression, about to trot over. Patchy ginger and white coat, short upturned snout, piri piri tassels. Rural farm background. Wildlife photography.",
+      "A photorealistic Kunekune pig in a grassy paddock on a sunny day, nudging a folded reply letter forward across the grass with its muddy snout, sending it off. Happy proud expression, mouth open in a cheerful snort. Patchy ginger and white coat, ears bouncing. Wildlife photography.",
+    ],
+    narwhal: [
+      "A photorealistic narwhal at the surface of Arctic waters among ice chunks, turning to notice a letter floating on the water nearby. Mottled grey-blue skin, long spiral ivory tusk. Curious expression, about to swim toward it. Cold Arctic light. Wildlife photography.",
+      "A photorealistic narwhal at the surface of Arctic waters, sliding a folded reply letter off a chunk of ice into the current with a flick of its tail. Spiral tusk catching the light. Looking proud and satisfied, watching the letter drift away. Ice in background. Cold Arctic light. Wildlife photography.",
+    ],
+    axolotl: [
+      "A photorealistic leucistic pink axolotl in clear freshwater, turning to notice a letter sinking slowly through the water nearby. Wide head, feathery pink-red external gills alert and spread wide with excitement. Dark eyes looking to the side. Soft aquatic lighting. Macro photography.",
+      "A photorealistic leucistic pink axolotl in clear freshwater, pushing a folded reply letter upward through the water with both tiny front legs, sending it toward the surface. Feathery gills streaming behind. Wide smile, looking proud and happy. Clear water with light caustics. Macro aquatic photography.",
+    ],
+  };
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  const apiKey = window.__GOOGLE_AI_API_KEY__;
+  const animals = window.__ANIMALS__;
+
+  // picks[animalId][beatIndex] = { index: number, base64: string, mimeType: string } | null
+  const picks = {};
+  // images[animalId][beatIndex] = [ { base64, mimeType } | null, ... ] (length 4)
+  const images = {};
+
+  animals.forEach(a => {
+    picks[a.id] = BEATS.map(() => null);
+    images[a.id] = BEATS.map(() => [null, null, null, null]);
+  });
+
+  // Lightbox context
+  let lbAnimalId = null;
+  let lbBeatIndex = null;
+  let lbImgIndex = null;
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  function render() {
+    const main = document.getElementById('main');
+    main.innerHTML = '';
+
+    animals.forEach(animal => {
+      main.appendChild(buildCard(animal));
+    });
+
+    main.appendChild(buildSummaryPanel());
+    updateHeaderPill();
+  }
+
+  function buildCard(animal) {
+    const card = el('div', 'card');
+    card.style.setProperty('--animal-color', animal.color);
+
+    // Header
+    const header = el('div', 'card__header');
+    const emoji = el('div', 'card__emoji');
+    emoji.textContent = animal.emoji;
+    const info = el('div', 'card__animal-info');
+    const name = el('div', 'card__name');
+    name.textContent = animal.name;
+    const badge = el('div', 'card__picked-badge');
+    badge.id = `badge-${animal.id}`;
+    badge.innerHTML = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> <span id="badge-count-${animal.id}">0</span> of ${BEATS.length} beats selected`;
+    info.append(name, badge);
+
+    const headerActions = el('div', 'card__header-actions');
+
+    const dot = el('div', 'card__color-dot');
+
+    header.append(emoji, info, headerActions, dot);
+    card.appendChild(header);
+
+    // Body
+    const body = el('div', 'card__body');
+
+    // Reference column
+    const refCol = el('div', 'reference-col');
+    const refLabel = el('div', 'reference-label');
+    refLabel.textContent = 'Reference';
+
+    if (animal.characterImageBase64) {
+      const refThumb = el('img', 'reference-thumb');
+      refThumb.src = `data:image/png;base64,${animal.characterImageBase64}`;
+      refThumb.alt = `${animal.name} character reference`;
+      refCol.append(refLabel, refThumb);
+    } else {
+      const refPlaceholder = el('div', 'reference-placeholder');
+      refPlaceholder.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="m21 15-5-5L5 21"/>
+        </svg>
+        <span>No ref</span>`;
+      refCol.append(refLabel, refPlaceholder);
+    }
+    body.appendChild(refCol);
+
+    // Beats scroll container
+    const beatsScroll = el('div', 'beats-scroll');
+    const beatsRow = el('div', 'beats-row');
+
+    BEATS.forEach((beat, beatIndex) => {
+      beatsRow.appendChild(buildBeatCol(animal, beatIndex));
+    });
+
+    beatsScroll.appendChild(beatsRow);
+    body.appendChild(beatsScroll);
+    card.appendChild(body);
+
+    return card;
+  }
+
+  function buildBeatCol(animal, beatIndex) {
+    const beat = BEATS[beatIndex];
+    const col = el('div', 'beat-col');
+
+    // Label
+    const label = el('div', 'beat-label');
+    label.innerHTML = `<span class="beat-label-num">${beatIndex + 1}.</span> ${beat.label}`;
+    col.appendChild(label);
+
+    // Prompt textarea
+    const textarea = el('textarea', 'prompt-textarea');
+    textarea.id = `prompt-${animal.id}-${beatIndex}`;
+    textarea.rows = 3;
+    textarea.value = (STORYBOARD_PROMPTS[animal.id] || [])[beatIndex] || '';
+    textarea.placeholder = 'Describe this beat…';
+    col.appendChild(textarea);
+
+    // Action row
+    const actionRow = el('div', 'beat-action-row');
+    const genBtn = el('button', 'beat-generate-btn');
+    genBtn.id = `genbtn-${animal.id}-${beatIndex}`;
+    genBtn.innerHTML = `
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+      Generate 4`;
+    // Disable if previous beat hasn't been picked yet (beat 0 is always enabled)
+    if (beatIndex > 0 && !picks[animal.id][beatIndex - 1]) {
+      genBtn.disabled = true;
+      genBtn.title = 'Pick an image from the previous beat first';
+    }
+    genBtn.addEventListener('click', () => generateBeat(animal.id, beatIndex));
+
+    const cost = el('div', 'beat-cost');
+    cost.textContent = '~$0.16 (4×$0.039)';
+
+    actionRow.append(genBtn, cost);
+    col.appendChild(actionRow);
+
+    // Status
+    const status = el('div', 'beat-status');
+    status.id = `status-${animal.id}-${beatIndex}`;
+    col.appendChild(status);
+
+    // Grid wrapper
+    const gridWrapper = el('div', 'beat-grid-wrapper');
+
+    const loadingOverlay = el('div', 'loading-overlay');
+    loadingOverlay.id = `loading-${animal.id}-${beatIndex}`;
+    const spinner = el('div', 'spinner');
+    const loadingText = el('div', 'loading-text');
+    loadingText.textContent = 'Generating…';
+    loadingOverlay.append(spinner, loadingText);
+
+    const grid = el('div', 'beat-grid');
+    grid.id = `grid-${animal.id}-${beatIndex}`;
+
+    for (let i = 0; i < 4; i++) {
+      grid.appendChild(buildImageSlot(animal, beatIndex, i));
+    }
+
+    gridWrapper.append(loadingOverlay, grid);
+    col.appendChild(gridWrapper);
+
+    return col;
+  }
+
+  function buildImageSlot(animal, beatIndex, index) {
+    const slot = el('div', 'image-slot');
+
+    const frame = el('div', 'image-frame is-empty');
+    frame.id = `frame-${animal.id}-${beatIndex}-${index}`;
+
+    // Placeholder
+    const placeholder = el('div', 'placeholder');
+    placeholder.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <path d="m21 15-5-5L5 21"/>
+      </svg>
+      <span>${index + 1}</span>`;
+
+    // Image
+    const img = el('img', 'generated-img');
+    img.alt = `Beat ${beatIndex + 1} image ${index + 1} for ${animal.name}`;
+
+    // Hover hint
+    const hoverHint = el('div', 'image-hover-hint');
+    hoverHint.innerHTML = '<span>View full size</span>';
+
+    // Picked overlay
+    const pickedOverlay = el('div', 'picked-overlay');
+    pickedOverlay.innerHTML = `
+      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 6l3 3 5-5"/>
+      </svg>`;
+
+    frame.append(placeholder, img, hoverHint, pickedOverlay);
+    frame.addEventListener('click', () => openLightbox(animal.id, beatIndex, index));
+
+    // Pick button
+    const pickBtn = el('button', 'pick-btn');
+    pickBtn.id = `pickbtn-${animal.id}-${beatIndex}-${index}`;
+    pickBtn.textContent = 'Pick';
+    pickBtn.disabled = true;
+    pickBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      pickImage(animal.id, beatIndex, index);
+    });
+
+    slot.append(frame, pickBtn);
+    return slot;
+  }
+
+  function buildSummaryPanel() {
+    const panel = el('div', 'summary-panel');
+
+    const title = el('div', 'summary-panel__title');
+    title.textContent = 'Storyboard Progress';
+    panel.appendChild(title);
+
+    // Grid table
+    const gridWrapper = el('div', 'summary-grid');
+    const table = el('table', 'summary-table');
+
+    // Header row
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    const thEmpty = document.createElement('th');
+    thEmpty.textContent = 'Animal';
+    headerRow.appendChild(thEmpty);
+    BEATS.forEach((beat, i) => {
+      const th = document.createElement('th');
+      th.textContent = `${i + 1}. ${beat.label}`;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Body rows
+    const tbody = document.createElement('tbody');
+    animals.forEach(animal => {
+      const row = document.createElement('tr');
+      row.style.setProperty('--animal-color', animal.color);
+
+      const tdAnimal = document.createElement('td');
+      const animalCell = el('div', 'summary-animal-cell');
+      const animalEmoji = el('span', 'summary-animal-cell__emoji');
+      animalEmoji.textContent = animal.emoji;
+      const animalName = el('span', 'summary-animal-cell__name');
+      animalName.textContent = animal.name;
+      animalCell.append(animalEmoji, animalName);
+      tdAnimal.appendChild(animalCell);
+      row.appendChild(tdAnimal);
+
+      BEATS.forEach((beat, beatIndex) => {
+        const td = document.createElement('td');
+        const check = el('span', 'summary-check');
+        check.id = `summarycheck-${animal.id}-${beatIndex}`;
+        check.innerHTML = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        td.appendChild(check);
+        row.appendChild(td);
+      });
+
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    gridWrapper.appendChild(table);
+    panel.appendChild(gridWrapper);
+
+    // Actions
+    const actions = el('div', 'summary-panel__actions');
+
+    const dlBtn = el('button', 'download-btn');
+    dlBtn.id = 'downloadBtn';
+    dlBtn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Save All Storyboards`;
+    dlBtn.disabled = true;
+    dlBtn.addEventListener('click', downloadAllStoryboards);
+
+    const hint = el('div', 'download-hint');
+    hint.id = 'downloadHint';
+    hint.textContent = 'Pick images for each beat first';
+
+    actions.append(dlBtn, hint);
+    panel.appendChild(actions);
+
+    return panel;
+  }
+
+  // ── Generate ──────────────────────────────────────────────────────────────
+  async function generateBeat(animalId, beatIndex) {
+    const promptEl = document.getElementById(`prompt-${animalId}-${beatIndex}`);
+    const promptText = promptEl ? promptEl.value.trim() : '';
+    if (!promptText) {
+      setBeatStatus(animalId, beatIndex, 'Please enter a prompt first.', true);
+      return;
+    }
+
+    setBeatLoading(animalId, beatIndex, true);
+    setBeatStatus(animalId, beatIndex, '');
+
+    // Clear old pick when regenerating
+    if (picks[animalId][beatIndex]) {
+      picks[animalId][beatIndex] = null;
+      updateBeatPickUI(animalId, beatIndex);
+      updateSummaryPanel();
+      updateHeaderPill();
+    }
+
+    // Reset images for this beat
+    images[animalId][beatIndex] = [null, null, null, null];
+    refreshBeatGrid(animalId, beatIndex);
+
+    // Use the picked image from the previous beat as reference for continuity.
+    // Falls back to the original character image for beat 0.
+    const animal = animals.find(a => a.id === animalId);
+    const prevPick = beatIndex > 0 ? picks[animalId][beatIndex - 1] : null;
+    const refImage = prevPick ? prevPick.base64 : animal?.characterImageBase64;
+
+    const parts = [
+      { text: `Using the animal in the reference image as the exact character, generate a new photorealistic image of this same animal in the following pose/scene. Keep the animal's appearance, coloring, markings, and environment as close to the reference as possible.\n\nScene: ${promptText}` }
+    ];
+    if (refImage) {
+      parts.push({
+        inlineData: {
+          mimeType: 'image/png',
+          data: refImage
+        }
+      });
+    }
+
+    const requestBody = {
+      contents: [{ parts }],
+      generationConfig: {
+        responseModalities: ['TEXT', 'IMAGE'],
+        imageConfig: { imageSize: '1K', aspectRatio: '9:16' }
+      }
+    };
+
+    try {
+      // Fire 4 parallel requests
+      const promises = Array.from({ length: 4 }, () =>
+        fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          }
+        ).then(r => r.json()).catch(err => ({ error: { message: err.message } }))
+      );
+
+      const results = await Promise.all(promises);
+      let generated = 0;
+
+      results.forEach((data, i) => {
+        if (data.error) {
+          console.warn(`Image ${i} error:`, data.error.message);
+          return;
+        }
+        // Extract image from candidates[0].content.parts
+        const candidate = data.candidates?.[0];
+        if (!candidate) return;
+        for (const part of (candidate.content?.parts || [])) {
+          if (part.inlineData || part.inline_data) {
+            const d = part.inlineData || part.inline_data;
+            images[animalId][beatIndex][i] = {
+              base64: d.data,
+              mimeType: d.mimeType || d.mime_type || 'image/png'
+            };
+            generated++;
+            break;
+          }
+        }
+      });
+
+      refreshBeatGrid(animalId, beatIndex);
+
+      if (generated === 0) {
+        // Check for specific errors
+        const firstErr = results.find(r => r.error)?.error?.message || '';
+        if (firstErr.toLowerCase().includes('quota') || firstErr.toLowerCase().includes('429')) {
+          setBeatStatus(animalId, beatIndex, 'Rate limit. Wait and retry.', true);
+        } else if (firstErr.toLowerCase().includes('safety')) {
+          setBeatStatus(animalId, beatIndex, 'Blocked by safety filter. Adjust prompt.', true);
+        } else {
+          setBeatStatus(animalId, beatIndex, `No images generated. ${firstErr}`, true);
+        }
+      } else {
+        setBeatStatus(animalId, beatIndex, `${generated} of 4 generated.`);
+      }
+
+    } catch (err) {
+      setBeatStatus(animalId, beatIndex, `Network error: ${err.message}`, true);
+    } finally {
+      setBeatLoading(animalId, beatIndex, false);
+    }
+  }
+
+  async function generateAllBeats(animalId) {
+    const genAllBtn = document.getElementById(`genallbtn-${animalId}`);
+    const progressEl = document.getElementById(`allprogress-${animalId}`);
+    if (genAllBtn) genAllBtn.disabled = true;
+
+    for (let beatIndex = 0; beatIndex < BEATS.length; beatIndex++) {
+      if (progressEl) {
+        progressEl.textContent = `Beat ${beatIndex + 1} of ${BEATS.length}…`;
+      }
+      await generateBeat(animalId, beatIndex);
+      // Small pause between requests to avoid rate limits
+      if (beatIndex < BEATS.length - 1) {
+        await new Promise(r => setTimeout(r, 800));
+      }
+    }
+
+    if (progressEl) progressEl.textContent = 'Done!';
+    setTimeout(() => {
+      if (progressEl) progressEl.textContent = '';
+    }, 3000);
+
+    if (genAllBtn) genAllBtn.disabled = false;
+  }
+
+  // ── UI updates ────────────────────────────────────────────────────────────
+  function refreshBeatGrid(animalId, beatIndex) {
+    for (let i = 0; i < 4; i++) {
+      const img = images[animalId][beatIndex][i];
+      const frame = document.getElementById(`frame-${animalId}-${beatIndex}-${i}`);
+      const pickBtn = document.getElementById(`pickbtn-${animalId}-${beatIndex}-${i}`);
+      const imgEl = frame ? frame.querySelector('.generated-img') : null;
+
+      if (!frame || !pickBtn || !imgEl) continue;
+
+      const hintEl = frame.querySelector('.image-hover-hint');
+      if (img) {
+        imgEl.src = `data:${img.mimeType};base64,${img.base64}`;
+        frame.classList.remove('is-empty');
+        frame.classList.add('has-image');
+        if (hintEl) hintEl.classList.add('has-image');
+        pickBtn.disabled = false;
+      } else {
+        imgEl.src = '';
+        frame.classList.add('is-empty');
+        frame.classList.remove('has-image', 'is-picked');
+        if (hintEl) hintEl.classList.remove('has-image');
+        pickBtn.disabled = true;
+        pickBtn.classList.remove('is-picked');
+        pickBtn.textContent = 'Pick';
+      }
+    }
+    updateBeatPickUI(animalId, beatIndex);
+  }
+
+  function pickImage(animalId, beatIndex, index) {
+    if (!images[animalId][beatIndex][index]) return;
+    const wasPicked = picks[animalId][beatIndex] && picks[animalId][beatIndex].index === index;
+
+    picks[animalId][beatIndex] = wasPicked ? null : {
+      index,
+      base64: images[animalId][beatIndex][index].base64,
+      mimeType: images[animalId][beatIndex][index].mimeType
+    };
+
+    updateBeatPickUI(animalId, beatIndex);
+    updateCardBadge(animalId);
+    updateSummaryPanel();
+    updateHeaderPill();
+
+    // Sync lightbox if open for same context
+    if (lbAnimalId === animalId && lbBeatIndex === beatIndex) {
+      syncLightboxPickBtn();
+    }
+
+  }
+
+  function updateBeatPickUI(animalId, beatIndex) {
+    const pick = picks[animalId][beatIndex];
+    for (let i = 0; i < 4; i++) {
+      const frame = document.getElementById(`frame-${animalId}-${beatIndex}-${i}`);
+      const pickBtn = document.getElementById(`pickbtn-${animalId}-${beatIndex}-${i}`);
+      if (!frame || !pickBtn) continue;
+      const isPicked = pick && pick.index === i;
+      frame.classList.toggle('is-picked', !!isPicked);
+      pickBtn.classList.toggle('is-picked', !!isPicked);
+      pickBtn.textContent = isPicked ? 'Picked' : 'Pick';
+    }
+
+    // Enable/disable next beat's generate button based on this pick
+    const nextBeat = beatIndex + 1;
+    if (nextBeat < BEATS.length) {
+      const nextGenBtn = document.getElementById(`genbtn-${animalId}-${nextBeat}`);
+      if (nextGenBtn) {
+        nextGenBtn.disabled = !pick;
+        nextGenBtn.title = pick ? '' : 'Pick an image from the previous beat first';
+      }
+    }
+  }
+
+  function updateCardBadge(animalId) {
+    const count = picks[animalId].filter(Boolean).length;
+    const badge = document.getElementById(`badge-${animalId}`);
+    const countEl = document.getElementById(`badge-count-${animalId}`);
+    if (badge) badge.classList.toggle('is-visible', count > 0);
+    if (countEl) countEl.textContent = count;
+  }
+
+  function updateSummaryPanel() {
+    let totalPicked = 0;
+    animals.forEach(animal => {
+      BEATS.forEach((beat, beatIndex) => {
+        const hasPick = !!picks[animal.id][beatIndex];
+        const check = document.getElementById(`summarycheck-${animal.id}-${beatIndex}`);
+        if (check) {
+          check.style.setProperty('--animal-color', animal.color);
+          check.classList.toggle('is-picked', hasPick);
+        }
+        if (hasPick) totalPicked++;
+      });
+    });
+
+    const totalPossible = animals.length * BEATS.length;
+    const dlBtn = document.getElementById('downloadBtn');
+    const dlHint = document.getElementById('downloadHint');
+
+    if (dlBtn) dlBtn.disabled = totalPicked === 0;
+    if (dlHint) {
+      dlHint.textContent = totalPicked > 0
+        ? `${totalPicked} of ${totalPossible} beats picked`
+        : 'Pick images for each beat first';
+    }
+  }
+
+  function updateHeaderPill() {
+    const pill = document.getElementById('headerPill');
+    if (!pill) return;
+    let totalPicked = 0;
+    animals.forEach(animal => {
+      picks[animal.id].forEach(p => { if (p) totalPicked++; });
+    });
+    const totalPossible = animals.length * BEATS.length;
+    pill.textContent = `${totalPicked} of ${totalPossible} beats picked`;
+    pill.classList.toggle('has-picks', totalPicked > 0);
+  }
+
+  function setBeatLoading(animalId, beatIndex, loading) {
+    const overlay = document.getElementById(`loading-${animalId}-${beatIndex}`);
+    const genBtn = document.getElementById(`genbtn-${animalId}-${beatIndex}`);
+    if (overlay) overlay.classList.toggle('is-visible', loading);
+    if (genBtn) genBtn.disabled = loading;
+  }
+
+  function setBeatStatus(animalId, beatIndex, message, isError = false) {
+    const statusEl = document.getElementById(`status-${animalId}-${beatIndex}`);
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    statusEl.classList.toggle('is-error', isError);
+  }
+
+  // ── Lightbox ──────────────────────────────────────────────────────────────
+  function openLightbox(animalId, beatIndex, index) {
+    const img = images[animalId][beatIndex][index];
+    if (!img) return;
+
+    lbAnimalId = animalId;
+    lbBeatIndex = beatIndex;
+    lbImgIndex = index;
+
+    const lightbox = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lightboxImg');
+    const lbLabel = document.getElementById('lightboxLabel');
+    const animal = animals.find(a => a.id === animalId);
+    const beat = BEATS[beatIndex];
+
+    lbImg.src = `data:${img.mimeType};base64,${img.base64}`;
+    lightbox.style.setProperty('--lb-animal-color', animal.color);
+    if (lbLabel) lbLabel.textContent = `${animal.emoji} ${animal.name} — ${beatIndex + 1}. ${beat.label} — Image ${index + 1}`;
+    lightbox.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+
+    syncLightboxPickBtn();
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('is-open');
+    document.body.style.overflow = '';
+    lbAnimalId = null;
+    lbBeatIndex = null;
+    lbImgIndex = null;
+  }
+
+  function syncLightboxPickBtn() {
+    const btn = document.getElementById('lightboxPickBtn');
+    if (!btn || lbAnimalId === null || lbBeatIndex === null || lbImgIndex === null) return;
+    const isPicked = picks[lbAnimalId][lbBeatIndex] && picks[lbAnimalId][lbBeatIndex].index === lbImgIndex;
+    btn.textContent = isPicked ? 'Picked!' : 'Pick this image';
+    btn.classList.toggle('is-picked', !!isPicked);
+  }
+
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  document.getElementById('lightbox').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeLightbox();
+  });
+  document.getElementById('lightboxPickBtn').addEventListener('click', () => {
+    if (lbAnimalId !== null && lbBeatIndex !== null && lbImgIndex !== null) {
+      pickImage(lbAnimalId, lbBeatIndex, lbImgIndex);
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  // ── Download ──────────────────────────────────────────────────────────────
+  async function downloadAllStoryboards() {
+    const btn = document.getElementById('downloadBtn');
+    const hint = document.getElementById('downloadHint');
+    btn.disabled = true;
+    btn.querySelector('span') ? btn.querySelector('span').textContent = ' Saving...' : btn.textContent = 'Saving...';
+
+    let saved = 0;
+    for (const animal of animals) {
+      for (let beatIndex = 0; beatIndex < BEATS.length; beatIndex++) {
+        const pick = picks[animal.id][beatIndex];
+        if (!pick) continue;
+        const filename = `${animal.id}_beat_${beatIndex + 1}_${BEATS[beatIndex].id}.png`;
+        try {
+          await fetch('/save-pick', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename, base64: pick.base64 }),
+          });
+          saved++;
+        } catch (err) {
+          console.warn(`Failed to save ${filename}:`, err);
+        }
+      }
+    }
+
+    btn.innerHTML = `Saved ${saved} image${saved !== 1 ? 's' : ''} ✓`;
+    btn.style.borderColor = 'var(--green-border)';
+    btn.style.color = 'var(--green)';
+    btn.style.background = 'var(--green-bg)';
+    if (hint) hint.textContent = 'Saved to pipeline/storyboard-images/';
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Save All Storyboards`;
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.style.background = '';
+    }, 3000);
+  }
+
+  // ── Utilities ─────────────────────────────────────────────────────────────
+  function el(tag, className) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    return node;
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  if (!apiKey) {
+    document.body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;">
+        <div>
+          <div style="font-size:48px;margin-bottom:16px;">🔑</div>
+          <h2 style="margin-bottom:8px;">API Key Not Found</h2>
+          <p style="color:#8b90a8;">Run <code style="background:#1a1d27;padding:2px 6px;border-radius:4px;">./pipeline/storyboard-picker/serve.sh</code> to launch this tool.</p>
+        </div>
+      </div>`;
+  } else if (!animals || animals.length === 0) {
+    document.body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;">
+        <div>
+          <div style="font-size:48px;margin-bottom:16px;">📋</div>
+          <h2 style="margin-bottom:8px;">No Animals Found</h2>
+          <p style="color:#8b90a8;">Check that <code style="background:#1a1d27;padding:2px 6px;border-radius:4px;">pipeline/animals.json</code> exists and is valid.</p>
+        </div>
+      </div>`;
+  } else {
+    render();
+  }
+</script>
+</body>
+</html>

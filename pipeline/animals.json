@@ -1,0 +1,54 @@
+[
+  {
+    "id": "swan",
+    "name": "Serena the Swan",
+    "emoji": "🦢",
+    "color": "#E8D5E0",
+    "greeting": "Oh, how lovely — a letter, just for me! I'm Serena, and I was just practicing my arabesque by the lake. Would you like to hear a poem I wrote this morning?",
+    "imagePrompt": "A photorealistic Mute Swan on a calm lake at golden hour. Pure white plumage with an orange bill bordered by a black knob. Elegant S-curved neck. The swan looks toward the camera with a gentle, attentive expression. Crystal clear water reflection, soft bokeh reeds. Telephoto lens, shallow depth of field. National Geographic wildlife photography.",
+    "voiceDesignPrompt": "An elegant, soft, slightly formal young female voice with a British accent. Poetic and graceful, like a ballet teacher reading a fairy tale. Warm but refined.",
+    "voiceCandidates": [
+      { "label": "A", "name": "Alice", "voiceId": "Xb7hH8MSUJpSbSDYk0k2" },
+      { "label": "B", "name": "Lily", "voiceId": "pFZP5JQG7iQjIQuC4Bku" }
+    ]
+  },
+  {
+    "id": "pig",
+    "name": "Patches the Pig",
+    "emoji": "🐷",
+    "color": "#F2A7B0",
+    "greeting": "*snort* Oh hi there! I'm Patches! I was just rolling in my favorite mud puddle — it's SO squishy! Want to know my secret recipe for the perfect mud pie?",
+    "imagePrompt": "A photorealistic Kunekune pig in a green grassy paddock on a sunny day. Round compact body, short upturned snout, visible piri piri tassels hanging from the jaw. Patchy ginger and white coat. Looking directly at camera with a happy friendly expression, mouth slightly open. Soft natural lighting, rural farm background. Sharp detail on bristly coat. Wildlife photography quality.",
+    "voiceDesignPrompt": "A warm, giggly, playful young female voice with a slight nasally quality. Energetic and cheerful, like someone who is always about to burst out laughing. Kid-friendly and silly.",
+    "voiceCandidates": [
+      { "label": "A", "name": "Jessica", "voiceId": "cgSgspJ2msm6clMCkdW9" },
+      { "label": "B", "name": "Laura", "voiceId": "FGY2WhTYpPnrIDTdsKH5" }
+    ]
+  },
+  {
+    "id": "narwhal",
+    "name": "Nori the Narwhal",
+    "emoji": "🦭",
+    "color": "#6EC6CA",
+    "greeting": "Woooosh! Hello from under the Arctic ice! I'm Nori, the unicorn of the sea! Did you know my tusk is actually a giant tooth? Make a wish and tell me all about it!",
+    "imagePrompt": "A photorealistic narwhal surfacing through Arctic sea ice. Mottled grey-blue skin with white belly speckles. Single long spiral ivory tusk extending forward. Breaking the surface with water droplets catching cold Arctic light. Deep blue-green water, chunks of sea ice. Expressive curious eye visible. Underwater wildlife photography, National Geographic quality.",
+    "voiceDesignPrompt": "A dreamy, gentle, wonder-filled young voice with an ethereal quality. Slightly breathy, as if sharing magical secrets. Gender-neutral or soft male. Think underwater fairy tale narrator.",
+    "voiceCandidates": [
+      { "label": "A", "name": "River", "voiceId": "SAz9YHcvj6GT2YYXdXww" },
+      { "label": "B", "name": "George", "voiceId": "JBFqnCBsd6RMkjVDRZzb" }
+    ]
+  },
+  {
+    "id": "axolotl",
+    "name": "Axel the Axolotl",
+    "emoji": "🦎",
+    "color": "#E88BBF",
+    "greeting": "Hey, duuude! I'm Axel, and I'm just floating here in my lake in Mexico. Check out my gills — pretty cool, right? I can even grow back my arms if I lose one! What's YOUR superpower?",
+    "imagePrompt": "A photorealistic leucistic pink axolotl in clear shallow freshwater. Wide flat head with permanent gentle smile. Six feathery external gills, bright pink-red with visible filaments. Tiny dark eyes, smooth pink translucent skin. Small stubby legs with delicate fingers. Facing camera head-on. Aquatic macro photography, sharp gill detail. Soft aquatic plants blurred background. Studio underwater lighting.",
+    "voiceDesignPrompt": "A chill, relaxed, friendly young male voice with laid-back California surfer energy. Calm and cool but enthusiastic when excited. Think young Jeff Spicoli meets Bob Ross.",
+    "voiceCandidates": [
+      { "label": "A", "name": "Will", "voiceId": "bIHbv24MWmeRgasZH58o" },
+      { "label": "B", "name": "Chris", "voiceId": "iP95p4xoKVk53GoZ742B" }
+    ]
+  }
+]

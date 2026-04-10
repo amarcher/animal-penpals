@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Character Picker — Animal Penpals</title>
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-2: #21263a;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e8eaf0;
+      --text-muted: #8b90a8;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(15, 17, 23, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header__title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header__title h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header__title span {
+      font-size: 20px;
+    }
+
+    .header__subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 1px;
+    }
+
+    .header__summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .summary-pill {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+    }
+
+    .summary-pill.has-picks {
+      color: #7fff9a;
+      border-color: rgba(127, 255, 154, 0.3);
+      background: rgba(127, 255, 154, 0.08);
+    }
+
+    /* ── Main layout ── */
+    .main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Animal card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card__header {
+      padding: 16px 20px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .card__header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--animal-color);
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    .card__emoji {
+      font-size: 30px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      position: relative;
+    }
+
+    .card__animal-info {
+      flex: 1;
+      position: relative;
+    }
+
+    .card__name {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .card__picked-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--animal-color);
+      margin-top: 2px;
+      display: none;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card__picked-badge.is-visible {
+      display: flex;
+    }
+
+    .card__color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--animal-color);
+      box-shadow: 0 0 8px var(--animal-color);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .card__body {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Prompt section ── */
+    .prompt-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .prompt-textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text);
+      font-family: inherit;
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .prompt-textarea:focus {
+      border-color: var(--animal-color);
+    }
+
+    /* ── Action row ── */
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .generate-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--animal-color);
+      color: #0f1117;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .generate-btn:hover:not(:disabled) {
+      opacity: 0.88;
+    }
+
+    .generate-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .generate-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .cost-indicator {
+      font-size: 11px;
+      color: var(--text-muted);
+      flex: 1;
+    }
+
+    .status-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      min-height: 18px;
+      flex: 1;
+    }
+
+    .status-text.is-error {
+      color: #ff7070;
+    }
+
+    /* ── Image grid ── */
+    .image-grid-wrapper {
+      position: relative;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    /* ── Loading overlay ── */
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 17, 23, 0.8);
+      border-radius: var(--radius-sm);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 10;
+      backdrop-filter: blur(2px);
+    }
+
+    .loading-overlay.is-visible {
+      display: flex;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--animal-color);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* ── Image slot ── */
+    .image-slot {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .image-frame {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 2px solid var(--border);
+      background: var(--surface-2);
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .image-frame:hover .image-hover-hint {
+      opacity: 1;
+    }
+
+    .image-frame.is-picked {
+      border-color: var(--animal-color);
+      box-shadow: 0 0 0 2px var(--animal-color), 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    .image-frame.is-empty {
+      cursor: default;
+    }
+
+    /* ── Placeholder ── */
+    .placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 2px dashed rgba(255,255,255,0.1);
+      border-radius: calc(var(--radius-sm) - 2px);
+      color: rgba(255,255,255,0.2);
+    }
+
+    .placeholder svg {
+      width: 28px;
+      height: 28px;
+      opacity: 0.5;
+    }
+
+    .placeholder span {
+      font-size: 11px;
+    }
+
+    /* ── Generated image ── */
+    .generated-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .image-frame.has-image .generated-img {
+      display: block;
+    }
+
+    .image-frame.has-image .placeholder {
+      display: none;
+    }
+
+    /* ── Hover hint (view full-size) ── */
+    .image-hover-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.35);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .image-hover-hint span {
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(0,0,0,0.5);
+      padding: 5px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Picked checkmark overlay ── */
+    .picked-overlay {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--animal-color);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .image-frame.is-picked .picked-overlay {
+      display: flex;
+    }
+
+    .picked-overlay svg {
+      width: 14px;
+      height: 14px;
+      color: #0f1117;
+    }
+
+    /* ── Pick button ── */
+    .pick-btn {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 0;
+      border-radius: 6px;
+      border: 1.5px solid var(--border);
+      background: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      width: 100%;
+      text-align: center;
+    }
+
+    .pick-btn:hover:not(:disabled) {
+      border-color: var(--animal-color);
+      color: var(--animal-color);
+    }
+
+    .pick-btn.is-picked {
+      background: var(--animal-color);
+      border-color: var(--animal-color);
+      color: #0f1117;
+    }
+
+    .pick-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* ── Summary panel ── */
+    .summary-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .summary-panel__title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .summary-animals {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .summary-animal {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      min-width: 160px;
+      transition: border-color 0.2s;
+    }
+
+    .summary-animal.is-picked {
+      border-color: var(--animal-color);
+      background: color-mix(in srgb, var(--animal-color) 8%, var(--surface-2));
+    }
+
+    .summary-animal__emoji {
+      font-size: 20px;
+    }
+
+    .summary-animal__info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .summary-animal__name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .summary-animal__status {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .summary-animal.is-picked .summary-animal__status {
+      color: var(--animal-color);
+    }
+
+    .summary-panel__actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .download-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid rgba(127, 255, 154, 0.4);
+      background: rgba(127, 255, 154, 0.08);
+      color: #7fff9a;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .download-btn:hover:not(:disabled) {
+      background: rgba(127, 255, 154, 0.15);
+      border-color: rgba(127, 255, 154, 0.6);
+    }
+
+    .download-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .download-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.88);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      backdrop-filter: blur(6px);
+    }
+
+    .lightbox.is-open {
+      display: flex;
+    }
+
+    .lightbox__close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      font-size: 18px;
+    }
+
+    .lightbox__close:hover {
+      background: var(--surface-2);
+    }
+
+    .lightbox__img {
+      max-width: 100%;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: var(--radius);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+
+    .lightbox__actions {
+      position: absolute;
+      bottom: 24px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .lightbox__pick-btn {
+      padding: 9px 20px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--lb-animal-color, rgba(255,255,255,0.3));
+      background: rgba(0,0,0,0.5);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .lightbox__pick-btn:hover {
+      background: var(--lb-animal-color, rgba(255,255,255,0.2));
+      color: #0f1117;
+    }
+
+    .lightbox__pick-btn.is-picked {
+      background: var(--lb-animal-color, rgba(255,255,255,0.3));
+      color: #0f1117;
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header__title">
+    <span>🖼️</span>
+    <div>
+      <h1>Character Picker</h1>
+      <div class="header__subtitle">Animal Penpals</div>
+    </div>
+  </div>
+  <div class="header__summary">
+    <div class="summary-pill" id="headerPill">0 of 4 picked</div>
+  </div>
+</header>
+
+<main class="main" id="main"></main>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image preview">
+  <button class="lightbox__close" id="lightboxClose" aria-label="Close">&#x2715;</button>
+  <img class="lightbox__img" id="lightboxImg" src="" alt="Full size preview">
+  <div class="lightbox__actions">
+    <button class="lightbox__pick-btn" id="lightboxPickBtn">Pick this image</button>
+  </div>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  const apiKey = window.__GOOGLE_AI_API_KEY__;
+  const animals = window.__ANIMALS__;
+
+  // picks[animalId] = { index: number, base64: string, mimeType: string } | null
+  const picks = {};
+  // images[animalId] = [ { base64, mimeType } | null, ... ] (length 4)
+  const images = {};
+
+  animals.forEach(a => {
+    picks[a.id] = null;
+    images[a.id] = [null, null, null, null];
+  });
+
+  // Lightbox context
+  let lbAnimalId = null;
+  let lbIndex = null;
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function render() {
+    const main = document.getElementById('main');
+    main.innerHTML = '';
+
+    animals.forEach(animal => {
+      main.appendChild(buildCard(animal));
+    });
+
+    main.appendChild(buildSummaryPanel());
+    updateHeaderPill();
+  }
+
+  function buildCard(animal) {
+    const card = el('div', 'card');
+    card.style.setProperty('--animal-color', animal.color);
+
+    // Header
+    const header = el('div', 'card__header');
+    const emoji = el('div', 'card__emoji');
+    emoji.textContent = animal.emoji;
+    const info = el('div', 'card__animal-info');
+    const name = el('div', 'card__name');
+    name.textContent = animal.name;
+    const badge = el('div', `card__picked-badge${picks[animal.id] ? ' is-visible' : ''}`);
+    badge.id = `badge-${animal.id}`;
+    badge.innerHTML = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Image selected`;
+    info.append(name, badge);
+    const dot = el('div', 'card__color-dot');
+
+    header.append(emoji, info, dot);
+    card.appendChild(header);
+
+    // Body
+    const body = el('div', 'card__body');
+
+    // Prompt
+    const promptLabel = el('div', 'prompt-label');
+    promptLabel.textContent = 'Image Prompt';
+    const textarea = el('textarea', 'prompt-textarea');
+    textarea.id = `prompt-${animal.id}`;
+    textarea.rows = 4;
+    textarea.value = animal.imagePrompt || '';
+    textarea.placeholder = 'Describe the image you want to generate…';
+    body.append(promptLabel, textarea);
+
+    // Action row
+    const actionRow = el('div', 'action-row');
+    const genBtn = el('button', 'generate-btn');
+    genBtn.id = `genbtn-${animal.id}`;
+    genBtn.innerHTML = `
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+      Generate 4 Images`;
+    genBtn.addEventListener('click', () => generateImages(animal.id));
+
+    const cost = el('div', 'cost-indicator');
+    cost.textContent = '~$0.08 per generation (4 images × $0.02)';
+
+    actionRow.append(genBtn, cost);
+    body.appendChild(actionRow);
+
+    // Status
+    const status = el('div', 'status-text');
+    status.id = `status-${animal.id}`;
+    body.appendChild(status);
+
+    // Image grid
+    const gridWrapper = el('div', 'image-grid-wrapper');
+
+    const loadingOverlay = el('div', 'loading-overlay');
+    loadingOverlay.id = `loading-${animal.id}`;
+    const spinner = el('div', 'spinner');
+    const loadingText = el('div', 'loading-text');
+    loadingText.textContent = 'Generating…';
+    loadingOverlay.append(spinner, loadingText);
+
+    const grid = el('div', 'image-grid');
+    grid.id = `grid-${animal.id}`;
+
+    for (let i = 0; i < 4; i++) {
+      grid.appendChild(buildImageSlot(animal, i));
+    }
+
+    gridWrapper.append(loadingOverlay, grid);
+    body.appendChild(gridWrapper);
+    card.appendChild(body);
+
+    return card;
+  }
+
+  function buildImageSlot(animal, index) {
+    const slot = el('div', 'image-slot');
+
+    const frame = el('div', 'image-frame is-empty');
+    frame.id = `frame-${animal.id}-${index}`;
+
+    // Placeholder
+    const placeholder = el('div', 'placeholder');
+    placeholder.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <path d="m21 15-5-5L5 21"/>
+      </svg>
+      <span>${index + 1}</span>`;
+
+    // Image
+    const img = el('img', 'generated-img');
+    img.alt = `Generated image ${index + 1} for ${animal.name}`;
+
+    // Hover hint
+    const hoverHint = el('div', 'image-hover-hint');
+    hoverHint.innerHTML = '<span>View full size</span>';
+
+    // Picked overlay
+    const pickedOverlay = el('div', 'picked-overlay');
+    pickedOverlay.innerHTML = `
+      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 6l3 3 5-5"/>
+      </svg>`;
+
+    frame.append(placeholder, img, hoverHint, pickedOverlay);
+    frame.addEventListener('click', () => openLightbox(animal.id, index));
+
+    // Pick button
+    const pickBtn = el('button', 'pick-btn');
+    pickBtn.id = `pickbtn-${animal.id}-${index}`;
+    pickBtn.textContent = 'Pick';
+    pickBtn.disabled = true;
+    pickBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      pickImage(animal.id, index);
+    });
+
+    slot.append(frame, pickBtn);
+    return slot;
+  }
+
+  function buildSummaryPanel() {
+    const panel = el('div', 'summary-panel');
+
+    const title = el('div', 'summary-panel__title');
+    title.textContent = 'Selected Characters';
+    panel.appendChild(title);
+
+    const animalsRow = el('div', 'summary-animals');
+    animals.forEach(animal => {
+      const item = el('div', `summary-animal${picks[animal.id] ? ' is-picked' : ''}`);
+      item.id = `summary-${animal.id}`;
+      item.style.setProperty('--animal-color', animal.color);
+
+      const emoji = el('div', 'summary-animal__emoji');
+      emoji.textContent = animal.emoji;
+      const info = el('div', 'summary-animal__info');
+      const name = el('div', 'summary-animal__name');
+      name.textContent = animal.name;
+      const status = el('div', 'summary-animal__status');
+      status.id = `summary-status-${animal.id}`;
+      status.textContent = picks[animal.id] ? 'Image selected' : 'No image selected';
+      info.append(name, status);
+      item.append(emoji, info);
+      animalsRow.appendChild(item);
+    });
+    panel.appendChild(animalsRow);
+
+    const actions = el('div', 'summary-panel__actions');
+    const dlBtn = el('button', 'download-btn');
+    dlBtn.id = 'downloadBtn';
+    dlBtn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Save Selected`;
+    dlBtn.disabled = Object.values(picks).every(p => !p);
+    dlBtn.addEventListener('click', downloadSelected);
+
+    const hint = el('div', 'download-hint');
+    const pickedCount = Object.values(picks).filter(Boolean).length;
+    hint.textContent = pickedCount > 0
+      ? `${pickedCount} image${pickedCount > 1 ? 's' : ''} ready to save`
+      : 'Pick an image for each animal first';
+    hint.id = 'downloadHint';
+
+    actions.append(dlBtn, hint);
+    panel.appendChild(actions);
+
+    return panel;
+  }
+
+  // ── Generate ───────────────────────────────────────────────────────────────
+  async function generateImages(animalId) {
+    const promptEl = document.getElementById(`prompt-${animalId}`);
+    const promptText = promptEl ? promptEl.value.trim() : '';
+    if (!promptText) {
+      setStatus(animalId, 'Please enter a prompt first.', true);
+      return;
+    }
+
+    setLoading(animalId, true);
+    setStatus(animalId, '');
+
+    // Clear old pick when regenerating
+    if (picks[animalId]) {
+      picks[animalId] = null;
+      updatePickUI(animalId);
+    }
+
+    // Reset images
+    images[animalId] = [null, null, null, null];
+    refreshGrid(animalId);
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            instances: [{ prompt: promptText }],
+            parameters: { sampleCount: 4, aspectRatio: '9:16' }
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errMsg = data?.error?.message || `HTTP ${response.status}`;
+        const isQuota = errMsg.toLowerCase().includes('quota') || response.status === 429;
+        if (isQuota) {
+          setStatus(animalId, 'Rate limit reached. Wait a moment and try again.', true);
+        } else if (response.status === 400 && errMsg.toLowerCase().includes('safety')) {
+          setStatus(animalId, 'Prompt blocked by safety filter. Try rephrasing.', true);
+        } else {
+          setStatus(animalId, `API error: ${errMsg}`, true);
+        }
+        return;
+      }
+
+      const predictions = data.predictions;
+      if (!predictions || predictions.length === 0) {
+        setStatus(animalId, 'No images generated — try adjusting the prompt.', true);
+        return;
+      }
+
+      predictions.forEach((pred, i) => {
+        if (i < 4 && pred.bytesBase64Encoded) {
+          images[animalId][i] = {
+            base64: pred.bytesBase64Encoded,
+            mimeType: pred.mimeType || 'image/png'
+          };
+        }
+      });
+
+      refreshGrid(animalId);
+      setStatus(animalId, `${predictions.length} image${predictions.length > 1 ? 's' : ''} generated.`);
+
+    } catch (err) {
+      setStatus(animalId, `Network error: ${err.message}`, true);
+    } finally {
+      setLoading(animalId, false);
+    }
+  }
+
+  // ── UI updates ─────────────────────────────────────────────────────────────
+  function refreshGrid(animalId) {
+    const animal = animals.find(a => a.id === animalId);
+    for (let i = 0; i < 4; i++) {
+      const img = images[animalId][i];
+      const frame = document.getElementById(`frame-${animalId}-${i}`);
+      const pickBtn = document.getElementById(`pickbtn-${animalId}-${i}`);
+      const imgEl = frame ? frame.querySelector('.generated-img') : null;
+
+      if (!frame || !pickBtn || !imgEl) continue;
+
+      if (img) {
+        imgEl.src = `data:${img.mimeType};base64,${img.base64}`;
+        frame.classList.remove('is-empty');
+        frame.classList.add('has-image');
+        pickBtn.disabled = false;
+      } else {
+        imgEl.src = '';
+        frame.classList.add('is-empty');
+        frame.classList.remove('has-image', 'is-picked');
+        pickBtn.disabled = true;
+        pickBtn.classList.remove('is-picked');
+        pickBtn.textContent = 'Pick';
+      }
+    }
+    updatePickUI(animalId);
+  }
+
+  function pickImage(animalId, index) {
+    if (!images[animalId][index]) return;
+    const wasPicked = picks[animalId] && picks[animalId].index === index;
+
+    picks[animalId] = wasPicked ? null : {
+      index,
+      base64: images[animalId][index].base64,
+      mimeType: images[animalId][index].mimeType
+    };
+
+    updatePickUI(animalId);
+    updateSummaryPanel();
+    updateHeaderPill();
+
+    // Sync lightbox if open for same animal+index
+    if (lbAnimalId === animalId) {
+      syncLightboxPickBtn();
+    }
+  }
+
+  function updatePickUI(animalId) {
+    const pick = picks[animalId];
+    for (let i = 0; i < 4; i++) {
+      const frame = document.getElementById(`frame-${animalId}-${i}`);
+      const pickBtn = document.getElementById(`pickbtn-${animalId}-${i}`);
+      if (!frame || !pickBtn) continue;
+      const isPicked = pick && pick.index === i;
+      frame.classList.toggle('is-picked', !!isPicked);
+      pickBtn.classList.toggle('is-picked', !!isPicked);
+      pickBtn.textContent = isPicked ? 'Picked' : 'Pick';
+    }
+
+    const badge = document.getElementById(`badge-${animalId}`);
+    if (badge) badge.classList.toggle('is-visible', !!pick);
+  }
+
+  function updateSummaryPanel() {
+    animals.forEach(animal => {
+      const item = document.getElementById(`summary-${animal.id}`);
+      const status = document.getElementById(`summary-status-${animal.id}`);
+      if (!item || !status) return;
+      const hasPick = !!picks[animal.id];
+      item.classList.toggle('is-picked', hasPick);
+      status.textContent = hasPick ? 'Image selected' : 'No image selected';
+    });
+
+    const dlBtn = document.getElementById('downloadBtn');
+    const dlHint = document.getElementById('downloadHint');
+    const pickedCount = Object.values(picks).filter(Boolean).length;
+
+    if (dlBtn) dlBtn.disabled = pickedCount === 0;
+    if (dlHint) {
+      dlHint.textContent = pickedCount > 0
+        ? `${pickedCount} image${pickedCount > 1 ? 's' : ''} ready to download`
+        : 'Pick an image for each animal first';
+    }
+  }
+
+  function updateHeaderPill() {
+    const pill = document.getElementById('headerPill');
+    if (!pill) return;
+    const pickedCount = Object.values(picks).filter(Boolean).length;
+    pill.textContent = `${pickedCount} of ${animals.length} picked`;
+    pill.classList.toggle('has-picks', pickedCount > 0);
+  }
+
+  function setLoading(animalId, loading) {
+    const overlay = document.getElementById(`loading-${animalId}`);
+    const genBtn = document.getElementById(`genbtn-${animalId}`);
+    if (overlay) overlay.classList.toggle('is-visible', loading);
+    if (genBtn) genBtn.disabled = loading;
+  }
+
+  function setStatus(animalId, message, isError = false) {
+    const el = document.getElementById(`status-${animalId}`);
+    if (!el) return;
+    el.textContent = message;
+    el.classList.toggle('is-error', isError);
+  }
+
+  // ── Lightbox ───────────────────────────────────────────────────────────────
+  function openLightbox(animalId, index) {
+    const img = images[animalId][index];
+    if (!img) return;
+
+    lbAnimalId = animalId;
+    lbIndex = index;
+
+    const lightbox = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lightboxImg');
+    const animal = animals.find(a => a.id === animalId);
+
+    lbImg.src = `data:${img.mimeType};base64,${img.base64}`;
+    lightbox.style.setProperty('--lb-animal-color', animal.color);
+    lightbox.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+
+    syncLightboxPickBtn();
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('is-open');
+    document.body.style.overflow = '';
+    lbAnimalId = null;
+    lbIndex = null;
+  }
+
+  function syncLightboxPickBtn() {
+    const btn = document.getElementById('lightboxPickBtn');
+    if (!btn || lbAnimalId === null || lbIndex === null) return;
+    const isPicked = picks[lbAnimalId] && picks[lbAnimalId].index === lbIndex;
+    btn.textContent = isPicked ? 'Picked!' : 'Pick this image';
+    btn.classList.toggle('is-picked', !!isPicked);
+  }
+
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  document.getElementById('lightbox').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeLightbox();
+  });
+  document.getElementById('lightboxPickBtn').addEventListener('click', () => {
+    if (lbAnimalId !== null && lbIndex !== null) {
+      pickImage(lbAnimalId, lbIndex);
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  // ── Download / Save to Pipeline ─────────────────────────────────────────────
+  async function downloadSelected() {
+    const btn = document.getElementById('downloadBtn');
+    const hint = document.getElementById('downloadHint');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    let saved = 0;
+    for (const animal of animals) {
+      const pick = picks[animal.id];
+      if (!pick) continue;
+
+      const filename = `${animal.id}_character.png`;
+      try {
+        // Save directly to pipeline/character-images/ via server
+        await fetch('/save-pick', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, base64: pick.base64 }),
+        });
+        saved++;
+      } catch (err) {
+        console.warn(`Failed to save ${filename}:`, err);
+      }
+    }
+
+    btn.textContent = `Saved ${saved} image${saved !== 1 ? 's' : ''} ✓`;
+    btn.style.borderColor = 'var(--green-border)';
+    btn.style.color = 'var(--green)';
+    btn.style.background = 'var(--green-bg)';
+    if (hint) hint.textContent = `Saved to pipeline/character-images/`;
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'Save Selected';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.style.background = '';
+    }, 3000);
+  }
+
+  // ── Utilities ──────────────────────────────────────────────────────────────
+  function el(tag, className) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    return node;
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  if (!apiKey) {
+    document.body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;">
+        <div>
+          <div style="font-size:48px;margin-bottom:16px;">🔑</div>
+          <h2 style="margin-bottom:8px;">API Key Not Found</h2>
+          <p style="color:#8b90a8;">Run <code style="background:#1a1d27;padding:2px 6px;border-radius:4px;">./pipeline/character-picker/serve.sh</code> to launch this tool.</p>
+        </div>
+      </div>`;
+  } else if (!animals || animals.length === 0) {
+    document.body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;">
+        <div>
+          <div style="font-size:48px;margin-bottom:16px;">📋</div>
+          <h2 style="margin-bottom:8px;">No Animals Found</h2>
+          <p style="color:#8b90a8;">Check that <code style="background:#1a1d27;padding:2px 6px;border-radius:4px;">pipeline/animals.json</code> exists and is valid.</p>
+        </div>
+      </div>`;
+  } else {
+    render();
+  }
+</script>
+</body>
+</html>
