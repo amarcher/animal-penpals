@@ -34,7 +34,7 @@ tools.json
 tests.json
 
 # Animal videos (large files, hosted on CDN in prod)
-public/animal-videos/*.mp4
+public/animal-videos/
 
 # Claude worktrees
 .claude/worktrees/
@@ -48,3 +48,13 @@ public/animals/
 # Vercel
 .vercel/
 .vercel
+
+# Wrangler (Cloudflare CLI state)
+.wrangler/
+
+# ElevenLabs agent/tool configs (managed via ElevenLabs CLI, not source of truth)
+agent_configs/
+tool_configs/
+
+# Misc duplicates
+public/logo-wide copy 2.png
