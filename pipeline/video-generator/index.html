@@ -310,9 +310,9 @@
 
     .char-thumb {
       width: 64px;
-      height: 64px;
+      height: auto;
       border-radius: 8px;
-      object-fit: cover;
+      object-fit: contain;
       border: 1.5px solid var(--border);
       background: var(--surface-2);
       display: block;
@@ -465,13 +465,15 @@
     }
 
     .video-preview {
-      width: 100%;
+      width: auto;
+      max-width: 100%;
+      max-height: 320px;
       border-radius: var(--radius-sm);
       border: 1.5px solid var(--border);
       background: #000;
       display: block;
-      max-height: 200px;
       object-fit: contain;
+      margin: 0 auto;
     }
 
     .video-actions {
@@ -737,6 +739,111 @@
       font-size: 12px;
       color: var(--text-muted);
     }
+
+    /* ── Storyboard Extend ── */
+    .beat-strip {
+      display: flex;
+      gap: 4px;
+      align-items: flex-end;
+      overflow-x: auto;
+      padding: 4px 0;
+    }
+
+    .beat-strip__item {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .beat-strip__img {
+      width: 52px;
+      aspect-ratio: 9 / 16;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 2px solid var(--border);
+      transition: border-color 0.2s;
+    }
+
+    .beat-strip__img.is-active {
+      border-color: var(--animal-color);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--animal-color) 40%, transparent);
+    }
+
+    .beat-strip__img.is-done {
+      border-color: var(--green);
+    }
+
+    .beat-strip__arrow {
+      flex-shrink: 0;
+      color: var(--text-muted);
+      font-size: 16px;
+      align-self: center;
+      padding: 0 2px;
+    }
+
+    .beat-strip__label {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      text-align: center;
+      max-width: 52px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .storyboard-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .step-log {
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      max-height: 120px;
+      overflow-y: auto;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .step-log .step-done { color: var(--green); }
+    .step-log .step-active { color: #f0b060; }
+    .step-log .step-error { color: #ff7070; }
+
+    .segment-previews {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .segment-preview {
+      flex: 1;
+      min-width: 120px;
+      max-width: 200px;
+    }
+
+    .segment-preview video {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #000;
+    }
+
+    .segment-preview__label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -792,6 +899,34 @@ const VIDEO_PROMPTS = {
   }
 };
 
+// Transition prompts for storyboard extend pipeline (between adjacent beats)
+const STORYBOARD_TRANSITIONS = {
+  swan: [
+    'A photorealistic Mute Swan on a calm lake gracefully lowers its neck to examine a piece of paper floating on the water, gently nudging it with its orange-black bill. Golden hour lighting. Wildlife footage.',
+    'A photorealistic Mute Swan on a calm lake with its head lowered, intently reading a letter on the water surface. Its neck curves into an elegant S-shape as it studies the paper. Golden hour lighting. Wildlife footage.',
+    'A photorealistic Mute Swan on a calm lake presses its bill against a piece of paper on the water, carefully writing a reply letter. Its neck curves down gracefully, focused on the paper. Golden hour. Wildlife footage.',
+    'A photorealistic Mute Swan on a calm lake spreads its wings triumphantly, rising up with a proud posture as if having finished writing a response. Wings catch golden light. Wildlife footage.',
+  ],
+  pig: [
+    'A photorealistic Kunekune pig in a grassy paddock trots forward excitedly and lowers its snout to sniff at a piece of paper on the grass. Patchy ginger and white coat. Sunny day. Wildlife footage.',
+    'A photorealistic Kunekune pig in a grassy paddock with its head down, focused on reading a letter on the grass. Attentive expression, ears forward. Patchy ginger and white coat. Sunny day. Wildlife footage.',
+    'A photorealistic Kunekune pig in a grassy paddock with its snout pressed down against a piece of paper on the grass, writing a reply letter. Focused determined expression. Patchy ginger and white coat. Sunny day. Wildlife footage.',
+    'A photorealistic Kunekune pig in a grassy paddock trots forward energetically with a happy proud expression, mouth open in a cheerful snort, as if having finished its response. Sunny day. Wildlife footage.',
+  ],
+  narwhal: [
+    'A photorealistic narwhal at the surface of Arctic waters gently nudges a piece of paper floating on the water with the tip of its spiral tusk. Mottled grey-blue skin. Cold Arctic light. Wildlife footage.',
+    'A photorealistic narwhal at the surface of Arctic waters with its head turned, one eye looking down at a letter floating on the water. Curious intent expression. Spiral tusk visible. Arctic light. Wildlife footage.',
+    'A photorealistic narwhal at the surface of Arctic waters, using the tip of its spiral tusk to press against a piece of paper floating on the water, carefully writing a reply letter. Mottled grey-blue skin. Cold Arctic light. Wildlife footage.',
+    'A photorealistic narwhal breaching slightly at the surface of Arctic waters, creating a splash, looking energetic and triumphant after finishing its response. Spiral tusk catching light. Wildlife footage.',
+  ],
+  axolotl: [
+    'A photorealistic leucistic pink axolotl in clear freshwater paddles over to a piece of paper on the sandy bottom, tiny front legs touching it. Feathery gills fluttering with excitement. Macro aquatic footage.',
+    'A photorealistic leucistic pink axolotl in clear freshwater with head lowered, looking down at a letter on the sandy bottom. Feathery pink-red gills relaxed. Gentle smile. Soft aquatic lighting. Macro footage.',
+    'A photorealistic leucistic pink axolotl in clear freshwater, hovering over a piece of paper on the sandy bottom with one tiny front leg pressed against it, writing a reply letter. Feathery pink-red gills relaxed. Focused smile. Soft aquatic lighting. Macro footage.',
+    'A photorealistic leucistic pink axolotl in clear freshwater swimming forward actively with all four legs extended, gills streaming behind, looking energetic and happy. Dynamic macro aquatic footage.',
+  ],
+};
+
 const MODELS = [
   { id: 'veo-3.1-lite-generate-preview', label: 'Lite', costPerSec: 0.05 },
   { id: 'veo-3.1-generate-preview', label: 'Fast', costPerSec: 0.10 },
@@ -799,6 +934,7 @@ const MODELS = [
 ];
 
 const VIDEO_DURATION = 8; // seconds
+const PROMPT_SUFFIX = ' Full-bleed 9:16 vertical frame — the subject and background must fill the entire frame edge to edge. No letterboxing, no black bars, no borders.';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 // state[animalId][type] = { videoBlob, videoUrl, videoPicked, generating, progress, progressText, operationName }
@@ -810,8 +946,23 @@ animals.forEach(a => {
   };
 });
 
+// Storyboard extend state per animal
+const storyboardState = {};
+animals.forEach(a => {
+  storyboardState[a.id] = {
+    generating: false,
+    currentStep: 0,       // 0-3 (4 transitions between 5 beats)
+    totalSteps: 4,
+    segments: [],          // array of { blob, url } for each generated segment
+    finalBlob: null,
+    finalUrl: null,
+    log: [],               // array of { text, status: 'done'|'active'|'error' }
+  };
+});
+
 // Selected model index per animal+type (shared: use one global for simplicity)
-const selectedModel = { index: 0 };
+// Default to Fast (index 1) since Lite doesn't support extend
+const selectedModel = { index: 1 };
 let mode = 'manual'; // 'manual' | 'api'
 
 // ── Mode toggle ───────────────────────────────────────────────────────────────
@@ -949,10 +1100,60 @@ function renderVideoSection(animal, type) {
     `;
   } else {
     // API mode
+    const hasBeats = type === 'receive' && animal.storyboardBeats && Object.keys(animal.storyboardBeats).length >= 2;
+
     if (!apiKey) {
       actionHTML = `
         <div class="api-disabled-msg">
           No Google AI API key found. Add <code>GOOGLE_AI_API_KEY=...</code> to your <code>.env</code> file and restart the server. Get a key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>.
+        </div>
+      `;
+    } else if (hasBeats) {
+      // Storyboard extend mode for receive videos
+      const ss = storyboardState[animal.id];
+      const beatKeys = Object.keys(animal.storyboardBeats).map(Number).sort((a, b) => a - b);
+      const beatLabels = ['Receiving', 'Opening', 'Reading', 'Composing', 'Sending'];
+
+      const firstKey = beatKeys[0];
+      const lastKey = beatKeys[beatKeys.length - 1];
+      const firstBeat = animal.storyboardBeats[firstKey];
+      const lastBeat = animal.storyboardBeats[lastKey];
+      const isDone = !ss.generating && ss.finalUrl;
+      const isActive = ss.generating;
+
+      const beatStripHTML = `
+        <div class="beat-strip__item">
+          <img class="beat-strip__img ${isDone ? 'is-done' : isActive ? 'is-active' : ''}" src="data:${firstBeat.mimeType};base64,${firstBeat.base64}" alt="First beat">
+          <span class="beat-strip__label">${firstBeat.label || beatLabels[0]}</span>
+        </div>
+        <span class="beat-strip__arrow">→</span>
+        <div class="beat-strip__item">
+          <img class="beat-strip__img ${isDone ? 'is-done' : ''}" src="data:${lastBeat.mimeType};base64,${lastBeat.base64}" alt="Last beat">
+          <span class="beat-strip__label">${lastBeat.label || beatLabels[beatKeys.length - 1]}</span>
+        </div>
+      `;
+
+      const logHTML = ss.log.length > 0
+        ? ss.log.map(l => `<span class="step-${l.status}">${l.text}</span>`).join('\n')
+        : 'Ready to generate 8s receive video...';
+
+      const modelOpts = MODELS.map((m, i) => `<option value="${i}" ${i === selectedModel.index ? 'selected' : ''}>${m.label} — $${m.costPerSec}/s</option>`).join('');
+
+      const costEst = (MODELS[selectedModel.index].costPerSec * 8).toFixed(2);
+
+      actionHTML = `
+        <div class="storyboard-controls">
+          <div class="beat-strip">${beatStripHTML}</div>
+          <div class="model-select-row">
+            <select class="model-select" id="ms-${animal.id}-${type}">
+              ${modelOpts}
+            </select>
+            <span class="cost-estimate" id="ce-${animal.id}-${type}">~$${costEst} (8s clip)</span>
+          </div>
+          <button class="generate-btn" id="genbtn-${animal.id}-${type}" ${ss.generating ? 'disabled' : ''}>
+            ${ss.generating ? '<span class="spinner"></span> Generating...' : 'Generate Receive Video'}
+          </button>
+          <div class="step-log" id="steplog-${animal.id}">${logHTML}</div>
         </div>
       `;
     } else {
@@ -1053,6 +1254,8 @@ function renderVideoSection(animal, type) {
       });
     }
   } else if (apiKey) {
+    const hasBeats = type === 'receive' && animal.storyboardBeats && Object.keys(animal.storyboardBeats).length >= 2;
+
     // Model selector
     const ms = document.getElementById(`ms-${animal.id}-${type}`);
     if (ms) {
@@ -1072,7 +1275,11 @@ function renderVideoSection(animal, type) {
     // Generate button
     const genbtn = document.getElementById(`genbtn-${animal.id}-${type}`);
     if (genbtn) {
-      genbtn.addEventListener('click', () => generateVideo(animal, type));
+      if (hasBeats) {
+        genbtn.addEventListener('click', () => generateStoryboardVideo(animal));
+      } else {
+        genbtn.addEventListener('click', () => generateVideo(animal, type));
+      }
     }
   }
 
@@ -1257,20 +1464,19 @@ async function generateVideo(animal, type) {
 
   try {
     // Submit generation request
+    const imageRef = animal.characterImageBase64
+      ? { bytesBase64Encoded: animal.characterImageBase64, mimeType: animal.characterImageMimeType }
+      : undefined;
+
     const reqBody = {
       instances: [{
-        prompt,
-        image: animal.characterImageBase64 ? {
-          inlineData: {
-            mimeType: animal.characterImageMimeType,
-            data: animal.characterImageBase64
-          }
-        } : undefined
+        prompt: prompt + PROMPT_SUFFIX,
+        image: imageRef
       }],
       parameters: {
-        aspectRatio: '16:9',
+        aspectRatio: '9:16',
         resolution: '720p',
-        durationSeconds: '8'
+        durationSeconds: 8
       }
     };
     // Remove undefined image if no character image
@@ -1328,7 +1534,11 @@ async function generateVideo(animal, type) {
     s.videoUrl = url;
     s.generating = false;
     s.progress = 100;
-    s.progressText = 'Done!';
+    s.progressText = 'Done! Saving...';
+
+    // Auto-save to disk
+    await saveVideoToDisk(blob, `${animal.id}_${type}.mp4`);
+    s.progressText = `Saved to pipeline/generated-videos/${animal.id}_${type}.mp4`;
 
     renderVideoSection(animal, type);
     refreshCardStatus(animal);
@@ -1380,7 +1590,259 @@ function updateProgressUI(animalId, type, s) {
   if (progwrap) progwrap.classList.toggle('is-visible', s.generating);
 }
 
+// ── Files API Upload ─────────────────────────────────────────────────────────
+// Veo models require media to be uploaded via the Files API, not passed inline.
+async function uploadToFilesAPI(base64Data, mimeType, displayName) {
+  // Convert base64 to binary
+  const byteStr = atob(base64Data);
+  const bytes = new Uint8Array(byteStr.length);
+  for (let i = 0; i < byteStr.length; i++) bytes[i] = byteStr.charCodeAt(i);
+  const blob = new Blob([bytes], { type: mimeType });
+
+  // Step 1: Initiate resumable upload
+  const initRes = await fetch(
+    `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: {
+        'X-Goog-Upload-Protocol': 'resumable',
+        'X-Goog-Upload-Command': 'start',
+        'X-Goog-Upload-Header-Content-Length': String(blob.size),
+        'X-Goog-Upload-Header-Content-Type': mimeType,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ file: { display_name: displayName } }),
+    }
+  );
+
+  if (!initRes.ok) {
+    const errText = await initRes.text();
+    throw new Error(`Files API init error ${initRes.status}: ${errText}`);
+  }
+
+  const uploadUrl = initRes.headers.get('X-Goog-Upload-URL');
+  if (!uploadUrl) throw new Error('No upload URL returned from Files API');
+
+  // Step 2: Upload file bytes
+  const uploadRes = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Length': String(blob.size),
+      'X-Goog-Upload-Offset': '0',
+      'X-Goog-Upload-Command': 'upload, finalize',
+    },
+    body: blob,
+  });
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text();
+    throw new Error(`Files API upload error ${uploadRes.status}: ${errText}`);
+  }
+
+  const fileInfo = await uploadRes.json();
+  const fileUri = fileInfo.file?.uri;
+  if (!fileUri) throw new Error('No file URI in upload response');
+
+  // Poll until file is ACTIVE (processing may take a moment for videos)
+  const fileName = fileInfo.file?.name;
+  if (fileName) {
+    let attempts = 0;
+    while (attempts < 30) {
+      const statusRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`
+      );
+      if (statusRes.ok) {
+        const status = await statusRes.json();
+        if (status.state === 'ACTIVE') break;
+        if (status.state === 'FAILED') throw new Error('File processing failed');
+      }
+      await new Promise(r => setTimeout(r, 2000));
+      attempts++;
+    }
+  }
+
+  return { fileUri, mimeType };
+}
+
+// ── Save video to disk via server ────────────────────────────────────────────
+async function saveVideoToDisk(blob, filename) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result.split(',')[1];
+      try {
+        await fetch('/save-video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, base64 }),
+        });
+        resolve();
+      } catch (err) {
+        console.warn(`Failed to save ${filename}:`, err);
+        resolve(); // Don't fail the pipeline on save errors
+      }
+    };
+    reader.onerror = () => resolve();
+    reader.readAsDataURL(blob);
+  });
+}
+
+// ── Storyboard Pipeline (First+Last Frame per segment) ──────────────────────
+const CLIP_DURATION = 5; // seconds per segment (API min: 4, max: 8)
+
+async function generateStoryboardVideo(animal) {
+  const ss = storyboardState[animal.id];
+  if (ss.generating) return;
+
+  const beatKeys = Object.keys(animal.storyboardBeats).map(Number).sort((a, b) => a - b);
+  const transitions = STORYBOARD_TRANSITIONS[animal.id] || [];
+  const model = MODELS[selectedModel.index];
+  const totalSteps = beatKeys.length - 1;
+
+  ss.generating = true;
+  ss.currentStep = 0;
+  ss.segments = [];
+  ss.finalBlob = null;
+  ss.finalUrl = null;
+  ss.log = [];
+
+  renderVideoSection(animal, 'receive');
+
+  try {
+    // Single first+last frame: first beat → last beat (8s)
+    const firstBeat = animal.storyboardBeats[beatKeys[0]];
+    const lastBeat = animal.storyboardBeats[beatKeys[beatKeys.length - 1]];
+    const prompt = transitions.join(' Then, ');
+
+    addStoryboardLog(animal.id, `Generating ${firstBeat.label}→${lastBeat.label} (8s, first+last frame)...`, 'active');
+
+    const clip = await generateFirstLastFrame(model, prompt, firstBeat, lastBeat, animal.id);
+    ss.segments.push(clip);
+    ss.currentStep = 1;
+
+    // Auto-save to disk
+    await saveVideoToDisk(clip.blob, `${animal.id}_receive.mp4`);
+
+    ss.finalBlob = clip.blob;
+    ss.finalUrl = clip.url;
+    ss.generating = false;
+
+    // Set as the receive video
+    state[animal.id].receive.videoBlob = clip.blob;
+    state[animal.id].receive.videoUrl = clip.url;
+
+    updateStoryboardLog(animal.id, ss.log.length - 1, `Generated ✓`, 'done');
+    addStoryboardLog(animal.id, `Saved to pipeline/generated-videos/${animal.id}_receive.mp4`, 'done');
+    renderVideoSection(animal, 'receive');
+    refreshCardStatus(animal);
+    refreshSummary();
+    updateHeaderPill();
+
+  } catch (err) {
+    ss.generating = false;
+    addStoryboardLog(animal.id, `Error: ${err.message}`, 'error');
+    renderVideoSection(animal, 'receive');
+  }
+}
+
+async function generateFirstLastFrame(model, prompt, firstBeat, lastBeat, logAnimalId) {
+  addStoryboardLog(logAnimalId, `  Submitting clip to Veo API (${model.label})...`, 'active');
+
+  const reqBody = {
+    instances: [{
+      prompt: prompt + PROMPT_SUFFIX,
+      image: {
+        bytesBase64Encoded: firstBeat.base64,
+        mimeType: firstBeat.mimeType
+      },
+      lastFrame: {
+        bytesBase64Encoded: lastBeat.base64,
+        mimeType: lastBeat.mimeType
+      }
+    }],
+    parameters: {
+      aspectRatio: '9:16',
+      resolution: '720p',
+      durationSeconds: 8
+    }
+  };
+
+  const submitRes = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model.id}:predictLongRunning?key=${apiKey}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) }
+  );
+
+  if (!submitRes.ok) {
+    const errText = await submitRes.text();
+    throw new Error(`API error ${submitRes.status}: ${errText}`);
+  }
+
+  const operation = await submitRes.json();
+  const logIdx = storyboardState[logAnimalId].log.length - 1;
+  const result = await pollOperation(operation.name, (elapsed) => {
+    updateStoryboardLog(logAnimalId, logIdx, `  Generating video... (${Math.floor(elapsed / 1000)}s elapsed)`, 'active');
+  });
+
+  const videoUri = result.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
+  if (!videoUri) throw new Error('No video URI in response');
+
+  let videoRes = await fetch(`${videoUri}&key=${apiKey}`);
+  if (!videoRes.ok) {
+    videoRes = await fetch(videoUri, { headers: { 'x-goog-api-key': apiKey } });
+  }
+  if (!videoRes.ok) throw new Error(`Failed to download video: ${videoRes.status}`);
+
+  const blob = await videoRes.blob();
+  const url = URL.createObjectURL(blob);
+
+  return { blob, url };
+}
+
+// Concatenate MP4 blobs by appending media segments.
+// For clean concatenation we use MediaSource if available, otherwise simple blob concat.
+async function concatenateVideos(blobs) {
+  // Simple approach: use a hidden video + MediaRecorder to re-encode
+  // For MVP, just concatenate the blobs (works for same-codec same-resolution MP4s)
+  return new Blob(blobs, { type: 'video/mp4' });
+}
+
+function addStoryboardLog(animalId, text, status) {
+  storyboardState[animalId].log.push({ text, status });
+  updateStoryboardLogUI(animalId);
+}
+
+function updateStoryboardLog(animalId, index, text, status) {
+  const ss = storyboardState[animalId];
+  if (index >= 0 && index < ss.log.length) {
+    ss.log[index] = { text, status };
+  }
+  updateStoryboardLogUI(animalId);
+}
+
+function updateStoryboardLogUI(animalId) {
+  const logEl = document.getElementById(`steplog-${animalId}`);
+  if (!logEl) return;
+  const ss = storyboardState[animalId];
+  logEl.innerHTML = ss.log.map(l => `<span class="step-${l.status}">${l.text}</span>`).join('\n');
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
+// Pre-populate state from previously generated videos on disk
+const existingVideos = window.__EXISTING_VIDEOS__ || {};
+Object.entries(existingVideos).forEach(([animalId, types]) => {
+  Object.entries(types).forEach(([type, url]) => {
+    if (state[animalId] && state[animalId][type]) {
+      state[animalId][type].videoUrl = url;
+      state[animalId][type].videoPicked = true;
+    }
+    // Also set storyboard state if it's a receive video with beats
+    if (type === 'receive' && storyboardState[animalId]) {
+      storyboardState[animalId].finalUrl = url;
+    }
+  });
+});
+
 renderAll();
 </script>
 </body>

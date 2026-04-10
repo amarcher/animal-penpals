@@ -34,13 +34,25 @@ pipeline/
 │   ├── swan_character.png
 │   ├── pig_character.png
 │   └── ...
+├── storyboard-images/        ← storyboard beat PNGs (gitignored)
+│   ├── swan_beat_1_receiving.png
+│   ├── swan_beat_2_opening.png
+│   └── ...
 ├── voice-screener/
 │   ├── index.html            ← Voice Screener UI
 │   ├── serve.sh              ← reads .env + animals.json → config.js
 │   └── config.js             ← generated at runtime (gitignored)
-└── character-picker/
-    ├── index.html            ← Character Picker UI
-    ├── serve.sh              ← reads .env + animals.json → config.js
+├── character-picker/
+│   ├── index.html            ← Character Picker UI
+│   ├── serve.sh              ← reads .env + animals.json → config.js
+│   └── config.js             ← generated at runtime (gitignored)
+├── storyboard-picker/
+│   ├── index.html            ← Storyboard Picker UI
+│   ├── serve.sh              ← reads .env + animals.json → config.js
+│   └── config.js             ← generated at runtime (gitignored)
+└── video-generator/
+    ├── index.html            ← Video Generator UI (manual + API + storyboard extend)
+    ├── serve.sh              ← reads .env + animals.json + images → config.js
     └── config.js             ← generated at runtime (gitignored)
 ```
 
@@ -104,11 +116,13 @@ Generate idle + receive videos from selected character images.
 
 1. Add entries to `animals.json` with all prompts and voice candidates
 2. Run voice screener → pick/design voices
-3. Run character picker → pick character images
-4. Generate videos from character images
-5. Add animal to `src/data/animals.ts`, `api/generate-response.ts`, `src/data/videoManifest.ts`
-6. Upload videos + thumbnails to R2
-7. Regenerate landing pages
+3. Run character picker → pick character images (saved to `character-images/`)
+4. Run storyboard picker → pick beat keyframes (saved to `storyboard-images/`)
+5. Run video generator → generate idle + receive videos (saved to `generated-videos/`)
+6. Add animal to `src/data/animals.ts`, `api/generate-response.ts`, `src/data/videoManifest.ts`
+7. Upload videos + thumbnails to R2: `npx wrangler r2 object put animal-penpals/... --remote`
+8. Update Scribbles agent config: add animal to `agent_configs/Animal-Penpals.json`, deploy with `/elevenlabs`
+9. Regenerate landing pages: `npx tsx scripts/generate-animal-pages.tsx`
 
 ## APIs Used
 

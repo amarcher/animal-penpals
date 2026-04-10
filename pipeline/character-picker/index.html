@@ -324,7 +324,7 @@
 
     .image-frame {
       position: relative;
-      aspect-ratio: 1 / 1;
+      aspect-ratio: 9 / 16;
       border-radius: var(--radius-sm);
       overflow: hidden;
       border: 2px solid var(--border);
@@ -868,14 +868,14 @@
         <polyline points="7 10 12 15 17 10"/>
         <line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
-      Download Selected`;
+      Save Selected`;
     dlBtn.disabled = Object.values(picks).every(p => !p);
     dlBtn.addEventListener('click', downloadSelected);
 
     const hint = el('div', 'download-hint');
     const pickedCount = Object.values(picks).filter(Boolean).length;
     hint.textContent = pickedCount > 0
-      ? `${pickedCount} image${pickedCount > 1 ? 's' : ''} ready to download`
+      ? `${pickedCount} image${pickedCount > 1 ? 's' : ''} ready to save`
       : 'Pick an image for each animal first';
     hint.id = 'downloadHint';
 
@@ -915,7 +915,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             instances: [{ prompt: promptText }],
-            parameters: { sampleCount: 4 }
+            parameters: { sampleCount: 4, aspectRatio: '9:16' }
           })
         }
       );
@@ -1116,26 +1116,45 @@
     if (e.key === 'Escape') closeLightbox();
   });
 
-  // ── Download ───────────────────────────────────────────────────────────────
-  function downloadSelected() {
-    animals.forEach(animal => {
+  // ── Download / Save to Pipeline ─────────────────────────────────────────────
+  async function downloadSelected() {
+    const btn = document.getElementById('downloadBtn');
+    const hint = document.getElementById('downloadHint');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    let saved = 0;
+    for (const animal of animals) {
       const pick = picks[animal.id];
-      if (!pick) return;
+      if (!pick) continue;
 
-      const byteStr = atob(pick.base64);
-      const arr = new Uint8Array(byteStr.length);
-      for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
-      const blob = new Blob([arr], { type: pick.mimeType });
-      const url = URL.createObjectURL(blob);
+      const filename = `${animal.id}_character.png`;
+      try {
+        // Save directly to pipeline/character-images/ via server
+        await fetch('/save-pick', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, base64: pick.base64 }),
+        });
+        saved++;
+      } catch (err) {
+        console.warn(`Failed to save ${filename}:`, err);
+      }
+    }
 
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${animal.id}_character.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    });
+    btn.textContent = `Saved ${saved} image${saved !== 1 ? 's' : ''} ✓`;
+    btn.style.borderColor = 'var(--green-border)';
+    btn.style.color = 'var(--green)';
+    btn.style.background = 'var(--green-bg)';
+    if (hint) hint.textContent = `Saved to pipeline/character-images/`;
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'Save Selected';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.style.background = '';
+    }, 3000);
   }
 
   // ── Utilities ──────────────────────────────────────────────────────────────

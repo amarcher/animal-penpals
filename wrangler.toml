@@ -1,0 +1,7 @@
+name = "animal-penpals-cdn"
+account_id = "184fa526e5fc4970a565f4fb7fc89ce7"
+
+# R2 bucket binding for video/thumbnail assets
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "animal-penpals"

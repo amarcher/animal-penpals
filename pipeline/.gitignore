@@ -9,3 +9,9 @@ voice-samples/*.mp3
 
 # Generated character images (large PNGs)
 character-images/*.png
+
+# Generated storyboard images (large PNGs)
+storyboard-images/*.png
+
+# Generated videos (large MP4s)
+generated-videos/*.mp4
