@@ -36,6 +36,14 @@ const videoManifest: Record<string, AnimalVideoEntry> = {
   'meerkat-receive':  { url: `${BASE_URL}/meerkat_receive.mp4`,poster: `${THUMB_URL}/meerkat_receive.jpg`,description: 'Mika reads your letter and writes back' },
   'shark-idle':       { url: `${BASE_URL}/shark_idle.mp4`,     poster: `${THUMB_URL}/shark_idle.jpg`,     description: 'Gus the Great White swimming calmly' },
   'shark-receive':    { url: `${BASE_URL}/shark_receive.mp4`,  poster: `${THUMB_URL}/shark_receive.jpg`,  description: 'Gus reads your letter and writes back' },
+  'swan-idle':        { url: `${BASE_URL}/swan_idle.mp4`,      poster: `${THUMB_URL}/swan_idle.jpg`,      description: 'Serena the Swan gliding gracefully on the lake' },
+  'swan-receive':     { url: `${BASE_URL}/swan_receive.mp4`,   poster: `${THUMB_URL}/swan_receive.jpg`,   description: 'Serena reads your letter and writes back' },
+  'pig-idle':         { url: `${BASE_URL}/pig_idle.mp4`,       poster: `${THUMB_URL}/pig_idle.jpg`,       description: 'Patches the Pig lounging happily' },
+  'pig-receive':      { url: `${BASE_URL}/pig_receive.mp4`,    poster: `${THUMB_URL}/pig_receive.jpg`,    description: 'Patches reads your letter and writes back' },
+  'narwhal-idle':     { url: `${BASE_URL}/narwhal_idle.mp4`,   poster: `${THUMB_URL}/narwhal_idle.jpg`,   description: 'Nori the Narwhal swimming under Arctic ice' },
+  'narwhal-receive':  { url: `${BASE_URL}/narwhal_receive.mp4`,poster: `${THUMB_URL}/narwhal_receive.jpg`,description: 'Nori reads your letter and writes back' },
+  'axolotl-idle':     { url: `${BASE_URL}/axolotl_idle.mp4`,   poster: `${THUMB_URL}/axolotl_idle.jpg`,   description: 'Axel the Axolotl floating peacefully' },
+  'axolotl-receive':  { url: `${BASE_URL}/axolotl_receive.mp4`,poster: `${THUMB_URL}/axolotl_receive.jpg`,description: 'Axel reads your letter and writes back' },
 };
 
 export function getAnimalVideo(animalId: string, type: VideoType): AnimalVideoEntry | undefined {

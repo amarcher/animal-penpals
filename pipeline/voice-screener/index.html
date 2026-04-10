@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Screener — Animal Penpals</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-2: #21263a;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e8eaf0;
+      --text-muted: #8b90a8;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(15, 17, 23, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header__title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header__title h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header__title span {
+      font-size: 20px;
+    }
+
+    .header__subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 1px;
+    }
+
+    /* ── Main layout ── */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* ── Animal grid ── */
+    .animal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .animal-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Animal card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card__header {
+      padding: 18px 20px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .card__header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--animal-color);
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    .card__emoji {
+      font-size: 32px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    .card__animal-info {
+      flex: 1;
+    }
+
+    .card__name {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .card__species {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .card__color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--animal-color);
+      box-shadow: 0 0 8px var(--animal-color);
+    }
+
+    .card__body {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    /* ── Greeting text ── */
+    .greeting {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ── Candidates section ── */
+    .candidates-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .candidates {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .candidate {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      transition: border-color 0.2s;
+    }
+
+    .candidate.is-selected {
+      border-color: var(--animal-color);
+      box-shadow: 0 0 0 1px var(--animal-color), inset 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    .candidate.is-playing {
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    .candidate__info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .candidate__label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .candidate__name {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .candidate__voice-id {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Play button ── */
+    .play-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .play-btn:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .play-btn:active {
+      transform: scale(0.93);
+    }
+
+    .play-btn.is-playing {
+      background: var(--animal-color);
+      border-color: var(--animal-color);
+      color: #0f1117;
+    }
+
+    /* ── Pick button ── */
+    .pick-btn {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1.5px solid var(--border);
+      background: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pick-btn:hover {
+      border-color: var(--animal-color);
+      color: var(--animal-color);
+    }
+
+    .pick-btn.is-selected {
+      background: var(--animal-color);
+      border-color: var(--animal-color);
+      color: #0f1117;
+    }
+
+    /* ── Waveform animation ── */
+    .waveform {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      height: 16px;
+    }
+
+    .waveform__bar {
+      width: 2.5px;
+      background: currentColor;
+      border-radius: 99px;
+      animation: wave 0.8s ease-in-out infinite;
+    }
+
+    .waveform__bar:nth-child(1) { animation-delay: 0s; height: 5px; }
+    .waveform__bar:nth-child(2) { animation-delay: 0.1s; height: 10px; }
+    .waveform__bar:nth-child(3) { animation-delay: 0.2s; height: 15px; }
+    .waveform__bar:nth-child(4) { animation-delay: 0.1s; height: 10px; }
+    .waveform__bar:nth-child(5) { animation-delay: 0s; height: 5px; }
+
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.5); opacity: 0.6; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 -20px;
+    }
+
+    /* ── Custom generate section ── */
+    .generate-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .generate-section label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .generate-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .generate-input {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: inherit;
+      transition: border-color 0.15s;
+      resize: none;
+      min-height: 60px;
+    }
+
+    .generate-input:focus {
+      outline: none;
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .generate-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .generate-btn {
+      align-self: flex-end;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: none;
+      background: var(--animal-color);
+      color: #0f1117;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .generate-btn:hover {
+      opacity: 0.9;
+    }
+
+    .generate-btn:active {
+      transform: scale(0.97);
+    }
+
+    .generate-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .generate-status {
+      font-size: 12px;
+      color: var(--text-muted);
+      min-height: 18px;
+    }
+
+    .generate-status.is-error {
+      color: #f87171;
+    }
+
+    .generate-status.is-success {
+      color: #4ade80;
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: #0f1117;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Summary panel ── */
+    .summary {
+      margin-top: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .summary__header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .summary__header h2 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .summary__body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .summary-row__emoji {
+      font-size: 20px;
+      width: 28px;
+      text-align: center;
+    }
+
+    .summary-row__animal {
+      font-size: 13px;
+      font-weight: 600;
+      width: 140px;
+      flex-shrink: 0;
+    }
+
+    .summary-row__pick {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .summary-row__pick.has-pick {
+      color: var(--text);
+    }
+
+    .summary-row__voice-id {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .summary-row__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 12px;
+    }
+
+    .summary-row__badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--animal-color);
+    }
+
+    .summary__json {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #a5d6ff;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .copy-btn {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 7px;
+      border: 1.5px solid var(--border);
+      background: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .copy-btn:hover {
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text);
+    }
+
+    .copy-btn.copied {
+      border-color: #4ade80;
+      color: #4ade80;
+    }
+
+    /* ── Voice Designer ── */
+    .voice-designer {
+      margin-top: 4px;
+    }
+
+    .voice-designer__toggle {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 8px 14px;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .voice-designer__toggle:hover {
+      color: var(--text);
+      border-color: rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .voice-designer__panel {
+      margin-top: 10px;
+      padding: 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .voice-designer__label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .voice-designer__prompt {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: inherit;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .voice-designer__prompt:focus {
+      outline: none;
+      border-color: var(--animal-color, rgba(255,255,255,0.3));
+    }
+
+    .voice-designer__actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      justify-content: space-between;
+    }
+
+    .voice-designer__generate {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: none;
+      background: var(--animal-color, #4ade80);
+      color: #0f1117;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .voice-designer__generate:hover { opacity: 0.9; }
+    .voice-designer__generate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .voice-designer__status {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .voice-designer__status.is-error { color: #f87171; }
+    .voice-designer__status.is-success { color: #4ade80; }
+
+    /* ── Generated previews ── */
+    .voice-previews {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .voice-previews__title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .voice-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+
+    .voice-preview.is-selected {
+      border-color: var(--animal-color, #4ade80);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .voice-preview__label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      min-width: 14px;
+    }
+
+    .voice-preview__id {
+      font-size: 10px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--text-muted);
+      flex: 1;
+    }
+
+    .voice-preview .play-btn {
+      width: 28px;
+      height: 28px;
+      font-size: 11px;
+    }
+
+    .voice-preview .pick-btn {
+      font-size: 11px;
+      padding: 4px 10px;
+    }
+
+    .voice-preview__save {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .voice-preview__save:hover {
+      color: var(--text);
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    .voice-preview__save.is-saved {
+      border-color: #4ade80;
+      color: #4ade80;
+    }
+
+  </style>
+</head>
+<body>
+
+  <script src="config.js"></script>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header__title">
+      <span>🎙️</span>
+      <div>
+        <h1>Voice Screener</h1>
+        <div class="header__subtitle">Animal Penpals</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main">
+    <div class="animal-grid" id="animal-grid">
+      <!-- Cards injected by JS -->
+    </div>
+
+    <!-- Summary -->
+    <div class="summary">
+      <div class="summary__header">
+        <h2>Selection Summary</h2>
+        <button class="copy-btn" id="copy-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copy Config
+        </button>
+      </div>
+      <div class="summary__body">
+        <div id="summary-rows"><!-- injected --></div>
+        <pre class="summary__json" id="summary-json">{}</pre>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ── Data ──────────────────────────────────────────────────────────────────
+
+    // ── Load animal data from config.js (injected by serve.sh from animals.json)
+    const ANIMALS = (window.__ANIMALS__ || []).map(a => ({
+      id: a.id,
+      name: a.name,
+      emoji: a.emoji,
+      color: a.color,
+      greeting: a.greeting,
+      voiceDesignPrompt: a.voiceDesignPrompt || '',
+      candidates: (a.voiceCandidates || []).map(c => ({
+        label: c.label,
+        name: c.name,
+        voiceId: c.voiceId,
+        file: c.file, // null if MP3 doesn't exist yet
+      })),
+    }));
+
+    // ── State ─────────────────────────────────────────────────────────────────
+
+    const state = {
+      apiKey: window.__ELEVENLABS_API_KEY__ || '',
+      selections: {}, // animalId -> { candidateIndex, voiceName, voiceId }
+      currentAudio: null,
+      currentPlayingKey: null, // "animalId-candidateIndex"
+      generatingKey: null,     // "animalId"
+    };
+
+    if (!state.apiKey) {
+      console.error('No API key found. Make sure serve.sh loaded config.js from .env');
+    }
+
+    // ── Audio playback ────────────────────────────────────────────────────────
+
+    function stopCurrentAudio() {
+      if (state.currentAudio) {
+        state.currentAudio.pause();
+        state.currentAudio.src = '';
+        state.currentAudio = null;
+      }
+      if (state.currentPlayingKey) {
+        setPlayingUI(state.currentPlayingKey, false);
+        state.currentPlayingKey = null;
+      }
+    }
+
+    function setPlayingUI(key, playing) {
+      const [animalId, candidateIdx] = key.split('-');
+      const btn = document.querySelector(`[data-play-key="${key}"]`);
+      if (!btn) return;
+      const candidateEl = document.querySelector(`[data-candidate-key="${key}"]`);
+
+      if (playing) {
+        btn.classList.add('is-playing');
+        btn.innerHTML = waveformSVG();
+        if (candidateEl) candidateEl.classList.add('is-playing');
+      } else {
+        btn.classList.remove('is-playing');
+        btn.innerHTML = playSVG();
+        if (candidateEl) candidateEl.classList.remove('is-playing');
+      }
+    }
+
+    function playSVG() {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+    }
+
+    function stopSVG() {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>`;
+    }
+
+    function waveformSVG() {
+      return `<div class="waveform">
+        <div class="waveform__bar"></div>
+        <div class="waveform__bar"></div>
+        <div class="waveform__bar"></div>
+        <div class="waveform__bar"></div>
+        <div class="waveform__bar"></div>
+      </div>`;
+    }
+
+    function playFile(key, src) {
+      if (state.currentPlayingKey === key) {
+        stopCurrentAudio();
+        return;
+      }
+      stopCurrentAudio();
+
+      const audio = new Audio(src);
+      state.currentAudio = audio;
+      state.currentPlayingKey = key;
+      setPlayingUI(key, true);
+
+      audio.addEventListener('ended', () => {
+        if (state.currentPlayingKey === key) {
+          setPlayingUI(key, false);
+          state.currentPlayingKey = null;
+          state.currentAudio = null;
+        }
+      });
+
+      audio.addEventListener('error', () => {
+        setPlayingUI(key, false);
+        state.currentPlayingKey = null;
+        state.currentAudio = null;
+        console.warn('Audio failed to load:', src);
+        // Show a small status
+        const statusEl = document.querySelector(`[data-status="${key.split('-')[0]}"]`);
+        if (statusEl) {
+          statusEl.textContent = 'Could not load MP3 file.';
+          statusEl.className = 'generate-status is-error';
+        }
+      });
+
+      audio.play().catch(err => {
+        console.error(err);
+      });
+    }
+
+    // ── On-the-fly candidate playback (when no pre-generated MP3 exists) ────
+
+    const candidateAudioCache = {}; // key -> blob URL
+
+    async function playCandidate(animalId, candidateIdx) {
+      const key = `${animalId}-${candidateIdx}`;
+      const animal = ANIMALS.find(a => a.id === animalId);
+      const candidate = animal.candidates[candidateIdx];
+
+      // If already cached, just play it
+      if (candidateAudioCache[key]) {
+        playFile(key, candidateAudioCache[key]);
+        return;
+      }
+
+      // Generate via TTS API
+      stopCurrentAudio();
+      const btn = document.querySelector(`[data-play-key="${key}"]`);
+      if (btn) btn.innerHTML = '<div class="spinner"></div>';
+
+      try {
+        const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${candidate.voiceId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'xi-api-key': state.apiKey },
+          body: JSON.stringify({ text: animal.greeting, model_id: 'eleven_v3' }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        candidateAudioCache[key] = url;
+        playFile(key, url);
+      } catch (err) {
+        console.error('TTS generation failed:', err);
+        if (btn) btn.innerHTML = playSVG();
+      }
+    }
+
+    // ── TTS generation ────────────────────────────────────────────────────────
+
+    async function generateAndPlay(animalId, voiceId, text, statusEl, btn) {
+      if (!state.apiKey) {
+        statusEl.textContent = 'No API key — run serve.sh to load from .env';
+        statusEl.className = 'generate-status is-error';
+        return;
+      }
+      if (!text.trim()) {
+        statusEl.textContent = 'Enter some text first.';
+        statusEl.className = 'generate-status is-error';
+        return;
+      }
+
+      stopCurrentAudio();
+      state.generatingKey = animalId;
+      btn.disabled = true;
+      btn.innerHTML = `<div class="spinner"></div> Generating…`;
+      statusEl.textContent = 'Calling ElevenLabs TTS API…';
+      statusEl.className = 'generate-status';
+
+      try {
+        const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': state.apiKey,
+          },
+          body: JSON.stringify({
+            text: text.trim(),
+            model_id: 'eleven_v3',
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail?.message || `HTTP ${res.status}`);
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const key = `${animalId}-gen`;
+
+        const audio = new Audio(url);
+        state.currentAudio = audio;
+        state.currentPlayingKey = key;
+
+        statusEl.textContent = 'Playing generated audio…';
+        statusEl.className = 'generate-status is-success';
+
+        audio.addEventListener('ended', () => {
+          URL.revokeObjectURL(url);
+          state.currentPlayingKey = null;
+          state.currentAudio = null;
+          statusEl.textContent = 'Done.';
+        });
+
+        audio.play();
+      } catch (err) {
+        statusEl.textContent = `Error: ${err.message}`;
+        statusEl.className = 'generate-status is-error';
+      } finally {
+        state.generatingKey = null;
+        btn.disabled = false;
+        btn.innerHTML = `${generateIcon()} Generate &amp; Play`;
+      }
+    }
+
+    function generateIcon() {
+      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+    }
+
+    // ── Selection tracking ────────────────────────────────────────────────────
+
+    function pickVoice(animalId, candidateIdx) {
+      const animal = ANIMALS.find(a => a.id === animalId);
+      const candidate = animal.candidates[candidateIdx];
+      state.selections[animalId] = {
+        candidateIndex: candidateIdx,
+        voiceName: candidate.name,
+        voiceId: candidate.voiceId,
+      };
+
+      // Update pick buttons for library candidates
+      animal.candidates.forEach((_, i) => {
+        const btn = document.querySelector(`[data-pick-key="${animalId}-${i}"]`);
+        if (btn) btn.classList.toggle('is-selected', i === candidateIdx);
+        const card = document.querySelector(`[data-candidate-key="${animalId}-${i}"]`);
+        if (card) card.classList.toggle('is-selected', i === candidateIdx);
+      });
+
+      // Clear any generated voice selection
+      const genPreviews = generatedPreviews[animalId] || [];
+      genPreviews.forEach((_, i) => {
+        const el = document.getElementById(`gen-preview-${animalId}-${i}`);
+        if (el) el.classList.remove('is-selected');
+      });
+
+      updateSummary();
+    }
+
+    // ── Summary ───────────────────────────────────────────────────────────────
+
+    function updateSummary() {
+      const rowsEl = document.getElementById('summary-rows');
+      const jsonEl = document.getElementById('summary-json');
+
+      const json = {};
+      ANIMALS.forEach(a => {
+        const sel = state.selections[a.id];
+        if (sel) {
+          json[a.id] = { voiceId: sel.voiceId, voiceName: sel.voiceName };
+        }
+      });
+
+      rowsEl.innerHTML = ANIMALS.map(a => {
+        const sel = state.selections[a.id];
+        return `
+          <div class="summary-row">
+            <span class="summary-row__emoji">${a.emoji}</span>
+            <span class="summary-row__animal">${a.name}</span>
+            ${sel
+              ? `<span class="summary-row__badge" style="--animal-color:${a.color}">
+                   <span class="summary-row__badge-dot"></span>
+                   ${sel.voiceName}
+                 </span>
+                 <span class="summary-row__voice-id">${sel.voiceId}</span>`
+              : `<span class="summary-row__pick">— not picked</span>`
+            }
+          </div>`;
+      }).join('');
+
+      jsonEl.textContent = JSON.stringify(json, null, 2);
+    }
+
+    // ── Copy config ───────────────────────────────────────────────────────────
+
+    document.getElementById('copy-btn').addEventListener('click', async () => {
+      const text = document.getElementById('summary-json').textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        const btn = document.getElementById('copy-btn');
+        btn.classList.add('copied');
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Config`;
+        }, 2000);
+      } catch {
+        alert('Could not copy to clipboard. Select the text manually.');
+      }
+    });
+
+    // ── Voice Designer ─────────────────────────────────────────────────────────
+
+    function toggleDesigner(animalId) {
+      const panel = document.getElementById(`designer-panel-${animalId}`);
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Store generated previews per animal: { animalId: [{ generated_voice_id, audioUrl }] }
+    const generatedPreviews = {};
+
+    async function handleDesignVoice(animalId) {
+      const animal = ANIMALS.find(a => a.id === animalId);
+      const promptEl = document.getElementById(`designer-prompt-${animalId}`);
+      const statusEl = document.getElementById(`designer-status-${animalId}`);
+      const btn = document.getElementById(`designer-btn-${animalId}`);
+      const previewsEl = document.getElementById(`designer-previews-${animalId}`);
+
+      const description = promptEl.value.trim();
+      if (!description) {
+        statusEl.textContent = 'Enter a voice description.';
+        statusEl.className = 'voice-designer__status is-error';
+        return;
+      }
+
+      // Use the greeting as the sample text (must be 100+ chars)
+      let sampleText = animal.greeting;
+      if (sampleText.length < 100) {
+        sampleText += ' ' + sampleText; // double it if too short
+      }
+
+      stopCurrentAudio();
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div> Generating…';
+      statusEl.textContent = 'Creating 3 voice previews (this takes ~15s)…';
+      statusEl.className = 'voice-designer__status';
+
+      try {
+        const res = await fetch('https://api.elevenlabs.io/v1/text-to-voice/create-previews', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': state.apiKey,
+          },
+          body: JSON.stringify({
+            voice_description: description,
+            text: sampleText,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          const msg = Array.isArray(err.detail) ? err.detail.map(d => d.msg).join(', ') : (err.detail?.message || `HTTP ${res.status}`);
+          throw new Error(msg);
+        }
+
+        const data = await res.json();
+        const previews = data.previews || [];
+
+        statusEl.textContent = `Got ${previews.length} previews — listen and pick your favorite:`;
+        statusEl.className = 'voice-designer__status is-success';
+
+        // Convert base64 audio to blob URLs
+        generatedPreviews[animalId] = previews.map((p, i) => {
+          const binary = atob(p.audio_base_64);
+          const bytes = new Uint8Array(binary.length);
+          for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+          const blob = new Blob([bytes], { type: p.media_type || 'audio/mpeg' });
+          return {
+            generated_voice_id: p.generated_voice_id,
+            audioUrl: URL.createObjectURL(blob),
+            duration: p.duration_secs,
+          };
+        });
+
+        renderDesignerPreviews(animalId);
+      } catch (err) {
+        statusEl.textContent = `Error: ${err.message}`;
+        statusEl.className = 'voice-designer__status is-error';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Generate 3 Previews`;
+      }
+    }
+
+    function renderDesignerPreviews(animalId) {
+      const animal = ANIMALS.find(a => a.id === animalId);
+      const container = document.getElementById(`designer-previews-${animalId}`);
+      const previews = generatedPreviews[animalId] || [];
+
+      container.innerHTML = `
+        <div class="voice-previews">
+          <div class="voice-previews__title">Generated previews</div>
+          ${previews.map((p, i) => `
+            <div class="voice-preview" id="gen-preview-${animalId}-${i}">
+              <span class="voice-preview__label">${i + 1}</span>
+              <span class="voice-preview__id">${p.generated_voice_id}</span>
+              <button class="play-btn" data-play-key="${animalId}-gen-${i}" onclick="playGeneratedPreview('${animalId}', ${i})">${playSVG()}</button>
+              <button class="pick-btn" onclick="pickGeneratedVoice('${animalId}', ${i})">Pick</button>
+              <button class="voice-preview__save" id="save-btn-${animalId}-${i}" onclick="saveGeneratedVoice('${animalId}', ${i})">Save to Library</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function playGeneratedPreview(animalId, idx) {
+      const key = `${animalId}-gen-${idx}`;
+      const preview = generatedPreviews[animalId]?.[idx];
+      if (!preview) return;
+
+      if (state.currentPlayingKey === key) {
+        stopCurrentAudio();
+        return;
+      }
+      stopCurrentAudio();
+
+      const audio = new Audio(preview.audioUrl);
+      state.currentAudio = audio;
+      state.currentPlayingKey = key;
+      setPlayingUI(key, true);
+
+      audio.addEventListener('ended', () => {
+        if (state.currentPlayingKey === key) {
+          setPlayingUI(key, false);
+          state.currentPlayingKey = null;
+          state.currentAudio = null;
+        }
+      });
+
+      audio.play().catch(console.error);
+    }
+
+    function pickGeneratedVoice(animalId, idx) {
+      const preview = generatedPreviews[animalId]?.[idx];
+      if (!preview) return;
+
+      state.selections[animalId] = {
+        candidateIndex: -1, // indicates a generated voice
+        voiceName: `Generated #${idx + 1}`,
+        voiceId: preview.generated_voice_id,
+        isGenerated: true,
+      };
+
+      // Clear pick state on library candidates
+      const animal = ANIMALS.find(a => a.id === animalId);
+      animal.candidates.forEach((_, i) => {
+        const btn = document.querySelector(`[data-pick-key="${animalId}-${i}"]`);
+        if (btn) btn.classList.remove('is-selected');
+        const card = document.querySelector(`[data-candidate-key="${animalId}-${i}"]`);
+        if (card) card.classList.remove('is-selected');
+      });
+
+      // Highlight the picked generated preview
+      const previews = generatedPreviews[animalId] || [];
+      previews.forEach((_, i) => {
+        const el = document.getElementById(`gen-preview-${animalId}-${i}`);
+        if (el) el.classList.toggle('is-selected', i === idx);
+      });
+
+      updateSummary();
+    }
+
+    async function saveGeneratedVoice(animalId, idx) {
+      const preview = generatedPreviews[animalId]?.[idx];
+      if (!preview) return;
+
+      const animal = ANIMALS.find(a => a.id === animalId);
+      const promptEl = document.getElementById(`designer-prompt-${animalId}`);
+      const saveBtn = document.getElementById(`save-btn-${animalId}-${idx}`);
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+
+      try {
+        const res = await fetch('https://api.elevenlabs.io/v1/text-to-voice/create-voice-from-preview', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': state.apiKey,
+          },
+          body: JSON.stringify({
+            voice_name: `${animal.name} Voice`,
+            voice_description: promptEl.value.trim(),
+            generated_voice_id: preview.generated_voice_id,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          const msg = Array.isArray(err.detail) ? err.detail.map(d => d.msg).join(', ') : (err.detail?.message || `HTTP ${res.status}`);
+          throw new Error(msg);
+        }
+
+        const data = await res.json();
+        const newVoiceId = data.voice_id;
+
+        saveBtn.textContent = `Saved! ${newVoiceId}`;
+        saveBtn.className = 'voice-preview__save is-saved';
+
+        // Update the selection to use the permanent voice ID
+        if (state.selections[animalId]?.voiceId === preview.generated_voice_id) {
+          state.selections[animalId].voiceId = newVoiceId;
+          state.selections[animalId].voiceName = `${animal.name} Voice`;
+          updateSummary();
+        }
+
+        // Update the displayed ID
+        const idEl = document.querySelector(`#gen-preview-${animalId}-${idx} .voice-preview__id`);
+        if (idEl) idEl.textContent = newVoiceId;
+
+        // Store the permanent ID
+        preview.savedVoiceId = newVoiceId;
+      } catch (err) {
+        saveBtn.textContent = `Error: ${err.message}`;
+        saveBtn.disabled = false;
+      }
+    }
+
+    // ── Card rendering ────────────────────────────────────────────────────────
+
+    function renderCards() {
+      const grid = document.getElementById('animal-grid');
+      grid.innerHTML = ANIMALS.map(animal => `
+        <div class="card" style="--animal-color: ${animal.color}">
+          <div class="card__header">
+            <span class="card__emoji">${animal.emoji}</span>
+            <div class="card__animal-info">
+              <div class="card__name">${animal.name}</div>
+              <div class="card__species">${animal.id.charAt(0).toUpperCase() + animal.id.slice(1)}</div>
+            </div>
+            <div class="card__color-dot"></div>
+          </div>
+          <div class="card__body">
+
+            <div class="greeting">${animal.greeting}</div>
+
+            <div>
+              <div class="candidates-label" style="margin-bottom:8px">Voice candidates</div>
+              <div class="candidates">
+                ${animal.candidates.map((c, i) => `
+                  <div class="candidate" data-candidate-key="${animal.id}-${i}">
+                    <div class="candidate__info">
+                      <span class="candidate__label">${c.label}</span>
+                      <div>
+                        <div class="candidate__name">${c.name}</div>
+                        <div class="candidate__voice-id">${c.voiceId}</div>
+                      </div>
+                    </div>
+                    <button
+                      class="play-btn"
+                      data-play-key="${animal.id}-${i}"
+                      title="Play ${c.name}"
+                      onclick="${c.file
+                        ? `playFile('${animal.id}-${i}', '${c.file}')`
+                        : `playCandidate('${animal.id}', ${i})`
+                      }"
+                    >${playSVG()}</button>
+                    <button
+                      class="pick-btn"
+                      data-pick-key="${animal.id}-${i}"
+                      onclick="pickVoice('${animal.id}', ${i})"
+                    >Pick</button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Voice Designer -->
+            <div class="voice-designer">
+              <button class="voice-designer__toggle" onclick="toggleDesigner('${animal.id}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Design a custom voice
+              </button>
+              <div class="voice-designer__panel" id="designer-panel-${animal.id}" style="display:none">
+                <div class="voice-designer__label">Voice description prompt</div>
+                <textarea class="voice-designer__prompt" id="designer-prompt-${animal.id}" rows="3">${animal.voiceDesignPrompt || ''}</textarea>
+                <div class="voice-designer__actions">
+                  <div class="voice-designer__status" id="designer-status-${animal.id}"></div>
+                  <button class="voice-designer__generate" id="designer-btn-${animal.id}" onclick="handleDesignVoice('${animal.id}')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    Generate 3 Previews
+                  </button>
+                </div>
+                <div id="designer-previews-${animal.id}"></div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="generate-section">
+              <label for="gen-text-${animal.id}">Generate &amp; Play custom text</label>
+              <textarea
+                class="generate-input"
+                id="gen-text-${animal.id}"
+                placeholder="Type something for the selected voice to say…"
+                rows="2"
+              >${animal.greeting}</textarea>
+              <div style="display:flex; align-items:center; gap:10px; justify-content:space-between">
+                <div class="generate-status" data-status="${animal.id}"></div>
+                <button
+                  class="generate-btn"
+                  id="gen-btn-${animal.id}"
+                  onclick="handleGenerate('${animal.id}')"
+                >
+                  ${generateIcon()} Generate &amp; Play
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function handleGenerate(animalId) {
+      const animal = ANIMALS.find(a => a.id === animalId);
+      const sel = state.selections[animalId];
+
+      if (!sel) {
+        const statusEl = document.querySelector(`[data-status="${animalId}"]`);
+        statusEl.textContent = 'Pick a voice candidate first.';
+        statusEl.className = 'generate-status is-error';
+        return;
+      }
+
+      const textEl = document.getElementById(`gen-text-${animalId}`);
+      const statusEl = document.querySelector(`[data-status="${animalId}"]`);
+      const btn = document.getElementById(`gen-btn-${animalId}`);
+
+      generateAndPlay(animalId, sel.voiceId, textEl.value, statusEl, btn);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+
+    renderCards();
+    updateSummary();
+  </script>
+</body>
+</html>

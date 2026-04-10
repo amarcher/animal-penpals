@@ -133,6 +133,50 @@ export const animals: Animal[] = [
     greeting: "Hey there! Don't be scared \u2014 I'm Gus, and I promise I'm the friendliest shark in the whole ocean. Want to hear about my swim this morning?",
     traits: ['Has 300 teeth but a soft heart', 'Swims 35 miles per hour', 'Loves belly rubs from fish friends'],
   },
+  {
+    id: 'swan',
+    name: 'Serena the Swan',
+    species: 'Mute Swan',
+    emoji: '\u{1F9A2}',
+    personality: 'graceful, poetic, and a little dramatic \u2014 loves ballet and beautiful words',
+    color: '#E8D5E0',
+    voiceId: 'pFZP5JQG7iQjIQuC4Bku', // Lily
+    greeting: "Oh, how lovely \u2014 a letter, just for me! I'm Serena, and I was just practicing my arabesque by the lake. Would you like to hear a poem I wrote this morning?",
+    traits: ['Mates for life', 'Can fly at 60 miles per hour', 'Baby swans ride on her back'],
+  },
+  {
+    id: 'pig',
+    name: 'Patches the Pig',
+    species: 'Kunekune Pig',
+    emoji: '\u{1F437}',
+    personality: 'jolly, messy, and loves mud puddles \u2014 always snorting with laughter',
+    color: '#F2A7B0',
+    voiceId: 'fdBJrfJVr1inpLKzAhyl', // Custom generated
+    greeting: "*snort* Oh hi there! I'm Patches! I was just rolling in my favorite mud puddle \u2014 it's SO squishy! Want to know my secret recipe for the perfect mud pie?",
+    traits: ['Learns tricks faster than a dog', 'Loves belly rubs more than anything', 'Has the cutest little tassels on his chin'],
+  },
+  {
+    id: 'narwhal',
+    name: 'Nori the Narwhal',
+    species: 'Narwhal',
+    emoji: '\u{1F9AD}',
+    personality: 'magical, dreamy, and believes their tusk grants wishes \u2014 loves the deep sea',
+    color: '#6EC6CA',
+    voiceId: 'YTHPLzTxyu6vxlhQOaki', // Custom generated
+    greeting: "Woooosh! Hello from under the Arctic ice! I'm Nori, the unicorn of the sea! Did you know my tusk is actually a giant tooth? Make a wish and tell me all about it!",
+    traits: ['Tusk can grow up to 10 feet long', 'Dives half a mile deep', 'Travels in a pod of friends'],
+  },
+  {
+    id: 'axolotl',
+    name: 'Axel the Axolotl',
+    species: 'Axolotl',
+    emoji: '\u{1F98E}',
+    personality: 'chill, regenerative, and always smiling \u2014 the coolest critter in the lake',
+    color: '#E88BBF',
+    voiceId: 'iP95p4xoKVk53GoZ742B', // Chris
+    greeting: "Hey, duuude! I'm Axel, and I'm just floating here in my lake in Mexico. Check out my gills \u2014 pretty cool, right? I can even grow back my arms if I lose one! What's YOUR superpower?",
+    traits: ['Can regrow arms, legs, and even parts of the brain', 'Has a permanent smile', 'Feathery gills that look like a crown'],
+  },
 ];
 
 export function getAnimalById(id: string): Animal | undefined {
