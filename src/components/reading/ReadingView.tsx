@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { getAnimalById } from '../../data/animals.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
 import { useTtsPlayback } from '../../hooks/useTtsPlayback.ts';
+import { trackVideoLoop } from '../../utils/analytics.ts';
 import { HighlightedText } from './HighlightedText.tsx';
 import './ReadingView.css';
 
@@ -82,7 +83,7 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
 
       <div className="reading__body">
         {videoEntry && (
-          <MutedVideo className="reading__video" src={videoEntry.url} loop />
+          <MutedVideo className="reading__video" src={videoEntry.url} loop animalId={animalId} />
         )}
 
         <div className="reading__letter">
@@ -122,12 +123,17 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
 }
 
 /** Renders a video element that is guaranteed muted before playback starts. */
-function MutedVideo({ className, src, loop }: { className: string; src: string; loop?: boolean }) {
+function MutedVideo({ className, src, loop, animalId }: { className: string; src: string; loop?: boolean; animalId: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const loopCountRef = useRef(0);
+  const animalIdRef = useRef(animalId);
+  animalIdRef.current = animalId;
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    loopCountRef.current = 0;
 
     const video = document.createElement('video');
     video.className = className;
@@ -136,12 +142,22 @@ function MutedVideo({ className, src, loop }: { className: string; src: string; 
     video.loop = !!loop;
     video.playsInline = true;
     video.preload = 'auto';
+
+    const handleEnded = () => {
+      loopCountRef.current += 1;
+    };
+    video.addEventListener('ended', handleEnded);
+
     // Set src AFTER muted + volume=0 so the browser never plays audio
     video.src = src;
     container.appendChild(video);
     video.play().catch(() => {});
 
     return () => {
+      video.removeEventListener('ended', handleEnded);
+      if (loopCountRef.current > 0) {
+        trackVideoLoop(animalIdRef.current, loopCountRef.current);
+      }
       video.pause();
       video.removeAttribute('src');
       if (container.contains(video)) container.removeChild(video);
