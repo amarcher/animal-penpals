@@ -9,7 +9,7 @@ import { useTransitionContext } from '../../contexts/TransitionContext.tsx';
 import { getAnimalById } from '../../data/animals.ts';
 import { prefetchTts } from '../../utils/ttsPrefetchCache.ts';
 import { VoiceAgent } from '../ui/VoiceAgent.tsx';
-import { trackAnimalSelected, trackLetterSent, trackLetterReceived, trackTtsPlaybackStarted } from '../../utils/analytics.ts';
+import { trackAnimalSelected, trackLetterSent, trackLetterReceived, trackTtsPlaybackStarted, trackTtsPlaybackCompleted, trackReplyClicked } from '../../utils/analytics.ts';
 import type { AppOutletContext } from '../../types/outlet.ts';
 
 export function AppLayout() {
@@ -124,6 +124,10 @@ export function AppLayout() {
   }, [voice, ctx.pendingResponseRef]);
 
   const handleTtsEnd = useCallback(() => {
+    const current = navRef.current;
+    if (current.view === 'reading') {
+      trackTtsPlaybackCompleted(current.animalId);
+    }
     voice.unmuteAgent();
   }, [voice]);
 
@@ -163,17 +167,16 @@ export function AppLayout() {
     const current = navRef.current;
     if (current.view !== 'compose') return;
 
-    trackLetterSent(current.animalId, content.length, !!current.threadId);
-
     // Clear stale pending response from previous send
     ctx.pendingResponseRef.current = null;
     ctx.setPendingResponse(null);
 
     const { threadId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
+    const thread = storeRef.current.getThread(threadId);
+    trackLetterSent(current.animalId, content.length, !!current.threadId, thread?.letters.length);
     const animal = getAnimalById(current.animalId);
 
     // Fire the API call (moved from SendAnimation)
-    const thread = storeRef.current.getThread(threadId);
     const priorHistory = (thread?.letters ?? [])
       .filter(l => !(l.from === 'child' && l.content === content))
       .map(l => ({ from: l.from, content: l.content }));
@@ -228,8 +231,9 @@ export function AppLayout() {
   const handleReceiveComplete = useCallback((animalResponse: string) => {
     const current = navRef.current;
     if (current.view !== 'receiving') return;
-    trackLetterReceived(current.animalId);
     const { letterId } = storeRef.current.addLetter(current.animalId, 'animal', animalResponse, current.threadId);
+    const thread = storeRef.current.getThread(current.threadId);
+    trackLetterReceived(current.animalId, thread?.letters.length);
     ctx.pendingResponseRef.current = animalResponse;
     ctx.setPendingResponse(animalResponse);
     goToReading(current.animalId, letterId, current.threadId);
@@ -246,6 +250,8 @@ export function AppLayout() {
     if (current.view !== 'reading') return;
     ctx.currentDraftRef.current = '';
     const thread = storeRef.current.getThread(current.threadId);
+    const threadLength = thread?.letters.length ?? 0;
+    trackReplyClicked(current.animalId, threadLength);
     const animalLetterCount = thread?.letters.filter(l => l.from === 'animal').length ?? 0;
     goToCompose(current.animalId, current.threadId, animalLetterCount);
   }, [goToCompose, ctx.currentDraftRef]);
