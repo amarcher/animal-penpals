@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import type { Animal } from '../../types/app.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
 import './AnimalCard.css';
@@ -16,16 +16,42 @@ interface AnimalCardProps {
 export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThread, onClick, viewTransitionName }: AnimalCardProps) {
   const videoEntry = getAnimalVideo(animal.id, 'idle');
   const [videoError, setVideoError] = useState(false);
+  const [isNearViewport, setIsNearViewport] = useState(false);
+  const cardRef = useRef<HTMLButtonElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const preloadRef = useRef<HTMLVideoElement | null>(null);
 
   const showVideo = !!videoEntry && !reducedMotion && !videoError;
 
+  // Observe visibility — only load/play videos when near viewport
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || !showVideo) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsNearViewport(entry.isIntersecting),
+      { rootMargin: '200px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [showVideo]);
+
+  // Pause/play video based on viewport visibility
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isNearViewport) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [isNearViewport]);
+
   const handleMouseEnter = useCallback(() => {
     if (!videoEntry || preloadRef.current) return;
     hoverTimerRef.current = setTimeout(() => {
-      // Use a detached video element to warm the browser cache —
-      // <link rel=preload as=video> is not supported by browsers.
       const video = document.createElement('video');
       video.preload = 'auto';
       video.src = videoEntry.url;
@@ -43,6 +69,7 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
 
   return (
     <button
+      ref={cardRef}
       className="animal-card"
       style={{ '--animal-color': animal.color } as React.CSSProperties}
       onClick={() => onClick(animal.id)}
@@ -59,28 +86,36 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
 
       <div className="animal-card__visual" style={viewTransitionName ? { viewTransitionName } : undefined}>
         {showVideo ? (
-          <video
-            className="animal-card__video"
-            src={videoEntry.url}
-            poster={videoEntry.poster}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="none"
-            onError={() => setVideoError(true)}
-            aria-label={animal.name}
-          />
+          isNearViewport ? (
+            <video
+              ref={videoRef}
+              className="animal-card__video"
+              src={videoEntry.url}
+              poster={videoEntry.poster}
+              muted
+              loop
+              playsInline
+              preload="none"
+              onError={() => setVideoError(true)}
+              aria-label={animal.name}
+            />
+          ) : (
+            <img
+              className="animal-card__poster"
+              src={videoEntry.poster}
+              alt={animal.name}
+            />
+          )
         ) : (
           <span className="animal-card__emoji">{animal.emoji}</span>
         )}
-      </div>
 
-      <div className="animal-card__info">
-        <span className="animal-card__name">{animal.name}</span>
-        <span className="animal-card__cta">
-          {hasThread ? 'Continue writing' : 'Write a letter'}
-        </span>
+        <div className="animal-card__overlay">
+          <span className="animal-card__name">{animal.name}</span>
+          <span className="animal-card__cta">
+            {hasThread ? 'Continue writing' : 'Write a letter'}
+          </span>
+        </div>
       </div>
     </button>
   );

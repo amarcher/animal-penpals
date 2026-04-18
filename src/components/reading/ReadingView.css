@@ -40,7 +40,7 @@
 /* Side-by-side: video + letter */
 .reading__body {
   display: flex;
-  gap: 24px;
+  gap: 0;
   flex: 1;
   min-height: 0;
 }
@@ -50,6 +50,7 @@
   border-radius: 16px;
   overflow: hidden;
   align-self: stretch;
+  margin-right: 16px;
   view-transition-name: animal-video;
 }
 
@@ -65,10 +66,16 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 16px;
   min-width: 0;
   min-height: 0;
   view-transition-name: reading-content;
+}
+
+.reading__letter > * {
+  width: 100%;
+  max-width: 540px;
 }
 
 .reading__from-name {
@@ -156,6 +163,14 @@
 @media (max-width: 700px) {
   .reading__video-wrap {
     display: none;
+  }
+
+  .reading__letter {
+    align-items: stretch;
+  }
+
+  .reading__letter > * {
+    max-width: none;
   }
 }
 

@@ -5,14 +5,12 @@
   border: none;
   cursor: pointer;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  border-radius: 20px;
-  background: color-mix(in srgb, var(--animal-color) 12%, white);
-  border: 2px solid color-mix(in srgb, var(--animal-color) 25%, transparent);
+  display: block;
   padding: 0;
+  background: none;
   transition: transform 0.2s, box-shadow 0.2s;
   text-align: center;
+  border-radius: 16px;
 }
 
 .animal-card:hover {
@@ -45,17 +43,19 @@
 
 /* Video / emoji area — aspect-ratio reserves space before video loads (CLS fix) */
 .animal-card__visual {
+  position: relative;
   width: 100%;
   aspect-ratio: 9 / 16;
   overflow: hidden;
-  border-radius: 18px 18px 0 0;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: color-mix(in srgb, var(--animal-color) 8%, white);
 }
 
-.animal-card__video {
+.animal-card__video,
+.animal-card__poster {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -67,28 +67,37 @@
   line-height: 1;
 }
 
-/* Info area below video */
-.animal-card__info {
+/* Name + CTA overlaid on the bottom of the image */
+.animal-card__overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px 14px;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 12px 14px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+  pointer-events: none;
 }
 
 .animal-card__name {
   font-size: 0.95rem;
   font-weight: 700;
-  color: color-mix(in srgb, var(--animal-color) 80%, black);
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .animal-card__cta {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--animal-color);
-  padding: 4px 14px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--animal-color) 15%, transparent);
-  align-self: center;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 3px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 @media (prefers-reduced-motion: reduce) {
