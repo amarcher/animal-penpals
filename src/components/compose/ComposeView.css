@@ -242,6 +242,37 @@
   cursor: not-allowed;
 }
 
+/* Portrait tablets: the 9:16 video eats too much width if kept side-by-side.
+   Stack video as a short top banner, let the letter use the full width. */
+@media (max-width: 1023px) and (orientation: portrait) and (min-width: 701px) {
+  .compose__body {
+    flex-direction: column;
+  }
+
+  .compose__video-wrap {
+    flex: none;
+    width: 100%;
+    height: 200px;
+    margin-right: 0;
+    margin-bottom: 16px;
+  }
+
+  .compose__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+  }
+
+  .compose__content {
+    align-items: stretch;
+  }
+
+  .compose__content > * {
+    max-width: none;
+  }
+}
+
 @media (max-width: 700px) {
   .compose {
     padding: 16px;
