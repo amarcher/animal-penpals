@@ -47,6 +47,7 @@ describe('generate-response API', () => {
   it('calls Anthropic API with correct params', async () => {
     mockCreate.mockResolvedValue({
       content: [{ type: 'text', text: 'Hello little one!' }],
+      usage: { input_tokens: 10, output_tokens: 20 },
     });
 
     const res = mockRes();
@@ -72,6 +73,7 @@ describe('generate-response API', () => {
   it('builds message history from threadHistory', async () => {
     mockCreate.mockResolvedValue({
       content: [{ type: 'text', text: 'Response' }],
+      usage: { input_tokens: 10, output_tokens: 20 },
     });
 
     const res = mockRes();
