@@ -17,6 +17,7 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
   const videoEntry = getAnimalVideo(animal.id, 'idle');
   const [videoError, setVideoError] = useState(false);
   const [isNearViewport, setIsNearViewport] = useState(false);
+  const [hasBeenNearViewport, setHasBeenNearViewport] = useState(false);
   const cardRef = useRef<HTMLButtonElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -24,13 +25,17 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
 
   const showVideo = !!videoEntry && !reducedMotion && !videoError;
 
-  // Observe visibility — only load/play videos when near viewport
+  // Observe visibility — lazy-mount the video on first approach, then keep it
+  // mounted (just pause/play) so scrolling back doesn't re-fetch.
   useEffect(() => {
     const el = cardRef.current;
     if (!el || !showVideo) return;
 
     const observer = new IntersectionObserver(
-      ([entry]) => setIsNearViewport(entry.isIntersecting),
+      ([entry]) => {
+        setIsNearViewport(entry.isIntersecting);
+        if (entry.isIntersecting) setHasBeenNearViewport(true);
+      },
       { rootMargin: '200px' }
     );
     observer.observe(el);
@@ -86,7 +91,7 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
 
       <div className="animal-card__visual" style={viewTransitionName ? { viewTransitionName } : undefined}>
         {showVideo ? (
-          isNearViewport ? (
+          hasBeenNearViewport ? (
             <video
               ref={videoRef}
               className="animal-card__video"
