@@ -53,6 +53,9 @@ export function useNavigation() {
   }, [routerNavigate]);
 
   const goToCompose = useCallback((animalId: string, threadId?: string, animalLetterCount?: number) => {
+    // Save mailbox scroll position before navigating away
+    sessionStorage.setItem('mailbox-scroll', String(window.scrollY));
+
     const params = new URLSearchParams();
     if (threadId) params.set('thread', threadId);
     if (animalLetterCount !== undefined) params.set('count', String(animalLetterCount));

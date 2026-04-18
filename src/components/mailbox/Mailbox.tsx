@@ -13,7 +13,19 @@ interface MailboxProps {
 }
 
 export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread, selectedAnimalId }: MailboxProps) {
-  useEffect(() => { trackMailboxOpened(); }, []);
+  useEffect(() => {
+    trackMailboxOpened();
+
+    // Restore scroll position after returning from compose/reading
+    const saved = sessionStorage.getItem('mailbox-scroll');
+    if (saved) {
+      // Wait for view transition to finish before restoring scroll
+      requestAnimationFrame(() => {
+        window.scrollTo(0, parseInt(saved, 10));
+      });
+      sessionStorage.removeItem('mailbox-scroll');
+    }
+  }, []);
 
   return (
     <div className="mailbox">
