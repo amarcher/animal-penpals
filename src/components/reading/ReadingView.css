@@ -160,6 +160,36 @@
   cursor: default;
 }
 
+/* Portrait tablets: see ComposeView.css for rationale. */
+@media (max-width: 1023px) and (orientation: portrait) and (min-width: 701px) {
+  .reading__body {
+    flex-direction: column;
+  }
+
+  .reading__video-wrap {
+    flex: none;
+    width: 100%;
+    height: 200px;
+    margin-right: 0;
+    margin-bottom: 16px;
+  }
+
+  .reading__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+  }
+
+  .reading__letter {
+    align-items: stretch;
+  }
+
+  .reading__letter > * {
+    max-width: none;
+  }
+}
+
 @media (max-width: 700px) {
   .reading__video-wrap {
     display: none;
