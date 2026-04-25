@@ -44,6 +44,14 @@ const videoManifest: Record<string, AnimalVideoEntry> = {
   'narwhal-receive':  { url: `${BASE_URL}/narwhal_receive.mp4`,poster: `${THUMB_URL}/narwhal_receive.jpg`,description: 'Nori reads your letter and writes back' },
   'axolotl-idle':     { url: `${BASE_URL}/axolotl_idle.mp4`,   poster: `${THUMB_URL}/axolotl_idle.jpg`,   description: 'Axel the Axolotl floating peacefully' },
   'axolotl-receive':  { url: `${BASE_URL}/axolotl_receive.mp4`,poster: `${THUMB_URL}/axolotl_receive.jpg`,description: 'Axel reads your letter and writes back' },
+  'spider-idle':      { url: `${BASE_URL}/spider_idle.mp4`,    poster: `${THUMB_URL}/spider_idle.jpg`,    description: 'Pip the Spider tending her dewdrop web' },
+  'spider-receive':   { url: `${BASE_URL}/spider_receive.mp4`, poster: `${THUMB_URL}/spider_receive.jpg`, description: 'Pip reads your letter and writes back' },
+  'giraffe-idle':     { url: `${BASE_URL}/giraffe_idle.mp4`,   poster: `${THUMB_URL}/giraffe_idle.jpg`,   description: 'Gigi the Giraffe nibbling acacia leaves' },
+  'giraffe-receive':  { url: `${BASE_URL}/giraffe_receive.mp4`,poster: `${THUMB_URL}/giraffe_receive.jpg`,description: 'Gigi reads your letter and writes back' },
+  'hippo-idle':       { url: `${BASE_URL}/hippo_idle.mp4`,     poster: `${THUMB_URL}/hippo_idle.jpg`,     description: 'Hank the Hippo wallowing in the river' },
+  'hippo-receive':    { url: `${BASE_URL}/hippo_receive.mp4`,  poster: `${THUMB_URL}/hippo_receive.jpg`,  description: 'Hank reads your letter and writes back' },
+  'eagle-idle':       { url: `${BASE_URL}/eagle_idle.mp4`,     poster: `${THUMB_URL}/eagle_idle.jpg`,     description: 'Echo the Eagle perched high on a mountain' },
+  'eagle-receive':    { url: `${BASE_URL}/eagle_receive.mp4`,  poster: `${THUMB_URL}/eagle_receive.jpg`,  description: 'Echo reads your letter and writes back' },
 };
 
 export function getAnimalVideo(animalId: string, type: VideoType): AnimalVideoEntry | undefined {

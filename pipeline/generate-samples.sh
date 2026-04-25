@@ -24,6 +24,28 @@ ANIMALS_FILE="animals.json"
 OUTPUT_DIR="voice-samples"
 mkdir -p "$OUTPUT_DIR"
 
+# Pick the best TTS model this account can access. Priority: most expressive first.
+# eleven_v3 = current alpha-quality flagship; eleven_multilingual_v2 = stable fallback.
+TTS_MODEL=""
+for candidate in eleven_v3 eleven_multilingual_v2; do
+  PROBE=$(curl -s -o /dev/null -w "%{http_code}" \
+    "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM/stream" \
+    -H "xi-api-key: $ELEVENLABS_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "{\"text\":\"hi\",\"model_id\":\"$candidate\"}")
+  if [ "$PROBE" = "200" ]; then
+    TTS_MODEL="$candidate"
+    echo "Using TTS model: $TTS_MODEL"
+    break
+  else
+    echo "  $candidate not available (HTTP $PROBE), trying next…"
+  fi
+done
+if [ -z "$TTS_MODEL" ]; then
+  echo "Error: no usable TTS model. Check ELEVENLABS_API_KEY and account permissions."
+  exit 1
+fi
+
 # Optional filter: only generate for specific animal IDs
 FILTER_ANIMALS=("$@")
 
@@ -57,10 +79,12 @@ for i in $(seq 0 $((ANIMAL_COUNT - 1))); do
     fi
 
     echo "  generating $OUTFILE ($VOICE_NAME / $VOICE_ID)..."
+    # Build JSON via stdin to dodge shell quoting (greeting contains apostrophes, em-dashes, etc.)
+    PAYLOAD=$(GREETING="$GREETING" MODEL="$TTS_MODEL" python3 -c 'import json, os; print(json.dumps({"text": os.environ["GREETING"], "model_id": os.environ["MODEL"]}))')
     curl -s "https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}" \
       -H "xi-api-key: $ELEVENLABS_API_KEY" \
       -H "Content-Type: application/json" \
-      -d "$(python3 -c "import json; print(json.dumps({'text': '''$GREETING''', 'model_id': 'eleven_v3'}))")" \
+      -d "$PAYLOAD" \
       --output "$OUTFILE"
 
     SIZE=$(wc -c < "$OUTFILE" | tr -d ' ')

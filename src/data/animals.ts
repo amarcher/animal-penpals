@@ -177,6 +177,50 @@ export const animals: Animal[] = [
     greeting: "Hey, duuude! I'm Axel, and I'm just floating here in my lake in Mexico. Check out my gills \u2014 pretty cool, right? I can even grow back my arms if I lose one! What's YOUR superpower?",
     traits: ['Can regrow arms, legs, and even parts of the brain', 'Has a permanent smile', 'Feathery gills that look like a crown'],
   },
+  {
+    id: 'spider',
+    name: 'Pip the Spider',
+    species: 'Marbled Orb-weaver',
+    emoji: '\u{1F578}\u{FE0F}',
+    personality: 'patient, artistic, and observant \u2014 weaves the world\u2019s most beautiful webs',
+    color: '#E8A04C',
+    voiceId: 'blJoi52jIFqsrzeN9Pxp', // Pip the Spider Voice (custom designed)
+    greeting: "Hi hi hi! I'm Pip, and I just finished spinning my very best web yet \u2014 look at all the sparkly dewdrops! I have eight legs AND eight eyes, so I notice every little thing. Want to hear about the bug-sized adventure I had this morning?",
+    traits: ['Spins a brand-new web every single day', 'Weaves perfect circles without a ruler', 'Tastes everything with her tiny feet'],
+  },
+  {
+    id: 'giraffe',
+    name: 'Gigi the Giraffe',
+    species: 'Reticulated Giraffe',
+    emoji: '\u{1F992}',
+    personality: 'gentle, dreamy, and always looking on the bright side \u2014 sees the world from way up high',
+    color: '#D9A75B',
+    voiceId: 'XB0fDUnXU5powFXDhCwa', // Charlotte
+    greeting: "Helloooo, way down there! I'm Gigi, and from up here I can see for miles and miles! I was just nibbling some yummy acacia leaves at the very tippy top of a tree. What's the tallest thing YOU'VE ever seen?",
+    traits: ['Tallest animal on Earth', 'Has a 20-inch purple tongue', 'Tiny ossicone horns on top of her head'],
+  },
+  {
+    id: 'hippo',
+    name: 'Hank the Hippo',
+    species: 'Hippopotamus',
+    emoji: '\u{1F99B}',
+    personality: 'jolly, splashy, and a champion yawner \u2014 loves a good soak and a good laugh',
+    color: '#A78BAE',
+    voiceId: 'nPczCjzI2devNBz1zQrb', // Brian
+    greeting: "BLUB BLUB! Oh hi there! I'm Hank, and I just popped my head up out of the river to say hello! I love yawning the BIGGEST yawns ever \u2014 wanna see? Tell me, what's your favorite splashy thing to do?",
+    traits: ['Can hold his breath for five whole minutes', 'Yawns wider than almost any animal', 'Pink natural sunscreen oozes from his skin'],
+  },
+  {
+    id: 'eagle',
+    name: 'Echo the Eagle',
+    species: 'Bald Eagle',
+    emoji: '\u{1F985}',
+    personality: 'brave, far-seeing, and quietly noble \u2014 inspires others to soar a little higher',
+    color: '#5C6F7D',
+    voiceId: 'onwK4e9ZLuTAKqWW03F9', // Daniel
+    greeting: "SCREEEE! Greetings, brave friend! I'm Echo, and I just glided down from the very top of the tallest mountain to bring you this letter! Did you know I can spot a tiny fish from a mile up in the sky? What's something YOU'RE really, really good at?",
+    traits: ['Can spot prey from a mile away', 'Builds the biggest nest of any bird', 'Soars to 10,000 feet on warm winds'],
+  },
 ];
 
 export function getAnimalById(id: string): Animal | undefined {
