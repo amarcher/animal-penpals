@@ -126,9 +126,11 @@ cmd_r2() {
     for kind in idle receive; do
       local mp4="$src/${aid}_${kind}.mp4"
       local jpg="$src/${aid}_${kind}.jpg"
+      # NOTE: videos go at bucket ROOT (matches videoManifest.ts BASE_URL pattern).
+      # Thumbnails go under animal-thumbnails/ (matches THUMB_URL pattern).
       if [ -f "$mp4" ]; then
-        echo "  ↑ R2 animal-videos/${aid}_${kind}.mp4"
-        npx wrangler r2 object put "$bucket/animal-videos/${aid}_${kind}.mp4" --file "$mp4" --remote
+        echo "  ↑ R2 ${aid}_${kind}.mp4"
+        npx wrangler r2 object put "$bucket/${aid}_${kind}.mp4" --file "$mp4" --remote
       else
         echo "  ✗ missing $mp4"
       fi
