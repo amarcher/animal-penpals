@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mission Control · Animal Penpals Pipeline</title>
+<style>
+  :root {
+    --ink: #1f2433;
+    --ink-soft: #4a5163;
+    --ink-mute: #7a8194;
+    --paper: #fbf8f3;
+    --paper-2: #f3ede2;
+    --line: #e6dfd1;
+    --accent: #c87a5b;
+    --accent-deep: #9d4f30;
+    --good: #4f8a5e;
+    --warn: #c79a3a;
+    --shadow: 0 1px 0 rgba(0,0,0,.04), 0 12px 40px -20px rgba(31,36,51,.18);
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "SF Pro Text", "Inter", sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 600px at 80% -10%, rgba(200,122,91,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 30%, rgba(125,176,150,.10), transparent 60%),
+      var(--paper);
+    min-height: 100vh;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 32px 120px;
+  }
+
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: 12px;
+    color: var(--ink-mute);
+    font-weight: 600;
+  }
+  h1 {
+    font: 700 44px/1.05 "Fraunces", "Iowan Old Style", "Georgia", serif;
+    letter-spacing: -0.02em;
+    margin: 8px 0 12px;
+  }
+  h1 em { font-style: italic; color: var(--accent-deep); }
+  .lede {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 70ch;
+    margin: 0 0 32px;
+  }
+
+  /* Roster strip */
+  .roster {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 24px 0 56px;
+  }
+  .roster .pill {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 18px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+  }
+  .roster .pill .swatch {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .roster .pill .meta { line-height: 1.2; }
+  .roster .pill .meta strong { display: block; font-size: 15px; }
+  .roster .pill .meta span { font-size: 12px; color: var(--ink-mute); }
+
+  /* Section heading */
+  .section-h {
+    display: flex; align-items: baseline; gap: 14px;
+    margin: 64px 0 18px;
+  }
+  .section-h .num {
+    font: 600 14px/1 ui-monospace, "SF Mono", Menlo, monospace;
+    color: var(--accent-deep);
+    background: rgba(200,122,91,.10);
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  .section-h h2 {
+    font: 600 26px/1.2 "Fraunces", "Iowan Old Style", "Georgia", serif;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .section-h .est {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--ink-mute);
+  }
+
+  /* Card */
+  .card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+  .card + .card { margin-top: 16px; }
+
+  /* Run command block */
+  .run {
+    display: flex; align-items: center; gap: 10px;
+    background: #1c1f29;
+    color: #e9e2cf;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font: 14px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+    margin: 14px 0 0;
+  }
+  .run code { flex: 1; white-space: pre-wrap; word-break: break-all; }
+  .run .copy {
+    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.06);
+    color: #f5e7c4;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+  }
+  .run .copy:hover { background: rgba(255,255,255,.14); }
+  .run .copy.copied { background: var(--good); border-color: transparent; color: white; }
+
+  .what-to-look-for {
+    margin-top: 16px;
+    padding: 16px 18px;
+    background: var(--paper-2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    font-size: 14.5px;
+    color: var(--ink-soft);
+  }
+  .what-to-look-for h4 {
+    margin: 0 0 6px;
+    font: 600 12px/1 ui-sans-serif;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+  }
+  .what-to-look-for ul { margin: 6px 0 0; padding-left: 18px; }
+  .what-to-look-for li { margin: 4px 0; }
+
+  /* Animal brief grid */
+  .briefs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 820px) { .briefs { grid-template-columns: 1fr; } .roster { grid-template-columns: repeat(2,1fr); } }
+
+  .brief {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
+  }
+  .brief header {
+    padding: 18px 20px 14px;
+    display: flex; align-items: center; gap: 14px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .brief header::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 4px;
+    background: var(--brief-color, var(--accent));
+  }
+  .brief header .emoji {
+    font-size: 32px; width: 56px; height: 56px;
+    display: grid; place-items: center;
+    border-radius: 14px;
+    background: var(--brief-soft, rgba(200,122,91,.12));
+  }
+  .brief header h3 { margin: 0; font: 600 19px/1.1 "Fraunces", serif; }
+  .brief header .species { font-size: 13px; color: var(--ink-mute); }
+
+  .brief .body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .field-label {
+    font: 600 11px/1 ui-sans-serif;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 6px;
+  }
+  .greeting {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    line-height: 1.5;
+    border-left: 3px solid var(--brief-color, var(--accent));
+    padding-left: 12px;
+  }
+  .prompt-box {
+    background: var(--paper-2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .prompt-box.compact {
+    max-height: 6.5em;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+  .prompt-box.compact::after {
+    content: "expand ▾";
+    position: absolute; right: 12px; bottom: 6px;
+    font-size: 11px; color: var(--ink-mute);
+    background: linear-gradient(to right, transparent, var(--paper-2) 30%);
+    padding-left: 28px;
+  }
+  .prompt-box.expanded { max-height: none; }
+  .prompt-box.expanded::after { content: "collapse ▴"; background: var(--paper-2); }
+
+  .candidates {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .candidates .chip {
+    border: 1px solid var(--line);
+    background: white;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .candidates .chip code {
+    font-size: 11px; color: var(--ink-mute);
+    background: var(--paper-2);
+    padding: 1px 6px;
+    border-radius: 5px;
+  }
+
+  /* Decision tracker */
+  .decisions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 200px repeat(4, 1fr);
+    align-items: center;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row.head {
+    background: var(--paper-2);
+    font: 600 11px/1 ui-sans-serif;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    padding: 14px 18px;
+  }
+  .row .who {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600;
+  }
+  .row .who .e { font-size: 22px; }
+  .check {
+    appearance: none; width: 18px; height: 18px;
+    border: 1.5px solid var(--line);
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    margin: 0;
+    background: white;
+  }
+  .check:checked {
+    background: var(--good);
+    border-color: var(--good);
+  }
+  .check:checked::after {
+    content: ""; position: absolute;
+    left: 5px; top: 1px;
+    width: 5px; height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .progress-bar {
+    margin: 14px 0 0;
+    background: var(--paper-2);
+    border-radius: 999px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .progress-bar > div {
+    background: linear-gradient(90deg, var(--good), #6bb079);
+    height: 100%;
+    width: 0;
+    transition: width .3s ease;
+  }
+  .progress-label { margin-top: 8px; font-size: 13px; color: var(--ink-mute); }
+
+  /* Tips note */
+  .note {
+    background: linear-gradient(135deg, rgba(200,122,91,.08), rgba(125,176,150,.06));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    color: var(--ink-soft);
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-mute);
+    font-size: 13px;
+    display: flex; justify-content: space-between;
+  }
+
+  .kbd {
+    font: 12px/1 ui-monospace, "SF Mono", Menlo, monospace;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 2px 6px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="eyebrow">Mission Control · 2026-04-24</div>
+<h1>Four new <em>pen pals</em> need their voices, faces, and motion.</h1>
+<p class="lede">
+  Code, manifests, and Scribbles' system prompt are already wired up. What's left is the taste work — picking voices, picking character images, picking storyboard beats, then generating videos. This is the playbook.
+</p>
+
+<div class="roster" id="roster"></div>
+
+<!-- Step 1 -->
+<div class="section-h">
+  <span class="num">STEP 1</span><h2>Generate voice samples</h2><span class="est">~30s · automated</span>
+</div>
+<div class="card">
+  <p style="margin:0; color: var(--ink-soft);">Calls ElevenLabs TTS for each candidate voice in <code>animals.json</code> using that animal's greeting line. Output goes to <code>pipeline/voice-samples/</code>. Pre-generating saves clicks in the screener UI.</p>
+  <div class="run">
+    <code>./pipeline/run.sh samples spider giraffe hippo eagle</code>
+    <button class="copy" data-copy="./pipeline/run.sh samples spider giraffe hippo eagle">Copy</button>
+  </div>
+  <div class="what-to-look-for">
+    <h4>Heads up</h4>
+    <ul>
+      <li>Skips files that already exist — safe to rerun.</li>
+      <li>Each animal has 2 stock voice candidates; you'll likely <em>design</em> a custom voice for at least Pip (squeaky child voice is hard to find off-the-shelf).</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Step 2 -->
+<div class="section-h">
+  <span class="num">STEP 2</span><h2>Pick or design voices</h2><span class="est">~10–15 min · taste</span>
+</div>
+<div class="card">
+  <p style="margin:0; color: var(--ink-soft);">Launches the Voice Screener at <code>localhost:8111</code>. Listen to candidates, design custom voices from each animal's <em>voiceDesignPrompt</em>, save winners to your ElevenLabs library, then paste the chosen <code>voiceId</code> into <code>src/data/animals.ts</code>.</p>
+  <div class="run">
+    <code>./pipeline/run.sh voices</code>
+    <button class="copy" data-copy="./pipeline/run.sh voices">Copy</button>
+  </div>
+  <div class="what-to-look-for">
+    <h4>What to listen for, per animal</h4>
+    <ul id="voice-tips"></ul>
+  </div>
+</div>
+
+<!-- Step 3 -->
+<div class="section-h">
+  <span class="num">STEP 3</span><h2>Pick character images</h2><span class="est">~15 min · ~$0.32 in Imagen</span>
+</div>
+<div class="card">
+  <p style="margin:0; color: var(--ink-soft);">Launches the Character Picker at <code>localhost:8222</code>. Generates 4 candidates per animal from the editable <em>imagePrompt</em>. Pick a favorite → saves as <code>{id}_character.png</code>. This becomes the reference frame for video generation.</p>
+  <div class="run">
+    <code>./pipeline/run.sh characters</code>
+    <button class="copy" data-copy="./pipeline/run.sh characters">Copy</button>
+  </div>
+  <div class="what-to-look-for">
+    <h4>Visual direction (briefs are below)</h4>
+    <ul>
+      <li><strong>Photorealistic</strong> — must read as wildlife photography, never illustrated/storybook.</li>
+      <li><strong>Composition</strong> — animal facing camera, eyes visible, subtle expression. Will be the idle-loop "talking head".</li>
+      <li><strong>Spider:</strong> the scariest one to get right. Push for "puppy-like jumping spider" — kid-safe, fuzzy, big shiny eyes. Reject anything web-y or creepy.</li>
+      <li><strong>Hippo:</strong> half-submerged framing matters — eyes + nostrils above water, shows the silly grin.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Step 4 -->
+<div class="section-h">
+  <span class="num">STEP 4</span><h2>Pick storyboard beats</h2><span class="est">~15 min</span>
+</div>
+<div class="card">
+  <p style="margin:0; color: var(--ink-soft);">Launches the Storyboard Picker at <code>localhost:8444</code>. Generates beat keyframes from the chosen character image (mail receiving, opening letter, reading, composing, sending). The video generator uses these as anchors so motion stays on-model.</p>
+  <div class="run">
+    <code>./pipeline/run.sh storyboards</code>
+    <button class="copy" data-copy="./pipeline/run.sh storyboards">Copy</button>
+  </div>
+  <div class="what-to-look-for">
+    <h4>Minimum required</h4>
+    <ul>
+      <li>At minimum, <strong>beat_1_receiving</strong> — same animal, same lighting, looking at an envelope arriving. This drives the receive video.</li>
+      <li>Idle video uses the character image directly, no extra beats needed.</li>
+      <li>Pig has all 5 beats — that was the most-polished test case; mirror it if you want a richer animation.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Step 5 -->
+<div class="section-h">
+  <span class="num">STEP 5</span><h2>Generate videos</h2><span class="est">~10 min compute · variable cost</span>
+</div>
+<div class="card">
+  <p style="margin:0; color: var(--ink-soft);">Launches the Video Generator at <code>localhost:8333</code>. Produces <code>{id}_idle.mp4</code> and <code>{id}_receive.mp4</code> per animal, plus extracted <code>.jpg</code> posters. Output lands in <code>pipeline/generated-videos/</code>.</p>
+  <div class="run">
+    <code>./pipeline/run.sh videos</code>
+    <button class="copy" data-copy="./pipeline/run.sh videos">Copy</button>
+  </div>
+  <div class="what-to-look-for">
+    <h4>Quality bar</h4>
+    <ul>
+      <li><strong>Idle:</strong> subtle breathing, blinking, micro-head-tilts. Should loop seamlessly — first and last frames near-identical.</li>
+      <li><strong>Receive:</strong> reaction beat (looks up, eyes widen, slight smile) when the letter arrives. ~3–5s.</li>
+      <li>Reject any clip with morphing limbs, melted features, or obvious AI tells. Re-roll is cheaper than shipping.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Step 6 -->
+<div class="section-h">
+  <span class="num">STEP 6</span><h2>Ship</h2><span class="est">~2 min · automated</span>
+</div>
+<div class="card">
+  <p style="margin:0; color: var(--ink-soft);">Single command: copies <code>.mp4</code>+<code>.jpg</code> into <code>public/animal-videos/</code> and <code>public/animal-thumbnails/</code>, uploads them to Cloudflare R2 via wrangler, then runs <code>scripts/generate-animal-pages.tsx</code> to rebuild the SEO landing pages and sitemap.</p>
+  <div class="run">
+    <code>./pipeline/run.sh ship spider giraffe hippo eagle</code>
+    <button class="copy" data-copy="./pipeline/run.sh ship spider giraffe hippo eagle">Copy</button>
+  </div>
+  <div class="what-to-look-for">
+    <h4>Don't forget</h4>
+    <ul>
+      <li>After voice screener: paste real <code>voiceId</code> into <code>src/data/animals.ts</code> (currently placeholders).</li>
+      <li>Push Scribbles agent updates: <span class="kbd">/11labs push</span></li>
+      <li>Open a feature branch + PR for the Vercel preview before merging to <code>master</code>.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Decisions tracker -->
+<div class="section-h">
+  <span class="num">TRACKER</span><h2>Your decisions, one place</h2><span class="est">saves locally</span>
+</div>
+<div class="decisions" id="decisions"></div>
+<div class="progress-bar"><div id="progress-fill"></div></div>
+<div class="progress-label" id="progress-label">0 / 16 decisions made</div>
+
+<!-- Manual video prompts -->
+<div class="section-h">
+  <span class="num">PROMPTS</span><h2>Manual video generation prompts</h2><span class="est">copy → Nano Banana / Veo / Kling with reference image</span>
+</div>
+<div class="card">
+  <p style="margin:0 0 4px; color: var(--ink-soft);">Three variants per state per animal so you can A/B which read works best with the chosen character image. Drop the character image into your image-to-video tool as the seed, paste a prompt, render. When you've got winners, save as <code>{id}_idle.mp4</code> and <code>{id}_receive.mp4</code> in <code>pipeline/generated-videos/</code>, then <code>./pipeline/run.sh ship</code>.</p>
+  <div class="what-to-look-for" style="margin-top: 18px;">
+    <h4>The three variants</h4>
+    <ul>
+      <li><strong>Idle / Stillness</strong> — minimal motion (breath + one blink). Safest for a clean loop.</li>
+      <li><strong>Idle / Ambient</strong> — environmental life (breeze, water ripples, dewdrops shimmer) plus character breathing.</li>
+      <li><strong>Idle / Personality</strong> — one signature gesture (web-touch, ear-flick, yawn, head-scan).</li>
+      <li><strong>Receive / Soft notice</strong> — gentle eye-widen + small smile. Most "in character" for shy animals (Echo, Pip).</li>
+      <li><strong>Receive / Joyful surprise</strong> — bigger reaction. Best for outgoing personalities (Hank, Gigi).</li>
+      <li><strong>Receive / Curious tilt</strong> — head turns/tilts toward camera. Strong on-camera presence; works for any animal.</li>
+    </ul>
+  </div>
+  <div class="what-to-look-for" style="margin-top: 12px;">
+    <h4>Reading for image-to-video specifically</h4>
+    <ul>
+      <li>Each prompt opens with <em>"This exact [animal] from the reference image"</em> — keeps the i2v model anchored on identity.</li>
+      <li>Each prompt names what stays unchanged (lighting, coloring, background) so the model doesn't drift.</li>
+      <li>Each prompt locks the camera. Don't add camera-motion language — the still character image is your hero frame.</li>
+      <li>Reject any output where: limbs morph/melt, fur texture turns plasticky, environment shifts, or the animal looks at all unfriendly. Re-roll is cheaper than shipping.</li>
+    </ul>
+  </div>
+  <div id="video-prompts" style="margin-top: 18px; display: flex; flex-direction: column; gap: 14px;"></div>
+</div>
+
+<!-- Per-animal briefs -->
+<div class="section-h">
+  <span class="num">BRIEF</span><h2>The four animals, in detail</h2><span class="est">click prompts to expand</span>
+</div>
+<div class="briefs" id="briefs"></div>
+
+<footer>
+  <span>Generated for animal-penpals · open this page anytime: <code>open pipeline/launch.html</code></span>
+  <span>16 / 20 animals shipped → 4 to go</span>
+</footer>
+
+</div>
+
+<script>
+const ANIMALS = [
+  {
+    id: "spider", name: "Pip the Spider", species: "Marbled Orb-weaver",
+    emoji: "🕷️", color: "#E8A04C", soft: "rgba(232,160,76,.20)",
+    greeting: "Hi hi hi! I'm Pip, and I just finished spinning my very best web yet — look at all the sparkly dewdrops! I have eight legs AND eight eyes, so I notice every little thing.",
+    imagePrompt: "A photorealistic close-up macro photograph of an adorable Marbled Orb-weaver spider (Araneus marmoreus) sitting at the center of her dew-covered orb web in a sunlit garden. Bright orange-yellow round body with intricate dark marble pattern on her abdomen, eight delicate slender legs gripping silver silk threads. Crystal-clear morning dewdrops along the spiral web catching warm golden sunlight. Eight tiny shiny eyes clustered on her head. Kid-safe and inviting.",
+    voicePrompt: "A tiny, bright, curious young child voice with a delicate sparkle and gentle enthusiasm — like a proud 6-year-old showing off their best art project. Energetic but soft and patient, never harsh. Think a friendly little garden fairy.",
+    voiceTip: "<strong>Pip:</strong> ✓ voice locked in (custom-designed). For the image: push for the dew-jeweled web shot — orange-yellow marble body in the center of a sparkling spiral. Reject anything dark, cobwebbed, or creepy.",
+    candidates: [
+      { label: "✓", name: "Pip the Spider Voice", id: "blJoi52jIFqsrzeN9Pxp" }
+    ],
+    videoIdle: [
+      { label: "Stillness", prompt: "This exact Marbled Orb-weaver spider from the reference image, sitting completely still at the center of her web. Only motion: an extremely subtle abdomen breathing rhythm and one slow blink of her tiny eyes around the 2-second mark. Dewdrops on the silk perfectly still. Camera locked, no zoom or pan. 3 seconds, seamlessly loopable. Same lighting, same web, same coloring — nothing else changes." },
+      { label: "Ambient", prompt: "This exact Marbled Orb-weaver spider from the reference image. Subtle natural motion only: dewdrops on the silk shimmer and very gently catch the warm golden sunlight, one or two outer threads flex barely-perceptibly from a tiny breeze. The spider herself breathes softly and blinks once. Locked camera. 4 seconds, seamlessly loopable. Warm National Geographic macro quality." },
+      { label: "Personality", prompt: "This exact Marbled Orb-weaver spider from the reference image, gently testing one front leg on a silk thread as if double-checking her work, then settling back to stillness. Slow, careful, curious gesture — kid-friendly and artistic, never creepy. Eyes blink slowly once at the end. Locked camera. 4 seconds. Same dew-jeweled web and golden lighting throughout." }
+    ],
+    videoReceive: [
+      { label: "Soft notice", prompt: "This exact Marbled Orb-weaver spider from the reference image, slowly raising her head and brightening her tiny eyes as she notices something off-camera. Two front legs lift slightly — a delicate, kid-friendly 'oh hello!' beat. End on the curious, friendly expression. 3 seconds. Same web, same dewdrops, same warm lighting — only her reaction changes." },
+      { label: "Joyful surprise", prompt: "This exact Marbled Orb-weaver spider from the reference image. She suddenly perks up — body lifts on her legs, all eight tiny eyes brighten and widen, two front legs raise eagerly as if to wave. A dewdrop trembles on the silk beside her. End on a wide, sparkling, delighted look. 4 seconds. Cute and warm, never creepy." },
+      { label: "Curious tilt", prompt: "This exact Marbled Orb-weaver spider from the reference image, turning her head slowly toward the camera with a soft head-tilt of curiosity. All eight eyes track the lens. Two legs reposition gently on the silk. End facing camera with a friendly, curious presence. 4 seconds. Same web and golden light throughout." }
+    ]
+  },
+  {
+    id: "giraffe", name: "Gigi the Giraffe", species: "Reticulated Giraffe",
+    emoji: "🦒", color: "#D9A75B", soft: "rgba(217,167,91,.20)",
+    greeting: "Helloooo, way down there! I'm Gigi, and from up here I can see for miles and miles! I was just nibbling some yummy acacia leaves at the very tippy top of a tree.",
+    imagePrompt: "A photorealistic Reticulated Giraffe on the African savanna at golden hour. Long elegant neck, large dark eyes with luxuriously long eyelashes, two small ossicones (horns) on top of the head, distinctive net-pattern reticulated coat of warm chestnut polygons separated by cream lines. Gentle, curious expression looking softly toward the camera.",
+    voicePrompt: "A warm, dreamy, slightly slow and elegant adult female voice with a gentle motherly quality. Speaks calmly with a soft musical lilt, as if always taking a peaceful view from above. Think a kind kindergarten teacher reading a bedtime story.",
+    voiceTip: "<strong>Gigi:</strong> ✓ Charlotte locked in — storybook-soft, slows down nicely on long syllables.",
+    candidates: [
+      { label: "✓", name: "Charlotte", id: "XB0fDUnXU5powFXDhCwa" }
+    ],
+    videoIdle: [
+      { label: "Stillness", prompt: "This exact Reticulated Giraffe from the reference image, standing peacefully on the savanna. Only motion: slow gentle chewing — long jaw working side to side — and one slow blink of her large dark eyes. Locked camera, no zoom or pan. 3 seconds, seamlessly loopable. Same coat pattern, savanna background, golden-hour light unchanged." },
+      { label: "Ambient", prompt: "This exact Reticulated Giraffe from the reference image. A soft golden-hour breeze stirs her long eyelashes and the tufts on her ossicones, distant acacia leaves shimmer in soft bokeh. She chews slowly, blinks once. Locked camera. 4 seconds, seamlessly loopable. Warm honey light unchanged throughout." },
+      { label: "Personality", prompt: "This exact Reticulated Giraffe from the reference image, gently flicking one tall ear, then resuming a slow chew. Dreamy, peaceful expression looking softly toward the lens. Long lashes lower in a thoughtful blink at the end. Locked camera. 4 seconds. Same lighting and savanna background." }
+    ],
+    videoReceive: [
+      { label: "Soft notice", prompt: "This exact Reticulated Giraffe from the reference image. She stops chewing and turns her head softly toward the camera, eyes warming with gentle curiosity, ears perking slightly forward. End on her kindly, dreamy expression. 3 seconds. Same coat pattern, lashes, savanna background, and golden light." },
+      { label: "Joyful surprise", prompt: "This exact Reticulated Giraffe from the reference image. A delighted realization — eyes widen, a soft warm smile spreads in her expression, ears flick forward in greeting, head tilts down a touch as if leaning in to greet a tiny friend. 4 seconds. Same lighting throughout, kid-safe and gentle." },
+      { label: "Curious tilt", prompt: "This exact Reticulated Giraffe from the reference image, gently tilting her long neck and head sideways toward the camera with slow, dreamy curiosity. Lashes lower in a thoughtful blink. End on the soft sideways tilt. 4 seconds. Same warm honey lighting." }
+    ]
+  },
+  {
+    id: "hippo", name: "Hank the Hippo", species: "Hippopotamus",
+    emoji: "🦛", color: "#A78BAE", soft: "rgba(167,139,174,.20)",
+    greeting: "BLUB BLUB! Oh hi there! I'm Hank, and I just popped my head up out of the river to say hello! I love yawning the BIGGEST yawns ever — wanna see?",
+    imagePrompt: "A photorealistic hippopotamus partially submerged in a calm African river, only the top of the head, eyes, and tiny round ears above the water. Smooth grey-pink wet skin with droplets running down the snout. Big nostrils flared. Wide friendly eyes looking directly at camera with a content, slightly silly expression.",
+    voicePrompt: "A big, warm, jolly adult male voice with a deep rumbly chest and a hearty chuckle in the background. Friendly and bumbling, slightly bubbly like he's talking from underwater. Think a giant teddy bear who loves to laugh.",
+    voiceTip: "<strong>Hank:</strong> ✓ Brian locked in — warm and rumbly.",
+    candidates: [
+      { label: "✓", name: "Brian", id: "nPczCjzI2devNBz1zQrb" }
+    ],
+    videoIdle: [
+      { label: "Stillness", prompt: "This exact hippopotamus from the reference image, half-submerged in calm river water. Only motion: slow gentle breathing visible at the nostrils, water rippling minutely around his head, one slow blink of his big friendly eyes. Locked camera. 3 seconds, seamlessly loopable. Same skin tone, water reflections, and morning light unchanged." },
+      { label: "Ambient", prompt: "This exact hippopotamus from the reference image. The water surface gently shimmers and ripples around his head, droplets cling to his snout and one rolls slowly down. Tiny round ears flick once. Slow gentle breathing. Locked camera. 4 seconds, seamlessly loopable. Warm morning light unchanged." },
+      { label: "Personality", prompt: "This exact hippopotamus from the reference image, opening his mouth into a slow content yawn that reveals a hint of pink tongue, then closing it with a small sigh. Eyes blink slowly, water ripples gently around his head. Locked camera. 4 seconds. Jolly and kid-safe — never aggressive." }
+    ],
+    videoReceive: [
+      { label: "Soft notice", prompt: "This exact hippopotamus from the reference image. He notices something off-camera — eyes widen with friendly curiosity, mouth softens into a tiny pleased smile, tiny round ears perk forward. End on the warm, content, slightly silly expression. 3 seconds. Same water, same skin tone, same morning light." },
+      { label: "Joyful surprise", prompt: "This exact hippopotamus from the reference image. Eyes brighten with delight, mouth splits into a wide, joyful, open-mouthed grin showing pink tongue. Water droplets shake from his snout, tiny ears perk forward. End on the wide, jolly, surprised grin. 4 seconds. Kid-safe, never aggressive." },
+      { label: "Curious tilt", prompt: "This exact hippopotamus from the reference image, tilting his head slightly above the waterline toward the camera with a curious, friendly look. One ear flicks. Eyes track gently. End on the curious, content gaze. 4 seconds. Same lighting and water reflections." }
+    ]
+  },
+  {
+    id: "eagle", name: "Echo the Eagle", species: "Bald Eagle",
+    emoji: "🦅", color: "#5C6F7D", soft: "rgba(92,111,125,.18)",
+    greeting: "SCREEEE! Greetings, brave friend! I'm Echo, and I just glided down from the very top of the tallest mountain to bring you this letter!",
+    imagePrompt: "A photorealistic Bald Eagle perched on a rugged pine branch overlooking a misty mountain valley. Bright white head and tail feathers crisp against dark chocolate-brown body. Sharp bright yellow hooked beak and intense yellow eyes with a focused but kind expression. Powerful yellow talons gripping the branch.",
+    voicePrompt: "A noble, brave, slightly older male voice with a clear ringing quality and gentle warmth — like a kindly mountain ranger telling tales of soaring adventures. Calm and confident, never harsh, with quiet awe when describing the view from above.",
+    voiceTip: "<strong>Echo:</strong> ✓ Daniel locked in — warm counterbalance to the intense yellow-eye stare.",
+    candidates: [
+      { label: "✓", name: "Daniel", id: "onwK4e9ZLuTAKqWW03F9" }
+    ],
+    videoIdle: [
+      { label: "Stillness", prompt: "This exact Bald Eagle from the reference image, perched on the pine branch. Only motion: one slow blink of his bright yellow eyes around the 2-second mark, very subtle ruffle of one neck feather in a soft breeze. Body and head perfectly still. Locked camera, no zoom or pan. 3 seconds, seamlessly loopable. Misty mountain background unchanged." },
+      { label: "Ambient", prompt: "This exact Bald Eagle from the reference image. White head and neck feathers ruffle softly in a mountain breeze, distant misty peaks shift very gently in soft bokeh. He blinks slowly once. Locked camera. 4 seconds, seamlessly loopable. Golden side-light unchanged." },
+      { label: "Personality", prompt: "This exact Bald Eagle from the reference image, slowly turning his head a small amount as if scanning the distant valley, then settling back to face forward. One slow blink. Calm, noble expression — never aggressive. Locked camera. 4 seconds. Same plumage and lighting throughout." }
+    ],
+    videoReceive: [
+      { label: "Soft notice", prompt: "This exact Bald Eagle from the reference image. Head turns smoothly toward the camera, intense yellow eyes warm with gentle curiosity, neck feathers settle. A subtle softening of expression. End on the alert, kindly gaze. 3 seconds. Same plumage, misty mountains, and side-lighting unchanged." },
+      { label: "Joyful surprise", prompt: "This exact Bald Eagle from the reference image. Bright yellow eyes brighten further with focused, friendly curiosity — head turns crisply toward the camera, neck feathers ruffle as if leaning forward to greet a friend. End on the alert, warm, almost-smiling expression. 4 seconds. Kid-safe and noble, never aggressive or fierce." },
+      { label: "Curious tilt", prompt: "This exact Bald Eagle from the reference image, tilting his head sideways with a slow, curious, almost puppy-like motion as he focuses on something off-camera. Yellow eyes track. End on the alert, friendly tilt. 4 seconds. Same lighting and mountain background." }
+    ]
+  }
+];
+
+const STAGES = [
+  { key: "voice",     label: "Voice picked" },
+  { key: "character", label: "Image picked" },
+  { key: "story",     label: "Beats picked" },
+  { key: "video",     label: "Video shipped" }
+];
+
+const STORAGE_KEY = "ap-pipeline-decisions-v1";
+const decisions = (() => {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+})();
+function saveDecisions() { localStorage.setItem(STORAGE_KEY, JSON.stringify(decisions)); }
+
+// Roster strip
+{
+  const r = document.getElementById("roster");
+  r.innerHTML = ANIMALS.map(a => `
+    <div class="pill">
+      <div class="swatch" style="background:${a.soft}; color:${a.color};">${a.emoji}</div>
+      <div class="meta"><strong>${a.name}</strong><span>${a.species}</span></div>
+    </div>
+  `).join("");
+}
+
+// Voice tips
+{
+  const ul = document.getElementById("voice-tips");
+  ul.innerHTML = ANIMALS.map(a => `<li>${a.voiceTip}</li>`).join("");
+}
+
+// Manual video prompts (multiple variants per state, image-to-video friendly)
+{
+  const escAttr = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  const variantBlock = (label, prompt, color) => `
+    <div style="border-left: 3px solid ${color}; padding-left: 12px;">
+      <div class="field-label" style="display:flex; align-items:center; gap:8px;">
+        <span style="color:${color}; font-weight:700;">${label}</span>
+      </div>
+      <div class="run" style="margin-top:6px;">
+        <code>${prompt}</code>
+        <button class="copy" data-copy="${escAttr(prompt)}">Copy</button>
+      </div>
+    </div>
+  `;
+
+  const wrap = document.getElementById("video-prompts");
+  wrap.innerHTML = ANIMALS.map(a => `
+    <details class="card" style="padding: 16px 20px; --brief-color:${a.color};" ${a.id === 'spider' ? 'open' : ''}>
+      <summary style="cursor:pointer; display:flex; align-items:center; gap:10px; font-weight:600; list-style:none;">
+        <span style="font-size:22px;">${a.emoji}</span>
+        <span>${a.name}</span>
+        <span style="margin-left:auto; font-size:11px; color:var(--ink-mute); letter-spacing:.08em; text-transform:uppercase;">click to expand</span>
+      </summary>
+      <div style="margin-top:14px; display:flex; flex-direction:column; gap:18px;">
+        <div>
+          <div class="field-label" style="margin-bottom: 10px;">Idle loop · 3 variants · use reference image as seed</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            ${a.videoIdle.map(v => variantBlock(v.label, v.prompt, a.color)).join("")}
+          </div>
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom: 10px;">Receive reaction · 3 variants · use reference image as seed</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            ${a.videoReceive.map(v => variantBlock(v.label, v.prompt, a.color)).join("")}
+          </div>
+        </div>
+      </div>
+    </details>
+  `).join("");
+}
+
+// Briefs
+{
+  const wrap = document.getElementById("briefs");
+  wrap.innerHTML = ANIMALS.map(a => `
+    <article class="brief" style="--brief-color:${a.color}; --brief-soft:${a.soft};">
+      <header>
+        <div class="emoji">${a.emoji}</div>
+        <div>
+          <h3>${a.name}</h3>
+          <div class="species">${a.species}</div>
+        </div>
+      </header>
+      <div class="body">
+        <div>
+          <div class="field-label">Greeting (TTS sample)</div>
+          <div class="greeting">"${a.greeting}"</div>
+        </div>
+        <div>
+          <div class="field-label">Image prompt</div>
+          <div class="prompt-box compact" data-toggle>${a.imagePrompt}</div>
+        </div>
+        <div>
+          <div class="field-label">Voice direction</div>
+          <div class="prompt-box compact" data-toggle>${a.voicePrompt}</div>
+        </div>
+        <div>
+          <div class="field-label">Stock voice candidates</div>
+          <div class="candidates">
+            ${a.candidates.map(c => `<span class="chip">${c.label} · ${c.name} <code>${c.id.slice(0,8)}…</code></span>`).join("")}
+          </div>
+        </div>
+      </div>
+    </article>
+  `).join("");
+}
+
+// Decision tracker
+{
+  const d = document.getElementById("decisions");
+  let html = `<div class="row head"><div>Animal</div>${STAGES.map(s => `<div>${s.label}</div>`).join("")}</div>`;
+  html += ANIMALS.map(a => `
+    <div class="row">
+      <div class="who"><span class="e">${a.emoji}</span>${a.name}</div>
+      ${STAGES.map(s => `
+        <div><input type="checkbox" class="check" data-aid="${a.id}" data-stage="${s.key}"
+          ${decisions[a.id+"-"+s.key] ? "checked" : ""} /></div>
+      `).join("")}
+    </div>
+  `).join("");
+  d.innerHTML = html;
+}
+
+function updateProgress() {
+  const total = ANIMALS.length * STAGES.length;
+  const done = Object.values(decisions).filter(Boolean).length;
+  document.getElementById("progress-fill").style.width = (done/total*100) + "%";
+  document.getElementById("progress-label").textContent = `${done} / ${total} decisions made`;
+}
+updateProgress();
+
+// Wire up listeners
+document.addEventListener("click", (e) => {
+  // Copy buttons
+  if (e.target.matches(".copy")) {
+    navigator.clipboard.writeText(e.target.dataset.copy);
+    const orig = e.target.textContent;
+    e.target.textContent = "Copied ✓";
+    e.target.classList.add("copied");
+    setTimeout(() => {
+      e.target.textContent = orig;
+      e.target.classList.remove("copied");
+    }, 1400);
+  }
+  // Expand prompt
+  if (e.target.matches("[data-toggle]")) {
+    e.target.classList.toggle("expanded");
+    e.target.classList.toggle("compact");
+  }
+});
+document.addEventListener("change", (e) => {
+  if (e.target.matches(".check")) {
+    const k = e.target.dataset.aid + "-" + e.target.dataset.stage;
+    decisions[k] = e.target.checked;
+    saveDecisions();
+    updateProgress();
+  }
+});
+</script>
+</body>
+</html>

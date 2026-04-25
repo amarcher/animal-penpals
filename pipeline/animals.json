@@ -50,5 +50,57 @@
       { "label": "A", "name": "Will", "voiceId": "bIHbv24MWmeRgasZH58o" },
       { "label": "B", "name": "Chris", "voiceId": "iP95p4xoKVk53GoZ742B" }
     ]
+  },
+  {
+    "id": "spider",
+    "name": "Pip the Spider",
+    "emoji": "🕷️",
+    "color": "#E8A04C",
+    "greeting": "Hi hi hi! I'm Pip, and I just finished spinning my very best web yet — look at all the sparkly dewdrops! I have eight legs AND eight eyes, so I notice every little thing. Want to hear about the bug-sized adventure I had this morning?",
+    "imagePrompt": "A photorealistic close-up macro photograph of an adorable Marbled Orb-weaver spider (Araneus marmoreus) sitting at the center of her dew-covered orb web in a sunlit garden. Bright orange-yellow round body with intricate dark marble pattern on her abdomen, eight delicate slender legs gripping silver silk threads. Crystal-clear morning dewdrops along the spiral web catching warm golden sunlight. Eight tiny shiny eyes clustered on her head. Looking gently toward the camera with a curious, friendly presence — like a tiny garden artist, not creepy. Macro lens, extreme detail on patterned body and silk threads. Soft green leafy bokeh background. National Geographic macro photography style, kid-safe and inviting.",
+    "voiceDesignPrompt": "A tiny, bright, curious young child voice with a delicate sparkle and gentle enthusiasm — like a proud 6-year-old showing off their best art project. Energetic but soft and patient, never harsh. Think a friendly little garden fairy.",
+    "voiceCandidates": [
+      { "label": "A", "name": "Lily", "voiceId": "pFZP5JQG7iQjIQuC4Bku" },
+      { "label": "B", "name": "Matilda", "voiceId": "XrExE9yKIg1WjnnlVkGX" }
+    ]
+  },
+  {
+    "id": "giraffe",
+    "name": "Gigi the Giraffe",
+    "emoji": "🦒",
+    "color": "#D9A75B",
+    "greeting": "Helloooo, way down there! I'm Gigi, and from up here I can see for miles and miles! I was just nibbling some yummy acacia leaves at the very tippy top of a tree. What's the tallest thing YOU'VE ever seen?",
+    "imagePrompt": "A photorealistic Reticulated Giraffe on the African savanna at golden hour. Long elegant neck, large dark eyes with luxuriously long eyelashes, two small ossicones (horns) on top of the head, distinctive net-pattern reticulated coat of warm chestnut polygons separated by cream lines. Gentle, curious expression looking softly toward the camera. Tall acacia trees and warm savanna grass in soft bokeh background. Telephoto wildlife photography, shallow depth of field, National Geographic quality.",
+    "voiceDesignPrompt": "A warm, dreamy, slightly slow and elegant adult female voice with a gentle motherly quality. Speaks calmly with a soft musical lilt, as if always taking a peaceful view from above. Think a kind kindergarten teacher reading a bedtime story under the stars.",
+    "voiceCandidates": [
+      { "label": "A", "name": "Charlotte", "voiceId": "XB0fDUnXU5powFXDhCwa" },
+      { "label": "B", "name": "Sarah", "voiceId": "EXAVITQu4vr4xnSDxMaL" }
+    ]
+  },
+  {
+    "id": "hippo",
+    "name": "Hank the Hippo",
+    "emoji": "🦛",
+    "color": "#A78BAE",
+    "greeting": "BLUB BLUB! Oh hi there! I'm Hank, and I just popped my head up out of the river to say hello! I love yawning the BIGGEST yawns ever — wanna see? Tell me, what's your favorite splashy thing to do?",
+    "imagePrompt": "A photorealistic hippopotamus partially submerged in a calm African river, only the top of the head, eyes, and tiny round ears above the water. Smooth grey-pink wet skin with droplets running down the snout. Big nostrils flared. Wide friendly eyes looking directly at camera with a content, slightly silly expression. Mouth gently open showing a hint of pink tongue. Lush green riverbank reflected in calm water, soft morning light. Wildlife photography, shallow depth of field, water droplets crisp on skin. National Geographic quality.",
+    "voiceDesignPrompt": "A big, warm, jolly adult male voice with a deep rumbly chest and a hearty chuckle in the background. Friendly and bumbling, slightly bubbly like he's talking from underwater. Think a giant teddy bear who loves to laugh.",
+    "voiceCandidates": [
+      { "label": "A", "name": "Brian", "voiceId": "nPczCjzI2devNBz1zQrb" },
+      { "label": "B", "name": "Charlie", "voiceId": "IKne3meq5aSn9XLyUdCD" }
+    ]
+  },
+  {
+    "id": "eagle",
+    "name": "Echo the Eagle",
+    "emoji": "🦅",
+    "color": "#5C6F7D",
+    "greeting": "SCREEEE! Greetings, brave friend! I'm Echo, and I just glided down from the very top of the tallest mountain to bring you this letter! Did you know I can spot a tiny fish from a mile up in the sky? What's something YOU'RE really, really good at?",
+    "imagePrompt": "A photorealistic Bald Eagle perched on a rugged pine branch overlooking a misty mountain valley. Bright white head and tail feathers crisp against dark chocolate-brown body. Sharp bright yellow hooked beak and intense yellow eyes with a focused but kind expression. Powerful yellow talons gripping the branch. Wind ruffling neck feathers slightly. Soft golden hour light from the side, distant pine-covered peaks in soft bokeh background. Telephoto wildlife photography, sharp feather detail. National Geographic quality.",
+    "voiceDesignPrompt": "A noble, brave, slightly older male voice with a clear ringing quality and gentle warmth — like a kindly mountain ranger telling tales of soaring adventures. Calm and confident, never harsh, with quiet awe when describing the view from above.",
+    "voiceCandidates": [
+      { "label": "A", "name": "Daniel", "voiceId": "onwK4e9ZLuTAKqWW03F9" },
+      { "label": "B", "name": "George", "voiceId": "JBFqnCBsd6RMkjVDRZzb" }
+    ]
   }
 ]

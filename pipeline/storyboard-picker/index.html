@@ -262,11 +262,42 @@
       flex-direction: column;
       gap: 4px;
       color: rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: border-color .15s, background .15s, color .15s;
+    }
+
+    .reference-placeholder:hover,
+    .reference-placeholder.is-dragover {
+      border-color: var(--animal-color);
+      background: color-mix(in srgb, var(--animal-color) 10%, var(--surface-2));
+      color: var(--animal-color);
     }
 
     .reference-placeholder span {
       font-size: 9px;
       text-align: center;
+    }
+
+    .reference-thumb-wrap {
+      position: relative;
+      cursor: pointer;
+    }
+    .reference-thumb-wrap .replace-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.55); color: #fff;
+      font-size: 10px; font-weight: 700;
+      border-radius: var(--radius-sm);
+      opacity: 0; transition: opacity .15s;
+      letter-spacing: .04em; text-transform: uppercase;
+    }
+    .reference-thumb-wrap:hover .replace-overlay,
+    .reference-thumb-wrap.is-dragover .replace-overlay {
+      opacity: 1;
+    }
+    .reference-thumb-wrap.is-uploading .replace-overlay {
+      opacity: 1;
+      background: rgba(0,0,0,.75);
     }
 
     /* ── Beats scroll container ── */
@@ -846,6 +877,22 @@
       "A photorealistic leucistic pink axolotl in clear freshwater, turning to notice a letter sinking slowly through the water nearby. Wide head, feathery pink-red external gills alert and spread wide with excitement. Dark eyes looking to the side. Soft aquatic lighting. Macro photography.",
       "A photorealistic leucistic pink axolotl in clear freshwater, pushing a folded reply letter upward through the water with both tiny front legs, sending it toward the surface. Feathery gills streaming behind. Wide smile, looking proud and happy. Clear water with light caustics. Macro aquatic photography.",
     ],
+    spider: [
+      "A photorealistic close-up macro photograph of a Marbled Orb-weaver spider at the center of her dew-covered orb web in a sunlit garden. She has just noticed a tiny folded letter caught in the silk strands beside her — body lifted with bright excitement, two front legs raised, all eight tiny eyes locked on the letter, about to scuttle over to investigate. Same orange-yellow marble body and dew-jeweled web as the reference. Warm golden sunlight. Kid-safe and curious, never creepy. Macro National Geographic quality.",
+      "A photorealistic close-up macro photograph of a Marbled Orb-weaver spider at the center of her dew-covered orb web. She has just released a tiny folded reply letter that floats away on the breeze across the garden, watching it drift off with a proud, satisfied expression. Two front legs raised in a small send-off gesture. Same orange-yellow marble body, dewdrops on silk threads, warm golden sunlight as the reference. Kid-safe macro photography.",
+    ],
+    giraffe: [
+      "A photorealistic Reticulated Giraffe on the African savanna at golden hour. She has just noticed a folded letter resting on the tall grass far below her — long neck arching gracefully downward with gentle curiosity, big dark eyes with long lashes focused on the letter, about to pick it up softly with her long tongue. Same reticulated chestnut-and-cream coat pattern, ossicones, savanna with acacia trees in soft bokeh, warm honey-gold light as the reference. Telephoto wildlife photography, dreamy and warm.",
+      "A photorealistic Reticulated Giraffe on the African savanna at golden hour, lifting a folded reply letter high above her with her long purple tongue, releasing it into the warm breeze to sail away across the savanna. Proud, satisfied, kindly expression. Long neck stretched gracefully upward. Same coat pattern, ossicones, acacia trees, golden light as the reference. Telephoto wildlife photography.",
+    ],
+    hippo: [
+      "A photorealistic hippopotamus partially submerged in a calm African river — only the top of his head, eyes, and tiny ears above the water. He has just spotted a folded letter floating on the river nearby, eyes wide with delight, mouth open in a happy, surprised grin showing a hint of pink tongue. About to nudge the letter gently with his snout. Same grey-pink wet skin, water droplets, lush green riverbank reflected in the calm water, soft morning light as the reference. Wildlife photography, jolly and kid-safe.",
+      "A photorealistic hippopotamus partially submerged in a calm African river. He has just nudged a folded reply letter forward across the water surface with his snout, sending it drifting off downstream. Proud, jolly grin, water droplets shimmering on his face. Tiny ears perked. Same grey-pink wet skin, calm water, lush green riverbank, soft morning light as the reference. Wildlife photography, kid-safe.",
+    ],
+    eagle: [
+      "A photorealistic Bald Eagle perched on his rugged pine branch overlooking a misty mountain valley. He has just noticed a folded letter caught on the branch beside his powerful talons — head turned with intense focused curiosity, bright yellow eyes locked on the letter, about to pick it up with his sharp yellow hooked beak. Same crisp white head feathers, dark chocolate-brown body, misty mountain peaks in soft bokeh, warm golden side-light as the reference. Telephoto wildlife photography, noble and warm — never aggressive.",
+      "A photorealistic Bald Eagle perched on his rugged pine branch overlooking a misty mountain valley. He has just released a folded reply letter into a warm thermal updraft, watching it soar away across the peaks. Wings slightly raised in a calm, proud flourish. Bright yellow eyes following the letter into the distance. Same plumage, misty mountains, golden side-light as the reference. Telephoto wildlife photography, noble and kindly.",
+    ],
   };
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -912,19 +959,27 @@
     refLabel.textContent = 'Reference';
 
     if (animal.characterImageBase64) {
+      const wrap = el('div', 'reference-thumb-wrap');
+      wrap.style.setProperty('--animal-color', animal.color);
       const refThumb = el('img', 'reference-thumb');
       refThumb.src = `data:image/png;base64,${animal.characterImageBase64}`;
       refThumb.alt = `${animal.name} character reference`;
-      refCol.append(refLabel, refThumb);
+      const overlay = el('div', 'replace-overlay');
+      overlay.textContent = 'Replace';
+      wrap.append(refThumb, overlay);
+      attachReferenceUpload(wrap, animal);
+      refCol.append(refLabel, wrap);
     } else {
       const refPlaceholder = el('div', 'reference-placeholder');
+      refPlaceholder.style.setProperty('--animal-color', animal.color);
       refPlaceholder.innerHTML = `
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="3" y="3" width="18" height="18" rx="3"/>
-          <circle cx="8.5" cy="8.5" r="1.5"/>
-          <path d="m21 15-5-5L5 21"/>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        <span>No ref</span>`;
+        <span>Upload ref</span>`;
+      attachReferenceUpload(refPlaceholder, animal);
       refCol.append(refLabel, refPlaceholder);
     }
     body.appendChild(refCol);
@@ -1138,6 +1193,76 @@
     panel.appendChild(actions);
 
     return panel;
+  }
+
+  // ── Reference upload (manual seed image) ─────────────────────────────────
+  function attachReferenceUpload(target, animal) {
+    const trigger = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/png,image/jpeg,image/webp';
+      input.addEventListener('change', () => {
+        const f = input.files && input.files[0];
+        if (f) handleReferenceFile(animal, f, target);
+      });
+      input.click();
+    };
+    target.addEventListener('click', trigger);
+    target.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      target.classList.add('is-dragover');
+    });
+    target.addEventListener('dragleave', () => target.classList.remove('is-dragover'));
+    target.addEventListener('drop', (e) => {
+      e.preventDefault();
+      target.classList.remove('is-dragover');
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) handleReferenceFile(animal, f, target);
+    });
+  }
+
+  async function handleReferenceFile(animal, file, target) {
+    if (!file.type.startsWith('image/')) {
+      alert('Please drop an image file (PNG/JPEG/WebP).');
+      return;
+    }
+    target.classList.add('is-uploading');
+    const overlay = target.querySelector('.replace-overlay');
+    if (overlay) overlay.textContent = 'Uploading…';
+
+    try {
+      const base64 = await fileToBase64(file);
+      const res = await fetch('/save-character', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ animalId: animal.id, base64 })
+      });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
+      // Update in-memory state and re-render so the new ref is used by generation
+      animal.characterImageBase64 = base64;
+      animal.characterImageMimeType = file.type || 'image/png';
+      render();
+    } catch (err) {
+      console.error(err);
+      alert(`Upload failed: ${err.message}`);
+      target.classList.remove('is-uploading');
+      if (overlay) overlay.textContent = 'Replace';
+    }
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        // Result is a data URL; strip the prefix to get raw base64
+        const result = reader.result || '';
+        const comma = result.indexOf(',');
+        resolve(comma >= 0 ? result.slice(comma + 1) : result);
+      };
+      reader.onerror = () => reject(reader.error || new Error('FileReader error'));
+      reader.readAsDataURL(file);
+    });
   }
 
   // ── Generate ──────────────────────────────────────────────────────────────

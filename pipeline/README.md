@@ -4,22 +4,23 @@ Reusable pipeline for adding new animal characters to Animal Penpals.
 
 ## Quick Start
 
+Single entry point — `./pipeline/run.sh <step>` drives every stage:
+
 ```bash
-# 1. Define animals in animals.json (see format below)
-
-# 2. Pick voices
-./pipeline/generate-samples.sh           # fetch TTS samples (optional)
-./pipeline/voice-screener/serve.sh       # → http://localhost:8111/voice-screener/
-# Listen, design custom voices, pick winners → copy JSON config
-
-# 3. Pick character images
-./pipeline/character-picker/serve.sh     # → http://localhost:8222/character-picker/
-# Generate photorealistic images, pick favorites → download PNGs
-
-# 4. Update src/data/animals.ts with chosen voiceIds
-# 5. Generate videos from character images (next step)
-# 6. Upload assets to R2, regenerate landing pages
+./pipeline/run.sh status                          # see what's done per animal
+./pipeline/run.sh samples spider giraffe          # generate TTS samples
+./pipeline/run.sh voices                          # → voice screener UI (localhost:8111)
+./pipeline/run.sh characters                      # → character picker UI (localhost:8222)
+./pipeline/run.sh storyboards                     # → storyboard picker UI (localhost:8444)
+./pipeline/run.sh videos                          # → video generator UI (localhost:8333)
+./pipeline/run.sh ship spider giraffe hippo eagle # publish to public/ + R2 + regenerate pages
 ```
+
+After `ship`, update `voiceId` in `src/data/animals.ts` with the picks from
+the voice screener and redeploy the Scribbles agent (`/11labs push`).
+
+The individual `*/serve.sh` scripts still work standalone — `run.sh` is just
+a thin driver over them with shared status, publish, and R2 upload helpers.
 
 ## Directory Structure
 
@@ -114,15 +115,20 @@ Generate idle + receive videos from selected character images.
 
 ## Adding New Animals
 
-1. Add entries to `animals.json` with all prompts and voice candidates
-2. Run voice screener → pick/design voices
-3. Run character picker → pick character images (saved to `character-images/`)
-4. Run storyboard picker → pick beat keyframes (saved to `storyboard-images/`)
-5. Run video generator → generate idle + receive videos (saved to `generated-videos/`)
-6. Add animal to `src/data/animals.ts`, `api/generate-response.ts`, `src/data/videoManifest.ts`
-7. Upload videos + thumbnails to R2: `npx wrangler r2 object put animal-penpals/... --remote`
-8. Update Scribbles agent config: add animal to `agent_configs/Animal-Penpals.json`, deploy with `/elevenlabs`
-9. Regenerate landing pages: `npx tsx scripts/generate-animal-pages.tsx`
+1. Add entries to `pipeline/animals.json` with all prompts and voice candidates.
+2. Add the same animals (with placeholder `voiceId`) to `src/data/animals.ts`,
+   `api/generate-response.ts`, `src/data/videoManifest.ts`, and the Scribbles
+   prompt in `agent_configs/Animal-Penpals.json`.
+3. `./pipeline/run.sh samples <ids...>` then `./pipeline/run.sh voices` →
+   pick/design voices → paste real `voiceId` back into `src/data/animals.ts`.
+4. `./pipeline/run.sh characters` → pick character images.
+5. `./pipeline/run.sh storyboards` → pick beat keyframes.
+6. `./pipeline/run.sh videos` → generate idle + receive videos.
+7. `./pipeline/run.sh ship <ids...>` → copies to `public/`, uploads to R2,
+   regenerates landing pages.
+8. Redeploy Scribbles agent: `/11labs push`.
+
+Run `./pipeline/run.sh status` at any time to see what's still pending.
 
 ## APIs Used
 

@@ -36,6 +36,10 @@ const animals: AnimalDef[] = [
   { id: 'pig', name: 'Patches the Pig', species: 'Kunekune Pig', personality: 'jolly, messy, and loves mud puddles \u2014 always snorting with laughter' },
   { id: 'narwhal', name: 'Nori the Narwhal', species: 'Narwhal', personality: 'magical, dreamy, and believes their tusk grants wishes \u2014 loves the deep sea' },
   { id: 'axolotl', name: 'Axel the Axolotl', species: 'Axolotl', personality: 'chill, regenerative, and always smiling \u2014 the coolest critter in the lake' },
+  { id: 'spider', name: 'Pip the Spider', species: 'Marbled Orb-weaver', personality: 'patient, artistic, and observant \u2014 weaves the world\u2019s most beautiful webs' },
+  { id: 'giraffe', name: 'Gigi the Giraffe', species: 'Reticulated Giraffe', personality: 'gentle, dreamy, and always looking on the bright side \u2014 sees the world from way up high' },
+  { id: 'hippo', name: 'Hank the Hippo', species: 'Hippopotamus', personality: 'jolly, splashy, and a champion yawner \u2014 loves a good soak and a good laugh' },
+  { id: 'eagle', name: 'Echo the Eagle', species: 'Bald Eagle', personality: 'brave, far-seeing, and quietly noble \u2014 inspires others to soar a little higher' },
 ];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
