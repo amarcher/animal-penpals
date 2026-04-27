@@ -11,7 +11,7 @@ describe('ttsPrefetchCache', () => {
   }
 
   it('prefetchTts fires fetch and caches promise', async () => {
-    const mockData = { audio_base64: 'abc', alignment: { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] } };
+    const mockData = { audio_base64: 'dGVzdA==', alignment: { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] } };
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(mockData) }));
 
     const { prefetchTts, getCachedTts } = await loadModule();
@@ -21,11 +21,13 @@ describe('ttsPrefetchCache', () => {
     expect(getCachedTts('Hello', 'voice-1')).toBe(promise);
 
     const result = await promise;
-    expect(result.audio_base64).toBe('abc');
+    expect(result.audio).toBeInstanceOf(HTMLAudioElement);
+    expect(result.blobUrl).toMatch(/^blob:/);
+    expect(result.alignment).toBeDefined();
   });
 
   it('second call with same key returns existing promise without new fetch', async () => {
-    const mockData = { audio_base64: 'abc', alignment: { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] } };
+    const mockData = { audio_base64: 'dGVzdA==', alignment: { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] } };
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(mockData) }));
 
     const { prefetchTts } = await loadModule();
@@ -38,7 +40,7 @@ describe('ttsPrefetchCache', () => {
   });
 
   it('different text/voiceId gets separate cache entry', async () => {
-    const mockData = { audio_base64: 'abc', alignment: { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] } };
+    const mockData = { audio_base64: 'dGVzdA==', alignment: { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] } };
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(mockData) }));
 
     const { prefetchTts } = await loadModule();
@@ -50,7 +52,7 @@ describe('ttsPrefetchCache', () => {
   });
 
   it('evictTts removes entry', async () => {
-    const mockData = { audio_base64: 'abc', alignment: { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] } };
+    const mockData = { audio_base64: 'dGVzdA==', alignment: { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] } };
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(mockData) }));
 
     const { prefetchTts, getCachedTts, evictTts } = await loadModule();

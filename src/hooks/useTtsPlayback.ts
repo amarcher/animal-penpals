@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { getCachedTts, type TtsResult } from '../utils/ttsPrefetchCache.ts';
+import { getCachedTts, prefetchTts, type TtsAlignment, type TtsResult } from '../utils/ttsPrefetchCache.ts';
 
 export interface WordTiming {
   word: string;
@@ -14,12 +14,6 @@ interface TtsPlaybackState {
   currentCharIndex: number;
   wordTimings: WordTiming[];
   charCount: number;
-}
-
-interface TtsAlignment {
-  characters: string[];
-  character_start_times_seconds: number[];
-  character_end_times_seconds: number[];
 }
 
 export function buildWordTimings(text: string, alignment: TtsAlignment): WordTiming[] {
@@ -71,10 +65,11 @@ export function useTtsPlayback() {
   const animFrameRef = useRef<number>(0);
   const playIdRef = useRef(0);
 
-  const stopAudio = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.onended = null;
+  const detachAudio = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.onended = null;
       audioRef.current = null;
     }
     cancelAnimationFrame(animFrameRef.current);
@@ -82,47 +77,41 @@ export function useTtsPlayback() {
 
   const stop = useCallback(() => {
     playIdRef.current += 1;
-    stopAudio();
+    detachAudio();
     setState({ isPlaying: false, isLoading: false, currentWordIndex: -1, currentCharIndex: -1, wordTimings: [], charCount: 0 });
-  }, [stopAudio]);
+  }, [detachAudio]);
 
   const play = useCallback(async (text: string, voiceId: string): Promise<boolean> => {
-    // Increment play ID to invalidate any in-flight requests
     playIdRef.current += 1;
     const thisPlayId = playIdRef.current;
 
-    // Stop any current playback
-    stopAudio();
+    detachAudio();
 
     setState(s => ({ ...s, isLoading: true, isPlaying: false, currentWordIndex: -1, currentCharIndex: -1, charCount: 0 }));
 
-    try {
-      // Use prefetched TTS data if available, otherwise fetch fresh
-      const cached = getCachedTts(text, voiceId);
-      let data: TtsResult;
-      if (cached) {
-        data = await cached;
-      } else {
-        const res = await fetch('/api/tts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, voiceId }),
-        });
-        if (!res.ok) throw new Error('TTS request failed');
-        data = await res.json();
-      }
+    const playStartedAt = performance.now();
+    console.log('[tts] play() called', { textLength: text.length });
 
-      // If a newer play was requested while we were fetching, bail out
+    try {
+      // Prefer prefetched + pre-decoded audio; fall back to a fresh fetch.
+      const cachedPromise = getCachedTts(text, voiceId) ?? prefetchTts(text, voiceId);
+      const data: TtsResult = await cachedPromise;
+
       if (thisPlayId !== playIdRef.current) return false;
 
       const wordTimings = buildWordTimings(text, data.alignment);
       charTimesRef.current = data.alignment.character_start_times_seconds;
-      const audio = new Audio(`data:audio/mpeg;base64,${data.audio_base64}`);
+
+      // Reuse the pre-decoded audio element. Reset to start so replays work.
+      const audio = data.audio;
+      audio.currentTime = 0;
       audioRef.current = audio;
 
       setState({ isLoading: false, isPlaying: true, wordTimings, currentWordIndex: 0, currentCharIndex: 0, charCount: data.alignment.characters.length });
 
+      console.log(`[tts] starting playback ${(performance.now() - playStartedAt).toFixed(0)}ms after play()`);
       await audio.play();
+      console.log(`[tts] audio.play() resolved at ${(performance.now() - playStartedAt).toFixed(0)}ms`);
 
       if (thisPlayId !== playIdRef.current) return false;
 
@@ -131,7 +120,6 @@ export function useTtsPlayback() {
         if (!audioRef.current || thisPlayId !== playIdRef.current) return;
         const t = audioRef.current.currentTime;
         const wordIdx = wordTimings.findIndex(w => t >= w.startTime && t < w.endTime);
-        // Binary-ish search for current character: find last char whose start ≤ t
         let charIdx = -1;
         for (let i = charStarts.length - 1; i >= 0; i--) {
           if (charStarts[i] <= t) { charIdx = i; break; }
@@ -164,7 +152,7 @@ export function useTtsPlayback() {
       setState({ isPlaying: false, isLoading: false, currentWordIndex: -1, currentCharIndex: -1, wordTimings: [], charCount: 0 });
       return false;
     }
-  }, [stopAudio]);
+  }, [detachAudio]);
 
   return { ...state, play, stop };
 }

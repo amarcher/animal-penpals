@@ -66,3 +66,10 @@ window.Audio = class MockAudio extends Audio {
     if (src) this.src = src;
   }
 } as typeof Audio;
+
+// happy-dom doesn't fully implement URL.createObjectURL — stub it
+if (!URL.createObjectURL || URL.createObjectURL.toString().includes('not implemented')) {
+  let counter = 0;
+  URL.createObjectURL = () => `blob:mock-${++counter}`;
+  URL.revokeObjectURL = () => {};
+}

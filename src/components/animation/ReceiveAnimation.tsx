@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAnimalById } from '../../data/animals.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
-import { getCachedVideo, preloadVideo, evictVideo } from '../../utils/videoPreloadCache.ts';
+import { getCachedVideo, preloadVideo } from '../../utils/videoPreloadCache.ts';
 import { prefetchTts } from '../../utils/ttsPrefetchCache.ts';
 import './ReceiveAnimation.css';
 
@@ -13,8 +13,6 @@ interface ReceiveAnimationProps {
 }
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 export function ReceiveAnimation({ animalId, responsePromise, onComplete }: ReceiveAnimationProps) {
   const animal = getAnimalById(animalId);
@@ -59,14 +57,19 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const completedRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [showPlayButton, setShowPlayButton] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-
     const container = containerRef.current;
     if (!container) return;
+
+    // AbortController scopes ALL listeners + side effects to this mount, so
+    // cleanup truly tears down everything from this run (no leaked 'ended'
+    // listener firing onComplete from a stale closure).
+    const abort = new AbortController();
+    const { signal } = abort;
 
     // Grab the preloaded element from the cache, or create a fresh one as fallback
     const cached = getCachedVideo(videoUrl);
@@ -74,51 +77,62 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
     videoRef.current = video;
 
     video.className = 'receive-anim__video';
-    video.autoplay = true;
     video.playsInline = true;
+    video.muted = true; // receive videos shouldn't play audio; also unblocks autoplay
+    video.volume = 0;
 
-    // iOS requires muted for autoplay to work without user gesture
-    if (isIOS) video.muted = true;
+    const tryComplete = (animalResponse: string) => {
+      if (completedRef.current || signal.aborted) return;
+      completedRef.current = true;
+      onComplete(animalResponse);
+    };
 
     // Wait for BOTH video end AND API response before transitioning
-    const videoEndedPromise = new Promise<void>((resolve) => {
-      video.addEventListener('ended', () => resolve(), { once: true });
+    let videoEnded = video.ended;
+    let pendingResponse: string | null = null;
+
+    video.addEventListener('ended', () => {
+      videoEnded = true;
+      console.log('[receive] video ended');
+      if (pendingResponse !== null) tryComplete(pendingResponse);
+    }, { signal });
+
+    video.addEventListener('error', () => onError(), { signal });
+
+    responsePromise.then(text => {
+      pendingResponse = text;
+      console.log('[receive] response ready, video ended:', videoEnded);
+      if (videoEnded) tryComplete(text);
     });
 
-    video.addEventListener('error', () => onError(), { once: true });
-
-    Promise.all([videoEndedPromise, responsePromise]).then(([, animalResponse]) => {
-      if (!cancelled) onComplete(animalResponse);
-    });
-
-    // Mount the (already-buffered) element into the DOM but don't play yet
+    // Mount the (already-buffered) element into the DOM. If it's somehow
+    // still parented elsewhere (StrictMode race), appendChild moves it.
     container.appendChild(video);
+    console.log('[receive] mounted', { cached: !!cached, currentTime: video.currentTime, readyState: video.readyState });
 
     const attemptPlay = () => {
+      if (signal.aborted) return;
       video.play().catch(() => {
-        if (!cancelled) setShowPlayButton(true);
+        if (!signal.aborted) setShowPlayButton(true);
       });
     };
 
     const startPlaybackWhenReady = () => {
-      if (cancelled) return;
+      if (signal.aborted) return;
       // If already buffered, play immediately; otherwise wait for canplay
       if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
         setReady(true);
         attemptPlay();
       } else {
-        const onCanPlay = () => {
+        video.addEventListener('canplay', () => {
           setReady(true);
           attemptPlay();
-          video.removeEventListener('canplay', onCanPlay);
-        };
-        video.addEventListener('canplay', onCanPlay);
+        }, { signal, once: true });
       }
     };
 
     // Wait for any active view transition to finish before playing,
     // so the video doesn't start while the compose exit animation is still running.
-    // View transition animations run on ::view-transition pseudo-elements.
     const vtAnimations = document.getAnimations?.()?.filter(
       a => a.effect instanceof KeyframeEffect && a.effect.pseudoElement?.startsWith('::view-transition')
     ) ?? [];
@@ -129,19 +143,25 @@ function ReceiveAnimationVideo({ videoUrl, responsePromise, onComplete, onError 
     }
 
     return () => {
-      cancelled = true;
+      abort.abort();
       video.pause();
-      video.muted = true;
-      video.volume = 0;
       if (container.contains(video)) container.removeChild(video);
-      evictVideo(videoUrl);
+      // Note: deliberately NOT calling evictVideo here. Under StrictMode the
+      // effect runs setup → cleanup → setup; evicting would cause the second
+      // setup to refetch the video from the network and restart from frame 0.
+      // The cache entry survives until the page is unloaded, which is fine.
     };
   }, [videoUrl, responsePromise, onComplete, onError]);
 
   // Safety timeout in case ended event never fires
   useEffect(() => {
     const timer = setTimeout(() => {
-      responsePromise.then((r) => onComplete(r));
+      if (completedRef.current) return;
+      responsePromise.then((r) => {
+        if (completedRef.current) return;
+        completedRef.current = true;
+        onComplete(r);
+      });
     }, 15_000);
     return () => clearTimeout(timer);
   }, [onComplete, responsePromise]);

@@ -181,6 +181,8 @@ export function AppLayout() {
       .filter(l => !(l.from === 'child' && l.content === content))
       .map(l => ({ from: l.from, content: l.content }));
 
+    const sendStartedAt = performance.now();
+    console.log('[send] T+0 generate-response request fired');
     ctx.responsePromiseRef.current = fetch('/api/generate-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -193,6 +195,7 @@ export function AppLayout() {
     })
       .then(r => r.json())
       .then(data => {
+        console.log(`[send] T+${(performance.now() - sendStartedAt).toFixed(0)}ms generate-response returned (${(data.response as string)?.length ?? 0} chars) — kicking off TTS prefetch`);
         if (animal) prefetchTts(data.response, animal.voiceId);
         return data.response as string;
       })
@@ -231,6 +234,7 @@ export function AppLayout() {
   const handleReceiveComplete = useCallback((animalResponse: string) => {
     const current = navRef.current;
     if (current.view !== 'receiving') return;
+    console.log('[send] receive complete → navigating to reading');
     const { letterId } = storeRef.current.addLetter(current.animalId, 'animal', animalResponse, current.threadId);
     const thread = storeRef.current.getThread(current.threadId);
     trackLetterReceived(current.animalId, thread?.letters.length);

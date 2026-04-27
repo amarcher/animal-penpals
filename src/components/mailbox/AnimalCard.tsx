@@ -16,8 +16,10 @@ interface AnimalCardProps {
 export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThread, onClick, viewTransitionName }: AnimalCardProps) {
   const videoEntry = getAnimalVideo(animal.id, 'idle');
   const [videoError, setVideoError] = useState(false);
-  const [isNearViewport, setIsNearViewport] = useState(false);
-  const [hasBeenNearViewport, setHasBeenNearViewport] = useState(false);
+  // The selected animal returning from compose should immediately load — its
+  // video is the morph target, and waiting for IntersectionObserver causes a
+  // visible blink as the snapshot fades to the static poster.
+  const [hasBeenNearViewport, setHasBeenNearViewport] = useState(!!viewTransitionName);
   const cardRef = useRef<HTMLButtonElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -25,15 +27,18 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
 
   const showVideo = !!videoEntry && !reducedMotion && !videoError;
 
-  // Observe visibility — lazy-mount the video on first approach, then keep it
-  // mounted (just pause/play) so scrolling back doesn't re-fetch.
+  // Observe visibility — flips hasBeenNearViewport (which assigns src) and
+  // pauses the video when scrolled off-screen. The autoPlay attribute drives
+  // first playback once src loads; resume-on-scroll-back is handled in the
+  // play/pause effect below.
+  const [isInViewport, setIsInViewport] = useState(!!viewTransitionName);
   useEffect(() => {
     const el = cardRef.current;
     if (!el || !showVideo) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsNearViewport(entry.isIntersecting);
+        setIsInViewport(entry.isIntersecting);
         if (entry.isIntersecting) setHasBeenNearViewport(true);
       },
       { rootMargin: '200px' }
@@ -42,17 +47,15 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
     return () => observer.disconnect();
   }, [showVideo]);
 
-  // Pause/play video based on viewport visibility
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
-
-    if (isNearViewport) {
+    if (!video || !hasBeenNearViewport) return;
+    if (isInViewport) {
       video.play().catch(() => {});
     } else {
       video.pause();
     }
-  }, [isNearViewport]);
+  }, [isInViewport, hasBeenNearViewport]);
 
   const handleMouseEnter = useCallback(() => {
     if (!videoEntry || preloadRef.current) return;
@@ -91,26 +94,21 @@ export const AnimalCard = memo(function AnimalCard({ animal, unreadCount, hasThr
 
       <div className="animal-card__visual" style={viewTransitionName ? { viewTransitionName } : undefined}>
         {showVideo ? (
-          hasBeenNearViewport ? (
-            <video
-              ref={videoRef}
-              className="animal-card__video"
-              src={videoEntry.url}
-              poster={videoEntry.poster}
-              muted
-              loop
-              playsInline
-              preload="none"
-              onError={() => setVideoError(true)}
-              aria-label={animal.name}
-            />
-          ) : (
-            <img
-              className="animal-card__poster"
-              src={videoEntry.poster}
-              alt={animal.name}
-            />
-          )
+          <video
+            ref={videoRef}
+            className="animal-card__video"
+            // src is only set once we know the card is (or has been) near the
+            // viewport. Before that, the poster attribute fills the space.
+            src={hasBeenNearViewport ? videoEntry.url : undefined}
+            poster={videoEntry.poster}
+            muted
+            loop
+            playsInline
+            autoPlay
+            preload="auto"
+            onError={() => setVideoError(true)}
+            aria-label={animal.name}
+          />
         ) : (
           <span className="animal-card__emoji">{animal.emoji}</span>
         )}
