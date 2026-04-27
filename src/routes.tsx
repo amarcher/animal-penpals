@@ -1,19 +1,10 @@
 import { createBrowserRouter, Navigate } from 'react-router';
-import { TransitionProvider } from './contexts/TransitionContext.tsx';
-import { AppLayout } from './components/layout/AppLayout.tsx';
+import { LayoutWithProvider } from './components/layout/LayoutWithProvider.tsx';
 import { MailboxRoute } from './routes/MailboxRoute.tsx';
 import { ComposeRoute } from './routes/ComposeRoute.tsx';
 import { SendingRoute } from './routes/SendingRoute.tsx';
 import { ReceivingRoute } from './routes/ReceivingRoute.tsx';
 import { ReadingRoute } from './routes/ReadingRoute.tsx';
-
-function LayoutWithProvider() {
-  return (
-    <TransitionProvider>
-      <AppLayout />
-    </TransitionProvider>
-  );
-}
 
 export const routeConfig = [
   {

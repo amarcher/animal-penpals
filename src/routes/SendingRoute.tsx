@@ -1,17 +1,15 @@
-import { useParams, Navigate } from 'react-router';
-import { useOutletContext } from 'react-router';
+import { useParams, Navigate, useOutletContext } from 'react-router';
 import { SendAnimation } from '../components/animation/SendAnimation.tsx';
-import { useTransitionContext } from '../contexts/TransitionContext.tsx';
+import { letterFlowState } from '../utils/letterFlowState.ts';
 import type { AppOutletContext } from '../types/outlet.ts';
 
 export function SendingRoute() {
   const { animalId, threadId } = useParams<{ animalId: string; threadId: string }>();
   const { store, handleSendComplete } = useOutletContext<AppOutletContext>();
-  const { letterContentRef } = useTransitionContext();
 
   if (!animalId || !threadId) return <Navigate to="/mailbox" replace />;
 
-  const letterContent = letterContentRef.current;
+  const letterContent = letterFlowState.getLetterContent();
   if (!letterContent) return <Navigate to={`/compose/${animalId}`} replace />;
 
   return (

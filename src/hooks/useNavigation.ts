@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, useParams, useSearchParams } from 'react-router';
-import { useTransitionContext } from '../contexts/TransitionContext.tsx';
+import { letterFlowState } from '../utils/letterFlowState.ts';
 import type { AppState } from '../types/app.ts';
 
 function pathnameToView(pathname: string): string {
@@ -13,7 +13,6 @@ export function useNavigation() {
   const location = useLocation();
   const params = useParams();
   const [searchParams] = useSearchParams();
-  const ctx = useTransitionContext();
 
   const nav = useMemo<AppState>(() => {
     const view = pathnameToView(location.pathname);
@@ -29,7 +28,7 @@ export function useNavigation() {
       case 'sending': {
         const animalId = params.animalId ?? '';
         const threadId = params.threadId ?? '';
-        const letterContent = ctx.letterContentRef.current ?? '';
+        const letterContent = letterFlowState.getLetterContent() ?? '';
         return { view: 'sending', animalId, threadId, letterContent };
       }
       case 'receiving': {
@@ -46,7 +45,7 @@ export function useNavigation() {
       default:
         return { view: 'mailbox' };
     }
-  }, [location.pathname, params, searchParams, ctx.letterContentRef]);
+  }, [location.pathname, params, searchParams]);
 
   const goToMailbox = useCallback(() => {
     routerNavigate('/mailbox', { viewTransition: true });
@@ -64,9 +63,9 @@ export function useNavigation() {
   }, [routerNavigate]);
 
   const goToSending = useCallback((animalId: string, threadId: string, letterContent: string) => {
-    ctx.letterContentRef.current = letterContent;
+    letterFlowState.setLetterContent(letterContent);
     routerNavigate(`/sending/${animalId}/${threadId}`);
-  }, [routerNavigate, ctx.letterContentRef]);
+  }, [routerNavigate]);
 
   const goToReceiving = useCallback((animalId: string, threadId: string, options?: { viewTransition?: boolean }) => {
     routerNavigate(`/receiving/${animalId}/${threadId}`, options?.viewTransition ? { viewTransition: true } : undefined);
