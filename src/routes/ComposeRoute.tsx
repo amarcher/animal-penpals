@@ -1,7 +1,7 @@
 import { useParams, useSearchParams, Navigate } from 'react-router';
 import { useOutletContext } from 'react-router';
 import { ComposeView } from '../components/compose/ComposeView.tsx';
-import { useTransitionContext } from '../contexts/TransitionContext.tsx';
+import { useTransitionContext } from '../contexts/useTransitionContext.ts';
 import type { AppOutletContext } from '../types/outlet.ts';
 
 export function ComposeRoute() {

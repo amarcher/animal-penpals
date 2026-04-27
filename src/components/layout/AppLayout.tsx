@@ -5,8 +5,9 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useNavigation } from '../../hooks/useNavigation.ts';
 import { useLetterStore } from '../../hooks/useLetterStore.ts';
 import { usePenpalConversation } from '../../hooks/usePenpalConversation.ts';
-import { useTransitionContext } from '../../contexts/TransitionContext.tsx';
+import { useTransitionContext } from '../../contexts/useTransitionContext.ts';
 import { getAnimalById } from '../../data/animals.ts';
+import { letterFlowState } from '../../utils/letterFlowState.ts';
 import { prefetchTts } from '../../utils/ttsPrefetchCache.ts';
 import { VoiceAgent } from '../ui/VoiceAgent.tsx';
 import { trackAnimalSelected, trackLetterSent, trackLetterReceived, trackTtsPlaybackStarted, trackTtsPlaybackCompleted, trackReplyClicked } from '../../utils/analytics.ts';
@@ -45,16 +46,15 @@ export function AppLayout() {
 
   const handleSendLetter = useCallback(() => {
     const current = navRef.current;
-    if (current.view !== 'compose' || !ctx.currentDraftRef.current.trim()) return;
-    const content = ctx.currentDraftRef.current.trim();
-    const { threadId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
-    goToSending(current.animalId, threadId, content);
-  }, [goToSending, ctx.currentDraftRef]);
+    const draft = letterFlowState.getCurrentDraft().trim();
+    if (current.view !== 'compose' || !draft) return;
+    const { threadId } = storeRef.current.addLetter(current.animalId, 'child', draft, current.threadId);
+    goToSending(current.animalId, threadId, draft);
+  }, [goToSending]);
 
   const handleWriteText = useCallback((text: string) => {
-    ctx.currentDraftRef.current = ctx.currentDraftRef.current
-      ? ctx.currentDraftRef.current + ' ' + text
-      : text;
+    const existing = letterFlowState.getCurrentDraft();
+    letterFlowState.setCurrentDraft(existing ? existing + ' ' + text : text);
     externalTextSeq.current += 1;
     ctx.setExternalText({ text, seq: externalTextSeq.current });
   }, [ctx]);
@@ -90,10 +90,10 @@ export function AppLayout() {
       : undefined;
     return {
       nav: current,
-      draft: ctx.currentDraftRef.current ?? '',
+      draft: letterFlowState.getCurrentDraft(),
       thread,
     };
-  }, [ctx.currentDraftRef]);
+  }, []);
 
   const voice = usePenpalConversation({
     onSelectAnimal: handleSelectAnimal,
@@ -111,17 +111,17 @@ export function AppLayout() {
     trackTtsPlaybackStarted(current.animalId);
     voice.muteAgent();
     const letter = storeRef.current.getLetterById(current.letterId);
-    const content = letter?.content ?? ctx.pendingResponseRef.current;
+    const content = letter?.content ?? letterFlowState.getPendingResponse();
     if (content) voice.notifyLetterReceivedWithTts(current.animalId, content);
-  }, [voice, ctx.pendingResponseRef]);
+  }, [voice]);
 
   const handleTtsAutoPlayFailed = useCallback(() => {
     const current = navRef.current;
     if (current.view !== 'reading') return;
     const letter = storeRef.current.getLetterById(current.letterId);
-    const content = letter?.content ?? ctx.pendingResponseRef.current;
+    const content = letter?.content ?? letterFlowState.getPendingResponse();
     if (content) voice.notifyLetterReceivedNoTts(current.animalId, content);
-  }, [voice, ctx.pendingResponseRef]);
+  }, [voice]);
 
   const handleTtsEnd = useCallback(() => {
     const current = navRef.current;
@@ -138,9 +138,9 @@ export function AppLayout() {
     const thread = threadId ? store.getThread(threadId)
       : animalId ? store.getThreadByAnimal(animalId)
       : undefined;
-    voice.notifyViewChange(nav, thread, ctx.currentDraftRef.current ?? '');
+    voice.notifyViewChange(nav, thread, letterFlowState.getCurrentDraft());
     if (nav.view === 'compose') {
-      ctx.currentDraftRef.current = '';
+      letterFlowState.setCurrentDraft('');
     }
   }, [nav]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -168,7 +168,7 @@ export function AppLayout() {
     if (current.view !== 'compose') return;
 
     // Clear stale pending response from previous send
-    ctx.pendingResponseRef.current = null;
+    letterFlowState.setPendingResponse(null);
     ctx.setPendingResponse(null);
 
     const { threadId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
@@ -183,7 +183,7 @@ export function AppLayout() {
 
     const sendStartedAt = performance.now();
     console.log('[send] T+0 generate-response request fired');
-    ctx.responsePromiseRef.current = fetch('/api/generate-response', {
+    const responsePromise = fetch('/api/generate-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -200,6 +200,7 @@ export function AppLayout() {
         return data.response as string;
       })
       .catch(() => "Oh no, my quill broke! I'll write back soon, I promise!");
+    letterFlowState.setResponsePromise(responsePromise);
 
     // Swap view-transition-names before the snapshot so the send-letter
     // CSS rules match. The unique name "sending-letter" scopes the animation
@@ -217,19 +218,19 @@ export function AppLayout() {
   }, [goToReceiving, ctx]);
 
   const handleDraftChange = useCallback((animalId: string, content: string) => {
-    ctx.currentDraftRef.current = content;
+    letterFlowState.setCurrentDraft(content);
     if (draftNotifyRef.current) clearTimeout(draftNotifyRef.current);
     draftNotifyRef.current = setTimeout(() => {
       voice.notifyDraftChange(animalId, content);
     }, 800);
-  }, [voice, ctx.currentDraftRef]);
+  }, [voice]);
 
   const handleSendComplete = useCallback((responsePromise: Promise<string>) => {
     const current = navRef.current;
     if (current.view !== 'sending') return;
-    ctx.responsePromiseRef.current = responsePromise;
+    letterFlowState.setResponsePromise(responsePromise);
     goToReceiving(current.animalId, current.threadId);
-  }, [goToReceiving, ctx.responsePromiseRef]);
+  }, [goToReceiving]);
 
   const handleReceiveComplete = useCallback((animalResponse: string) => {
     const current = navRef.current;
@@ -238,7 +239,7 @@ export function AppLayout() {
     const { letterId } = storeRef.current.addLetter(current.animalId, 'animal', animalResponse, current.threadId);
     const thread = storeRef.current.getThread(current.threadId);
     trackLetterReceived(current.animalId, thread?.letters.length);
-    ctx.pendingResponseRef.current = animalResponse;
+    letterFlowState.setPendingResponse(animalResponse);
     ctx.setPendingResponse(animalResponse);
     goToReading(current.animalId, letterId, current.threadId);
   }, [goToReading, ctx]);
@@ -252,13 +253,13 @@ export function AppLayout() {
   const handleReply = useCallback(() => {
     const current = navRef.current;
     if (current.view !== 'reading') return;
-    ctx.currentDraftRef.current = '';
+    letterFlowState.setCurrentDraft('');
     const thread = storeRef.current.getThread(current.threadId);
     const threadLength = thread?.letters.length ?? 0;
     trackReplyClicked(current.animalId, threadLength);
     const animalLetterCount = thread?.letters.filter(l => l.from === 'animal').length ?? 0;
     goToCompose(current.animalId, current.threadId, animalLetterCount);
-  }, [goToCompose, ctx.currentDraftRef]);
+  }, [goToCompose]);
 
   const hasThread = useCallback((animalId: string) => {
     return !!storeRef.current.getThreadByAnimal(animalId);

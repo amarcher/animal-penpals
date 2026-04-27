@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- test mock, not subject to HMR */
 import type { ReactNode, ComponentPropsWithoutRef, ElementType } from 'react';
 
 function createMotionProxy() {

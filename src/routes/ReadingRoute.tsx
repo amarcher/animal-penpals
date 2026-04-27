@@ -1,6 +1,6 @@
 import { useParams, Navigate, useOutletContext } from 'react-router';
 import { ReadingView } from '../components/reading/ReadingView.tsx';
-import { useTransitionContext } from '../contexts/TransitionContext.tsx';
+import { useTransitionContext } from '../contexts/useTransitionContext.ts';
 import type { AppOutletContext } from '../types/outlet.ts';
 
 export function ReadingRoute() {

@@ -127,7 +127,11 @@ function MutedVideo({ className, src, loop, animalId }: { className: string; src
   const containerRef = useRef<HTMLDivElement>(null);
   const loopCountRef = useRef(0);
   const animalIdRef = useRef(animalId);
-  animalIdRef.current = animalId;
+  // Keep the animal id ref fresh so the unmount cleanup reports the loop
+  // count for the most recently rendered animal, not the one at first mount.
+  useEffect(() => {
+    animalIdRef.current = animalId;
+  });
 
   useEffect(() => {
     const container = containerRef.current;
