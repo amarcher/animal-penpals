@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+
+// Mock the prefetch cache so we don't have to stand up MediaSource / SSE in
+// happy-dom. The hook just consumes the TtsResult contract.
+const mockGetCachedTts = vi.fn();
+const mockPrefetchTts = vi.fn();
+vi.mock('../utils/ttsPrefetchCache.ts', () => ({
+  getCachedTts: (...args: unknown[]) => mockGetCachedTts(...args),
+  prefetchTts: (...args: unknown[]) => mockPrefetchTts(...args),
+}));
+
 import { buildWordTimings, useTtsPlayback } from './useTtsPlayback.ts';
 
 describe('buildWordTimings', () => {
@@ -71,7 +81,8 @@ describe('buildWordTimings', () => {
 
 describe('useTtsPlayback', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
+    mockGetCachedTts.mockReset();
+    mockPrefetchTts.mockReset();
   });
 
   it('starts in idle state', () => {
@@ -82,20 +93,20 @@ describe('useTtsPlayback', () => {
     expect(result.current.wordTimings).toEqual([]);
   });
 
-  it('play fetches TTS when no cache available', async () => {
-    const mockTtsData = {
-      audio_base64: 'dGVzdA==',
+  it('falls back to prefetchTts when nothing is cached', async () => {
+    const audio = new Audio();
+    const ttsResult = {
+      audio,
+      blobUrl: 'blob:test',
       alignment: {
         characters: ['H', 'i'],
         character_start_times_seconds: [0, 0.1],
         character_end_times_seconds: [0.1, 0.2],
       },
+      fullyLoaded: Promise.resolve(),
     };
-
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockTtsData),
-    }));
+    mockGetCachedTts.mockReturnValue(undefined);
+    mockPrefetchTts.mockReturnValue(Promise.resolve(ttsResult));
 
     const { result } = renderHook(() => useTtsPlayback());
 
@@ -103,9 +114,8 @@ describe('useTtsPlayback', () => {
       await result.current.play('Hi', 'voice-1');
     });
 
-    expect(fetch).toHaveBeenCalledWith('/api/tts', expect.objectContaining({
-      method: 'POST',
-    }));
+    expect(mockGetCachedTts).toHaveBeenCalledWith('Hi', 'voice-1');
+    expect(mockPrefetchTts).toHaveBeenCalledWith('Hi', 'voice-1');
   });
 
   it('stop resets state', async () => {

@@ -28,8 +28,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/with-timestamps`,
+    // Stream-with-timestamps returns SSE: each event is JSON with audio_base64
+    // (a chunk) + alignment (character timings for that chunk). We pipe the raw
+    // bytes through unchanged — the client parses the SSE stream and feeds the
+    // audio chunks into a MediaSource so playback can start before the full
+    // generation finishes.
+    const elevenResponse = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream/with-timestamps`,
       {
         method: 'POST',
         headers: {
@@ -44,17 +49,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     );
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('[tts] ElevenLabs error:', response.status, errText);
-      return res.status(response.status).json({ error: 'TTS request failed' });
+    if (!elevenResponse.ok || !elevenResponse.body) {
+      const errText = await elevenResponse.text();
+      console.error('[tts] ElevenLabs error:', elevenResponse.status, errText);
+      return res.status(elevenResponse.status).json({ error: 'TTS request failed' });
     }
 
-    const data = await response.json();
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('X-Accel-Buffering', 'no'); // disable proxy buffering
+    res.flushHeaders?.();
+
+    const reader = elevenResponse.body.getReader();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      res.write(Buffer.from(value));
+    }
+
     logUsage(text.length, voiceId);
-    return res.status(200).json(data);
+    res.end();
   } catch (err) {
     console.error('[tts] error:', err);
-    return res.status(500).json({ error: 'TTS request failed' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'TTS request failed' });
+    } else {
+      res.end();
+    }
   }
 }

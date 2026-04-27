@@ -60,7 +60,6 @@ export function useTtsPlayback() {
     wordTimings: [],
     charCount: 0,
   });
-  const charTimesRef = useRef<number[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animFrameRef = useRef<number>(0);
   const playIdRef = useRef(0);
@@ -99,8 +98,10 @@ export function useTtsPlayback() {
 
       if (thisPlayId !== playIdRef.current) return false;
 
-      const wordTimings = buildWordTimings(text, data.alignment);
-      charTimesRef.current = data.alignment.character_start_times_seconds;
+      // alignment is mutated by the streaming prefetch as more chunks arrive,
+      // so word timings have to be recomputed when its length grows.
+      let wordTimings = buildWordTimings(text, data.alignment);
+      let lastSeenAlignmentLength = data.alignment.characters.length;
 
       // Reuse the pre-decoded audio element. Reset to start so replays work.
       const audio = data.audio;
@@ -115,18 +116,34 @@ export function useTtsPlayback() {
 
       if (thisPlayId !== playIdRef.current) return false;
 
-      const charStarts = charTimesRef.current;
       const tick = () => {
         if (!audioRef.current || thisPlayId !== playIdRef.current) return;
+
+        if (data.alignment.characters.length !== lastSeenAlignmentLength) {
+          lastSeenAlignmentLength = data.alignment.characters.length;
+          wordTimings = buildWordTimings(text, data.alignment);
+        }
+
         const t = audioRef.current.currentTime;
         const wordIdx = wordTimings.findIndex(w => t >= w.startTime && t < w.endTime);
+        const charStarts = data.alignment.character_start_times_seconds;
         let charIdx = -1;
         for (let i = charStarts.length - 1; i >= 0; i--) {
           if (charStarts[i] <= t) { charIdx = i; break; }
         }
         setState(s => {
-          if (s.currentWordIndex === wordIdx && s.currentCharIndex === charIdx) return s;
-          return { ...s, currentWordIndex: wordIdx >= 0 ? wordIdx : s.currentWordIndex, currentCharIndex: charIdx };
+          const wordChanged = wordIdx >= 0 && s.currentWordIndex !== wordIdx;
+          const charChanged = s.currentCharIndex !== charIdx;
+          const charCountChanged = s.charCount !== data.alignment.characters.length;
+          const timingsChanged = s.wordTimings !== wordTimings;
+          if (!wordChanged && !charChanged && !charCountChanged && !timingsChanged) return s;
+          return {
+            ...s,
+            wordTimings,
+            currentWordIndex: wordChanged ? wordIdx : s.currentWordIndex,
+            currentCharIndex: charIdx,
+            charCount: data.alignment.characters.length,
+          };
         });
         if (!audioRef.current.paused && !audioRef.current.ended) {
           animFrameRef.current = requestAnimationFrame(tick);
