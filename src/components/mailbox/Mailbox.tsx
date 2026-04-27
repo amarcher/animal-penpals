@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { animals } from '../../data/animals.ts';
 import { trackMailboxOpened } from '../../utils/analytics.ts';
@@ -12,9 +12,18 @@ interface MailboxProps {
   selectedAnimalId?: string | null;
 }
 
+// Module-level flag: the staggered entrance animation should only run on the
+// user's first visit to the mailbox in this session. Re-running it on every
+// return-from-compose causes each card (including the just-morphed one) to
+// flash white while it waits its turn in the stagger.
+let entranceAnimationPlayed = false;
+
 export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread, selectedAnimalId }: MailboxProps) {
+  const [shouldAnimateEntrance] = useState(() => !entranceAnimationPlayed);
+
   useEffect(() => {
     trackMailboxOpened();
+    entranceAnimationPlayed = true;
 
     // Restore scroll position after returning from compose/reading
     const saved = sessionStorage.getItem('mailbox-scroll');
@@ -40,9 +49,9 @@ export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread, selectedAni
         {animals.map((animal, i) => (
           <motion.div
             key={animal.id}
-            initial={{ opacity: 0 }}
+            initial={shouldAnimateEntrance ? { opacity: 0 } : false}
             animate={{ opacity: 1 }}
-            transition={{ delay: i * 0.06, duration: 0.4 }}
+            transition={shouldAnimateEntrance ? { delay: i * 0.06, duration: 0.4 } : { duration: 0 }}
           >
             <AnimalCard
               animal={animal}

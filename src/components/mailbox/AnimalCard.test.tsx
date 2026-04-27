@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { AnimalCard } from './AnimalCard.tsx';
 import type { Animal } from '../../types/app.ts';
 
@@ -45,7 +45,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('AnimalCard video lazy-mount', () => {
+describe('AnimalCard video lazy-load', () => {
   const defaultProps = {
     animal: bear,
     unreadCount: 0,
@@ -53,35 +53,36 @@ describe('AnimalCard video lazy-mount', () => {
     onClick: vi.fn(),
   };
 
-  it('renders poster image before the card is near the viewport', () => {
-    render(<AnimalCard {...defaultProps} />);
+  it('always renders the video element with a poster, even before the card is near the viewport', () => {
+    const { container } = render(<AnimalCard {...defaultProps} />);
 
-    expect(screen.getByAltText('Bruno the Bear')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Bruno the Bear')).not.toBeInTheDocument();
+    const video = container.querySelector('video');
+    expect(video).toBeInTheDocument();
+    expect(video?.getAttribute('poster')).toMatch(/bear_idle\.jpg$/);
+    // src is not assigned until the card approaches the viewport
+    expect(video?.getAttribute('src')).toBeNull();
   });
 
-  it('mounts the video once the card enters the viewport', () => {
+  it('assigns video src once the card enters the viewport', () => {
     const { container } = render(<AnimalCard {...defaultProps} />);
     triggerIntersection(true);
 
-    expect(container.querySelector('video')).toBeInTheDocument();
-    expect(screen.queryByAltText('Bruno the Bear')).not.toBeInTheDocument();
+    const video = container.querySelector('video');
+    expect(video?.getAttribute('src')).toMatch(/bear_idle\.mp4$/);
   });
 
-  it('keeps the video mounted after the card leaves the viewport', () => {
+  it('keeps the same video element after the card leaves the viewport (no re-mount, no src removal)', () => {
     const { container } = render(<AnimalCard {...defaultProps} />);
 
     triggerIntersection(true);
     const videoOnEnter = container.querySelector('video');
-    expect(videoOnEnter).toBeInTheDocument();
+    const srcOnEnter = videoOnEnter?.getAttribute('src');
 
     triggerIntersection(false);
     const videoAfterLeave = container.querySelector('video');
-    expect(videoAfterLeave).toBeInTheDocument();
-    // Same element — never unmounted.
+
     expect(videoAfterLeave).toBe(videoOnEnter);
-    // Poster image is not re-rendered alongside the video.
-    expect(screen.queryByAltText('Bruno the Bear')).not.toBeInTheDocument();
+    expect(videoAfterLeave?.getAttribute('src')).toBe(srcOnEnter);
   });
 
   it('pauses the video when it leaves the viewport and plays when it returns', () => {
@@ -102,5 +103,13 @@ describe('AnimalCard video lazy-mount', () => {
 
     playSpy.mockRestore();
     pauseSpy.mockRestore();
+  });
+
+  it('preassigns src when given a viewTransitionName (selected animal returning from compose)', () => {
+    const { container } = render(<AnimalCard {...defaultProps} viewTransitionName="animal-video" />);
+    // Without waiting for IntersectionObserver, src should already be set so
+    // the video can keep playing as the morph lands.
+    const video = container.querySelector('video');
+    expect(video?.getAttribute('src')).toMatch(/bear_idle\.mp4$/);
   });
 });
