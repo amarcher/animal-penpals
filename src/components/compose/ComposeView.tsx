@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getAnimalById } from '../../data/animals.ts';
 import { getAnimalVideo } from '../../data/videoManifest.ts';
 import { preloadVideo } from '../../utils/videoPreloadCache.ts';
+import { useMailboxMode } from '../../utils/mailboxExperiment.ts';
 import type { Thread } from '../../types/app.ts';
 import './ComposeView.css';
 
@@ -20,6 +21,7 @@ interface ComposeViewProps {
 export function ComposeView({ animalId, thread, externalText, onSend, onBack, onDraftChange, onReadLetter }: ComposeViewProps) {
   const animal = getAnimalById(animalId);
   const videoEntry = getAnimalVideo(animalId, 'idle');
+  const [mailboxModeEnabled] = useMailboxMode();
   const [draft, setDraft] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -90,6 +92,9 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
           Mailbox
         </button>
         <span className="compose__recipient-name">Writing to {animal.name}</span>
+        {mailboxModeEnabled && (
+          <span className="compose__mail-mode">Snail mail reply</span>
+        )}
       </header>
 
       <div className="compose__body">
@@ -163,7 +168,7 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
               </svg>
-              Send Letter
+              {mailboxModeEnabled ? 'Send to Mailbox' : 'Send Letter'}
             </button>
           </div>
         </div>

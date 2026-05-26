@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
+import type { ReactElement } from 'react';
 import { Mailbox } from './Mailbox.tsx';
 import { animals } from '../../data/animals.ts';
 
@@ -27,10 +29,17 @@ describe('Mailbox', () => {
     onSelectAnimal: vi.fn(),
     getUnreadCount: () => 0,
     hasThread: () => false,
+    mailboxModeEnabled: false,
+    pendingMailCount: 0,
+    onToggleMailboxMode: vi.fn(),
   };
 
+  function renderMailbox(element: ReactElement) {
+    return render(<MemoryRouter>{element}</MemoryRouter>);
+  }
+
   it('renders all animal cards', () => {
-    render(<Mailbox {...defaultProps} />);
+    renderMailbox(<Mailbox {...defaultProps} />);
 
     for (const animal of animals) {
       expect(screen.getByLabelText(`Write to ${animal.name}`)).toBeInTheDocument();
@@ -38,7 +47,7 @@ describe('Mailbox', () => {
   });
 
   it('renders title and subtitle', () => {
-    render(<Mailbox {...defaultProps} />);
+    renderMailbox(<Mailbox {...defaultProps} />);
 
     expect(screen.getByAltText('Animal Penpals')).toBeInTheDocument();
     expect(screen.getByText('Pick an animal friend to write to!')).toBeInTheDocument();
@@ -46,7 +55,7 @@ describe('Mailbox', () => {
 
   it('clicking a card calls onSelectAnimal with correct id', async () => {
     const onSelectAnimal = vi.fn();
-    render(<Mailbox {...defaultProps} onSelectAnimal={onSelectAnimal} />);
+    renderMailbox(<Mailbox {...defaultProps} onSelectAnimal={onSelectAnimal} />);
 
     await userEvent.click(screen.getByLabelText('Write to Ella the Elephant'));
     expect(onSelectAnimal).toHaveBeenCalledWith('elephant');
@@ -54,20 +63,20 @@ describe('Mailbox', () => {
 
   it('shows unread badge when count > 0', () => {
     const getUnreadCount = (id: string) => (id === 'dolphin' ? 3 : 0);
-    render(<Mailbox {...defaultProps} getUnreadCount={getUnreadCount} />);
+    renderMailbox(<Mailbox {...defaultProps} getUnreadCount={getUnreadCount} />);
 
     expect(screen.getByLabelText('3 unread')).toBeInTheDocument();
   });
 
   it('shows "Continue writing" when hasThread returns true', () => {
     const hasThread = (id: string) => id === 'elephant';
-    render(<Mailbox {...defaultProps} hasThread={hasThread} />);
+    renderMailbox(<Mailbox {...defaultProps} hasThread={hasThread} />);
 
     expect(screen.getByText('Continue writing')).toBeInTheDocument();
   });
 
   it('shows "Write a letter" when hasThread returns false', () => {
-    render(<Mailbox {...defaultProps} />);
+    renderMailbox(<Mailbox {...defaultProps} />);
 
     const buttons = screen.getAllByText('Write a letter');
     expect(buttons.length).toBe(animals.length);
@@ -81,7 +90,7 @@ describe('Mailbox', () => {
 
     motionInitialProps.length = 0;
 
-    const first = render(<FreshMailbox {...defaultProps} />);
+    const first = renderMailbox(<FreshMailbox {...defaultProps} />);
     // First mount: every card animates in from opacity 0
     expect(motionInitialProps.length).toBe(animals.length);
     expect(motionInitialProps.every(v => typeof v === 'object' && v !== null && (v as { opacity?: number }).opacity === 0)).toBe(true);
@@ -89,7 +98,7 @@ describe('Mailbox', () => {
     first.unmount();
     motionInitialProps.length = 0;
 
-    render(<FreshMailbox {...defaultProps} />);
+    renderMailbox(<FreshMailbox {...defaultProps} />);
     // Second mount (e.g. returning from compose): no entrance — `initial: false`
     // tells framer-motion to render at the current animate value immediately.
     expect(motionInitialProps.length).toBe(animals.length);

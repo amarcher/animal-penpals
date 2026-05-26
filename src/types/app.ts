@@ -31,4 +31,6 @@ export type AppState =
   | { view: 'compose'; animalId: string; threadId?: string; animalLetterCount?: number }
   | { view: 'sending'; animalId: string; threadId: string; letterContent: string }
   | { view: 'receiving'; animalId: string; threadId: string }
-  | { view: 'reading'; animalId: string; letterId: string; threadId: string };
+  | { view: 'reading'; animalId: string; letterId: string; threadId: string }
+  | { view: 'mail-journey'; animalId: string; threadId: string }
+  | { view: 'mailbox-sent'; animalId: string; threadId: string };

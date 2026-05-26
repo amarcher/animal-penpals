@@ -16,6 +16,7 @@ interface LetterFlowState {
   pendingResponse: string | null;
   letterContent: string | null;
   currentDraft: string;
+  deliveryMode: 'instant' | 'mailbox';
 }
 
 const state: LetterFlowState = {
@@ -23,6 +24,7 @@ const state: LetterFlowState = {
   pendingResponse: null,
   letterContent: null,
   currentDraft: '',
+  deliveryMode: 'instant',
 };
 
 export const letterFlowState = {
@@ -38,11 +40,15 @@ export const letterFlowState = {
   getCurrentDraft: (): string => state.currentDraft,
   setCurrentDraft: (value: string): void => { state.currentDraft = value; },
 
+  getDeliveryMode: (): 'instant' | 'mailbox' => state.deliveryMode,
+  setDeliveryMode: (value: 'instant' | 'mailbox'): void => { state.deliveryMode = value; },
+
   /** Reset all values — primarily for tests. */
   reset: (): void => {
     state.responsePromise = null;
     state.pendingResponse = null;
     state.letterContent = null;
     state.currentDraft = '';
+    state.deliveryMode = 'instant';
   },
 };

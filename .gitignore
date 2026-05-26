@@ -27,6 +27,7 @@ dist-ssr
 .env
 .env.local
 .env*.local
+.env.bak
 
 # ElevenLabs CLI — ID mapping files
 agents.json
@@ -63,6 +64,12 @@ tool_configs/*
 !tool_configs/write_text.json
 !tool_configs/read_letter_aloud.json
 !tool_configs/read_previous_letter.json
+
+# Codex CLI workspace config (per-user, not shared)
+.codex/
+
+# Locally generated pipeline videos (uploaded to R2; not for git)
+pipeline/generated-videos/
 
 # Misc duplicates
 public/logo-wide copy 2.png
