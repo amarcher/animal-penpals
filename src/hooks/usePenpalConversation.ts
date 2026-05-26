@@ -115,7 +115,7 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
     if (!agentId) return;
 
     if (sessionStarted) {
-      await conversation.endSession().catch(() => {});
+      conversation.endSession();
       setSessionStarted(false);
       return;
     }
@@ -233,7 +233,7 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
   useEffect(() => {
     return () => {
       if (sessionStarted) {
-        conversation.endSession().catch(() => {});
+        conversation.endSession();
       }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
