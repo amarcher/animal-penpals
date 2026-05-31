@@ -115,7 +115,9 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
     if (!agentId) return;
 
     if (sessionStarted) {
-      conversation.endSession();
+      // endSession() returns void in @elevenlabs/react v1 (no promise to .catch);
+      // errors surface via the onError callback.
+      try { conversation.endSession(); } catch { /* already torn down */ }
       setSessionStarted(false);
       return;
     }
@@ -147,7 +149,9 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
         console.warn('[VoiceAgent] failed to build session context:', e);
       }
 
-      await conversation.startSession({
+      // startSession() returns void in v1; connection failures surface through
+      // the onError callback rather than a rejected promise.
+      conversation.startSession({
         agentId,
         connectionType: 'websocket',
         ...(firstMessage ? { overrides: { agent: { firstMessage } } } : {}),
@@ -233,7 +237,7 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
   useEffect(() => {
     return () => {
       if (sessionStarted) {
-        conversation.endSession();
+        try { conversation.endSession(); } catch { /* already torn down */ }
       }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
