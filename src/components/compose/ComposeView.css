@@ -43,6 +43,17 @@
   color: color-mix(in srgb, var(--animal-color) 80%, black);
 }
 
+.compose__mail-mode {
+  margin-left: auto;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--animal-color) 26%, white);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--animal-color) 12%, white);
+  color: color-mix(in srgb, var(--animal-color) 72%, black);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
 /* Side-by-side: video + letter */
 .compose__body {
   display: flex;

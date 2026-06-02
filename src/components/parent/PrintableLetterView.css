@@ -1,0 +1,147 @@
+.print-letter {
+  min-height: 100dvh;
+  padding: 24px;
+  background: #e9edf0;
+}
+
+.print-letter__toolbar {
+  max-width: 8.5in;
+  margin: 0 auto 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.print-letter__toolbar a,
+.print-letter__toolbar button {
+  appearance: none;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #bdc5ca;
+  background: white;
+  color: #263238;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.print-letter__page {
+  width: min(8.5in, 100%);
+  min-height: 11in;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 0.72in;
+  display: flex;
+  flex-direction: column;
+  gap: 0.34in;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--animal-color) 12%, transparent), transparent 32%),
+    #fffdf5;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.14);
+}
+
+.print-letter__letterhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 0.22in;
+  border-bottom: 3px double color-mix(in srgb, var(--animal-color) 38%, #d6caa2);
+}
+
+.print-letter__letterhead p,
+.print-letter__letterhead h1,
+.print-letter__body p {
+  margin: 0;
+}
+
+.print-letter__letterhead p {
+  color: color-mix(in srgb, var(--animal-color) 72%, black);
+  font-size: 0.88rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.print-letter__letterhead h1 {
+  margin-top: 6px;
+  color: #263238;
+  font-size: 2.2rem;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.print-letter__mark {
+  width: 88px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: var(--animal-color);
+  color: white;
+  border-radius: 50%;
+  font-size: 3rem;
+}
+
+.print-letter__body {
+  flex: 1;
+  display: grid;
+  align-content: start;
+  gap: 0.18in;
+  color: #263238;
+  font-size: 1.18rem;
+  line-height: 1.62;
+}
+
+.print-letter__footer {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-top: 0.22in;
+  border-top: 1px solid #d9cfb6;
+}
+
+.print-letter__footer img {
+  width: 112px;
+  height: 112px;
+}
+
+.print-letter__footer div {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.print-letter__footer strong {
+  color: #263238;
+  font-size: 1.05rem;
+}
+
+.print-letter__footer span {
+  overflow-wrap: anywhere;
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 0.86rem;
+}
+
+@media print {
+  .print-letter {
+    padding: 0;
+    background: white;
+  }
+
+  .print-letter__toolbar {
+    display: none;
+  }
+
+  .print-letter__page {
+    width: 8.5in;
+    min-height: 11in;
+    border: none;
+    box-shadow: none;
+  }
+}

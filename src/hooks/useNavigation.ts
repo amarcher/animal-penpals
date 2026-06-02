@@ -42,6 +42,16 @@ export function useNavigation() {
         const threadId = searchParams.get('thread') ?? '';
         return { view: 'reading', animalId, letterId, threadId };
       }
+      case 'mailbox-sent': {
+        const animalId = params.animalId ?? '';
+        const threadId = params.threadId ?? '';
+        return { view: 'mailbox-sent', animalId, threadId };
+      }
+      case 'mail-journey': {
+        const animalId = params.animalId ?? '';
+        const threadId = params.threadId ?? '';
+        return { view: 'mail-journey', animalId, threadId };
+      }
       default:
         return { view: 'mailbox' };
     }
@@ -78,5 +88,13 @@ export function useNavigation() {
     routerNavigate(`/reading/${animalId}/${letterId}${query ? `?${query}` : ''}`, { viewTransition: true });
   }, [routerNavigate]);
 
-  return { nav, goToMailbox, goToCompose, goToSending, goToReceiving, goToReading };
+  const goToMailJourney = useCallback((animalId: string, threadId: string) => {
+    routerNavigate(`/mail-journey/${animalId}/${threadId}`, { viewTransition: true });
+  }, [routerNavigate]);
+
+  const goToMailboxSent = useCallback((animalId: string, threadId: string) => {
+    routerNavigate(`/mailbox-sent/${animalId}/${threadId}`, { viewTransition: true });
+  }, [routerNavigate]);
+
+  return { nav, goToMailbox, goToCompose, goToSending, goToReceiving, goToReading, goToMailJourney, goToMailboxSent };
 }

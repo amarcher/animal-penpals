@@ -16,9 +16,23 @@ interface ReadingViewProps {
   onTtsAutoPlayStarted?: () => void;
   onTtsAutoPlayFailed?: () => void;
   onTtsEnd?: () => void;
+  showReply?: boolean;
+  replyLabel?: string;
 }
 
-export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBack, onMarkRead, onTtsAutoPlayStarted, onTtsAutoPlayFailed, onTtsEnd }: ReadingViewProps) {
+export function ReadingView({
+  animalId,
+  letterContent,
+  ttsRequest,
+  onReply,
+  onBack,
+  onMarkRead,
+  onTtsAutoPlayStarted,
+  onTtsAutoPlayFailed,
+  onTtsEnd,
+  showReply = true,
+  replyLabel = 'Write Back',
+}: ReadingViewProps) {
   const animal = getAnimalById(animalId);
   const videoEntry = getAnimalVideo(animalId, 'receive');
   const tts = useTtsPlayback();
@@ -99,9 +113,11 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
           </div>
 
           <div className="reading__actions">
-            <button className="reading__reply" onClick={onReply} type="button">
-              Write Back
-            </button>
+            {showReply && (
+              <button className="reading__reply" onClick={onReply} type="button">
+                {replyLabel}
+              </button>
+            )}
             {tts.isLoading ? (
               <button className="reading__action-btn reading__action-btn--loading" type="button" disabled>
                 Loading voice...

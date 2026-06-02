@@ -15,6 +15,8 @@ function createHookWrapper(initialPath = '/mailbox') {
           createElement(Route, { path: 'sending/:animalId/:threadId', element: children }),
           createElement(Route, { path: 'receiving/:animalId/:threadId', element: children }),
           createElement(Route, { path: 'reading/:animalId/:letterId', element: children }),
+          createElement(Route, { path: 'mailbox-sent/:animalId/:threadId', element: children }),
+          createElement(Route, { path: 'mail-journey/:animalId/:threadId', element: children }),
         )
       )
     );
@@ -88,6 +90,30 @@ describe('useNavigation', () => {
       view: 'reading',
       animalId: 'bear',
       letterId: 'letter-1',
+      threadId: 'thread-1',
+    });
+  });
+
+  it('goToMailboxSent sets mailbox-sent view', () => {
+    const { result } = renderHook(() => useNavigation(), {
+      wrapper: createHookWrapper('/mailbox'),
+    });
+    act(() => result.current.goToMailboxSent('fox', 'thread-1'));
+    expect(result.current.nav).toEqual({
+      view: 'mailbox-sent',
+      animalId: 'fox',
+      threadId: 'thread-1',
+    });
+  });
+
+  it('goToMailJourney navigates to journey route', () => {
+    const { result } = renderHook(() => useNavigation(), {
+      wrapper: createHookWrapper('/mailbox'),
+    });
+    act(() => result.current.goToMailJourney('owl', 'thread-1'));
+    expect(result.current.nav).toEqual({
+      view: 'mail-journey',
+      animalId: 'owl',
       threadId: 'thread-1',
     });
   });

@@ -1,0 +1,180 @@
+.mail-journey {
+  min-height: 100dvh;
+  padding: 24px;
+  display: grid;
+  align-content: center;
+  gap: 22px;
+  background:
+    linear-gradient(135deg, #f9f2dc, #eef8fb 48%, color-mix(in srgb, var(--animal-color) 13%, white)),
+    #fffdf5;
+  color: #263238;
+}
+
+.mail-journey__hero,
+.mail-journey__map,
+.mail-journey__actions {
+  width: min(860px, 100%);
+  margin: 0 auto;
+}
+
+.mail-journey__hero {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+}
+
+.mail-journey__passport {
+  aspect-ratio: 0.78;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--animal-color) 82%, #263238);
+  color: white;
+  border: 8px solid #fffef8;
+  box-shadow: 0 18px 40px rgba(37, 48, 55, 0.16);
+  transform: rotate(-4deg);
+}
+
+.mail-journey__passport span {
+  font-size: 4rem;
+}
+
+.mail-journey__passport small {
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.mail-journey__eyebrow,
+.mail-journey h1,
+.mail-journey h2,
+.mail-journey p {
+  margin: 0;
+}
+
+.mail-journey__eyebrow {
+  margin-bottom: 8px;
+  color: color-mix(in srgb, var(--animal-color) 74%, black);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mail-journey h1 {
+  margin-bottom: 12px;
+  font-size: clamp(2.1rem, 5vw, 4.6rem);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.mail-journey__hero p {
+  color: rgba(0, 0, 0, 0.64);
+  font-size: 1.08rem;
+  line-height: 1.55;
+}
+
+.mail-journey__receipt {
+  display: inline-flex;
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--animal-color) 28%, white);
+  background: rgba(255, 255, 255, 0.72);
+  color: color-mix(in srgb, var(--animal-color) 72%, black);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.mail-journey__map {
+  display: grid;
+  gap: 10px;
+}
+
+.mail-journey__step {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(38, 50, 56, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.mail-journey__step--waiting {
+  opacity: 0.55;
+}
+
+.mail-journey__step--current {
+  border-color: color-mix(in srgb, var(--animal-color) 44%, white);
+  background: color-mix(in srgb, var(--animal-color) 13%, white);
+}
+
+.mail-journey__dot {
+  width: 28px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  align-self: start;
+  margin-top: 4px;
+  background: #cfd8dc;
+  box-shadow: inset 0 0 0 5px white;
+}
+
+.mail-journey__step--done .mail-journey__dot,
+.mail-journey__step--current .mail-journey__dot {
+  background: var(--animal-color);
+}
+
+.mail-journey h2 {
+  margin-bottom: 4px;
+  font-size: 1.05rem;
+}
+
+.mail-journey__step p {
+  color: rgba(0, 0, 0, 0.62);
+  line-height: 1.45;
+}
+
+.mail-journey__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mail-journey__actions button,
+.mail-journey__actions a {
+  appearance: none;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  font: inherit;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.mail-journey__actions button {
+  background: var(--animal-color);
+  color: white;
+}
+
+.mail-journey__actions a {
+  background: white;
+  color: color-mix(in srgb, var(--animal-color) 72%, black);
+  border-color: color-mix(in srgb, var(--animal-color) 32%, white);
+}
+
+@media (max-width: 640px) {
+  .mail-journey__hero {
+    grid-template-columns: 1fr;
+  }
+
+  .mail-journey__passport {
+    width: 118px;
+  }
+}

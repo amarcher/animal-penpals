@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { motion } from 'framer-motion';
 import { animals } from '../../data/animals.ts';
 import { trackMailboxOpened } from '../../utils/analytics.ts';
@@ -10,6 +11,9 @@ interface MailboxProps {
   getUnreadCount: (animalId: string) => number;
   hasThread: (animalId: string) => boolean;
   selectedAnimalId?: string | null;
+  mailboxModeEnabled: boolean;
+  pendingMailCount: number;
+  onToggleMailboxMode: () => void;
 }
 
 // Module-level flag: the staggered entrance animation should only run on the
@@ -18,7 +22,15 @@ interface MailboxProps {
 // flash white while it waits its turn in the stagger.
 let entranceAnimationPlayed = false;
 
-export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread, selectedAnimalId }: MailboxProps) {
+export function Mailbox({
+  onSelectAnimal,
+  getUnreadCount,
+  hasThread,
+  selectedAnimalId,
+  mailboxModeEnabled,
+  pendingMailCount,
+  onToggleMailboxMode,
+}: MailboxProps) {
   const [shouldAnimateEntrance] = useState(() => !entranceAnimationPlayed);
 
   useEffect(() => {
@@ -44,6 +56,27 @@ export function Mailbox({ onSelectAnimal, getUnreadCount, hasThread, selectedAni
         </h1>
         <p className="mailbox__subtitle">Pick an animal friend to write to!</p>
       </header>
+
+      <section className="mailbox__grownup-panel" aria-label="Grown-up snail mail controls">
+        <div>
+          <span className="mailbox__grownup-kicker">Grown-up preview</span>
+          <strong>{mailboxModeEnabled ? 'Snail mail mode is on' : 'Regular instant replies are on'}</strong>
+          <p>
+            {mailboxModeEnabled
+              ? 'Sent letters become parent-approved printable mail with journey tracking.'
+              : 'Turn on snail mail mode to route new sends into parent review and tracking.'}
+          </p>
+        </div>
+        <div className="mailbox__grownup-actions">
+          {pendingMailCount > 0 && (
+            <Link to="/parent/review">{pendingMailCount} waiting</Link>
+          )}
+          <Link to="/parent/review">Parent review</Link>
+          <button type="button" onClick={onToggleMailboxMode} aria-pressed={mailboxModeEnabled}>
+            {mailboxModeEnabled ? 'Mailbox mode on' : 'Mailbox mode off'}
+          </button>
+        </div>
+      </section>
 
       <div className="mailbox__grid">
         {animals.map((animal, i) => (

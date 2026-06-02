@@ -4,18 +4,21 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useNavigation } from '../../hooks/useNavigation.ts';
 import { useLetterStore } from '../../hooks/useLetterStore.ts';
+import { useParentReviewStore } from '../../hooks/useParentReviewStore.ts';
 import { usePenpalConversation } from '../../hooks/usePenpalConversation.ts';
 import { useTransitionContext } from '../../contexts/useTransitionContext.ts';
 import { getAnimalById } from '../../data/animals.ts';
 import { letterFlowState } from '../../utils/letterFlowState.ts';
+import { isMailboxModeEnabled } from '../../utils/mailboxExperiment.ts';
 import { prefetchTts } from '../../utils/ttsPrefetchCache.ts';
 import { VoiceAgent } from '../ui/VoiceAgent.tsx';
 import { trackAnimalSelected, trackLetterSent, trackLetterReceived, trackTtsPlaybackStarted, trackTtsPlaybackCompleted, trackReplyClicked } from '../../utils/analytics.ts';
 import type { AppOutletContext } from '../../types/outlet.ts';
 
 export function AppLayout() {
-  const { nav, goToMailbox, goToCompose, goToSending, goToReceiving, goToReading } = useNavigation();
+  const { nav, goToMailbox, goToCompose, goToSending, goToReceiving, goToReading, goToMailJourney } = useNavigation();
   const store = useLetterStore();
+  const reviewStore = useParentReviewStore();
   const ctx = useTransitionContext();
   const location = useLocation();
 
@@ -24,6 +27,8 @@ export function AppLayout() {
   useEffect(() => { navRef.current = nav; });
   const storeRef = useRef(store);
   useEffect(() => { storeRef.current = store; });
+  const reviewStoreRef = useRef(reviewStore);
+  useEffect(() => { reviewStoreRef.current = reviewStore; });
 
   const externalTextSeq = useRef(0);
   // Clear stale voice-dictated text when switching to a new animal's compose view
@@ -171,15 +176,34 @@ export function AppLayout() {
     letterFlowState.setPendingResponse(null);
     ctx.setPendingResponse(null);
 
-    const { threadId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
+    const { threadId, letterId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
     const thread = storeRef.current.getThread(threadId);
     trackLetterSent(current.animalId, content.length, !!current.threadId, thread?.letters.length);
     const animal = getAnimalById(current.animalId);
 
-    // Fire the API call (moved from SendAnimation)
     const priorHistory = (thread?.letters ?? [])
       .filter(l => !(l.from === 'child' && l.content === content))
       .map(l => ({ from: l.from, content: l.content }));
+
+    if (isMailboxModeEnabled()) {
+      letterFlowState.setDeliveryMode('mailbox');
+      void reviewStoreRef.current.createDraft({
+        animalId: current.animalId,
+        childLetter: content,
+        childLetterId: letterId,
+        threadId,
+        threadHistory: priorHistory,
+      });
+      const receivedMessage = animal
+        ? `${animal.name} got your letter right away and is reading every word. Now the reply has to travel by real mailbox, so it may take a little while.`
+        : 'Your animal friend got your letter right away. Now the reply has to travel by real mailbox, so it may take a little while.';
+      letterFlowState.setResponsePromise(Promise.resolve(receivedMessage));
+      goToReceiving(current.animalId, threadId, { viewTransition: true });
+      return;
+    }
+
+    letterFlowState.setDeliveryMode('instant');
+    // Fire the API call (moved from SendAnimation)
 
     const sendStartedAt = performance.now();
     console.log('[send] T+0 generate-response request fired');
@@ -235,6 +259,11 @@ export function AppLayout() {
   const handleReceiveComplete = useCallback((animalResponse: string) => {
     const current = navRef.current;
     if (current.view !== 'receiving') return;
+    if (letterFlowState.getDeliveryMode() === 'mailbox') {
+      console.log('[send] mailbox receive complete -> navigating to mail journey');
+      goToMailJourney(current.animalId, current.threadId);
+      return;
+    }
     console.log('[send] receive complete → navigating to reading');
     const { letterId } = storeRef.current.addLetter(current.animalId, 'animal', animalResponse, current.threadId);
     const thread = storeRef.current.getThread(current.threadId);
@@ -242,7 +271,7 @@ export function AppLayout() {
     letterFlowState.setPendingResponse(animalResponse);
     ctx.setPendingResponse(animalResponse);
     goToReading(current.animalId, letterId, current.threadId);
-  }, [goToReading, ctx]);
+  }, [goToReading, goToMailJourney, ctx]);
 
   const handleReadLetter = useCallback((letterId: string) => {
     const current = navRef.current;
@@ -274,6 +303,7 @@ export function AppLayout() {
 
   const outletContext: AppOutletContext = {
     store,
+    reviewStore,
     handleSelectAnimal,
     handleComposeSend,
     handleSendComplete,

@@ -296,6 +296,21 @@ export function buildFirstMessage(ctx: SessionContext): string | null {
       if (!animal) return null;
       return `Off it goes! I wonder what ${animal.name} will write back!`;
     }
+    case 'receiving': {
+      const animal = getAnimalById(ctx.nav.animalId);
+      if (!animal) return null;
+      return `${animal.name} is opening the letter now. Let's watch quietly.`;
+    }
+    case 'mailbox-sent': {
+      const animal = getAnimalById(ctx.nav.animalId);
+      if (!animal) return null;
+      return `${animal.name} got the letter and is writing a careful reply for the mailbox.`;
+    }
+    case 'mail-journey': {
+      const animal = getAnimalById(ctx.nav.animalId);
+      if (!animal) return null;
+      return `${animal.name} got the letter right away. Now their reply is traveling by mailbox.`;
+    }
     case 'reading': {
       const animal = getAnimalById(ctx.nav.animalId);
       if (!animal) return null;
@@ -340,6 +355,21 @@ export function buildRichContext(ctx: SessionContext): string | null {
       const animal = getAnimalById(ctx.nav.animalId);
       if (!animal) return null;
       return `[SENDING] The letter to ${animal.name} is flying away! Say something brief and excited, then STAY QUIET. ${animal.name}'s response is coming in a few seconds. Do NOT suggest going to the mailbox or picking another animal. Just wait.`;
+    }
+    case 'receiving': {
+      const animal = getAnimalById(ctx.nav.animalId);
+      if (!animal) return null;
+      return `[RECEIVING] ${animal.name} is opening and reading the child's letter. Stay quiet unless the child asks a question.`;
+    }
+    case 'mailbox-sent': {
+      const animal = getAnimalById(ctx.nav.animalId);
+      if (!animal) return null;
+      return `[MAILBOX REPLY] ${animal.name} received the child's letter and is preparing a careful reply for real mail. Reassure the child that the reply is being written. Do not claim it has already arrived.`;
+    }
+    case 'mail-journey': {
+      const animal = getAnimalById(ctx.nav.animalId);
+      if (!animal) return null;
+      return `[MAIL JOURNEY] ${animal.name} received the child's letter immediately, but the reply has to travel by snail mail. Treat waiting as part of the adventure. If the child asks why it is not here yet, explain that the animal is sending as fast as they can with mailbox tools.`;
     }
     case 'reading': {
       const animal = getAnimalById(ctx.nav.animalId);
