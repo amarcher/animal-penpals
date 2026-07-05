@@ -61,7 +61,7 @@ describe('generate-response API', () => {
 
     expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
       model: expect.any(String),
-      max_tokens: 300,
+      max_tokens: 400,
       system: expect.stringContaining('Ella the Elephant'),
       messages: [{ role: 'user', content: 'Hi Ella!' }],
     }));
