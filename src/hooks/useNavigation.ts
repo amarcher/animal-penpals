@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, useParams, useSearchParams } from 'react-router';
-import { letterFlowState } from '../utils/letterFlowState.ts';
 import type { AppState } from '../types/app.ts';
 
 function pathnameToView(pathname: string): string {
@@ -24,12 +23,6 @@ export function useNavigation() {
         const countParam = searchParams.get('count');
         const animalLetterCount = countParam ? parseInt(countParam, 10) : undefined;
         return { view: 'compose', animalId, threadId, animalLetterCount };
-      }
-      case 'sending': {
-        const animalId = params.animalId ?? '';
-        const threadId = params.threadId ?? '';
-        const letterContent = letterFlowState.getLetterContent() ?? '';
-        return { view: 'sending', animalId, threadId, letterContent };
       }
       case 'receiving': {
         const animalId = params.animalId ?? '';
@@ -62,11 +55,6 @@ export function useNavigation() {
     routerNavigate(`/compose/${animalId}${query ? `?${query}` : ''}`, { viewTransition: true });
   }, [routerNavigate]);
 
-  const goToSending = useCallback((animalId: string, threadId: string, letterContent: string) => {
-    letterFlowState.setLetterContent(letterContent);
-    routerNavigate(`/sending/${animalId}/${threadId}`);
-  }, [routerNavigate]);
-
   const goToReceiving = useCallback((animalId: string, threadId: string, options?: { viewTransition?: boolean }) => {
     routerNavigate(`/receiving/${animalId}/${threadId}`, options?.viewTransition ? { viewTransition: true } : undefined);
   }, [routerNavigate]);
@@ -78,5 +66,5 @@ export function useNavigation() {
     routerNavigate(`/reading/${animalId}/${letterId}${query ? `?${query}` : ''}`, { viewTransition: true });
   }, [routerNavigate]);
 
-  return { nav, goToMailbox, goToCompose, goToSending, goToReceiving, goToReading };
+  return { nav, goToMailbox, goToCompose, goToReceiving, goToReading };
 }

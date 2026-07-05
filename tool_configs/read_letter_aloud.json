@@ -1,6 +1,6 @@
 {
     "name": "read_letter_aloud",
-    "description": "Read the animal's letter aloud using the animal's voice. Use when the child asks to hear the letter read to them, or asks 'read it to me', 'what does it say', etc.",
+    "description": "Read the animal's letter aloud using the animal's voice. Use when the child asks to hear the letter read to them, or asks 'read it to me', 'what does it say', etc. The response reports whether reading actually started — if it failed (e.g. no letter is open on screen), nothing is playing: tell the child honestly and follow the response's suggestion.",
     "type": "client",
     "expects_response": true,
     "response_timeout_secs": 30,

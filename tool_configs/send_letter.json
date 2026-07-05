@@ -1,6 +1,6 @@
 {
     "name": "send_letter",
-    "description": "Send the current letter to the animal pen pal. Use when the child says they are done writing and want to send their letter (e.g. 'send it', 'I'm done', 'mail it', 'finished').",
+    "description": "Send the current letter to the animal pen pal. Use when the child says they are done writing and want to send their letter (e.g. 'send it', 'I'm done', 'mail it', 'finished'). The response reports whether the send actually succeeded — if it failed (for example the letter is still empty), the letter was NOT sent: tell the child honestly and help them fix it before trying again.",
     "type": "client",
     "expects_response": true,
     "response_timeout_secs": 30,

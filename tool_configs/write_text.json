@@ -1,6 +1,6 @@
 {
     "name": "write_text",
-    "description": "Write text onto the child's letter. Use when the child dictates what they want to say, or asks you to write something for them. The text will appear in the letter.",
+    "description": "Write text onto the child's letter. Use when the child dictates what they want to say, or asks you to write something for them. The text will appear in the letter. The response reports whether the text was actually added — if it failed (e.g. no letter is open), tell the child honestly and help them pick an animal first.",
     "type": "client",
     "expects_response": true,
     "response_timeout_secs": 30,
@@ -13,7 +13,9 @@
                 "description": "The text to write on the letter"
             }
         },
-        "required": ["text"]
+        "required": [
+            "text"
+        ]
     },
     "dynamic_variables": {
         "dynamic_variable_placeholders": {}

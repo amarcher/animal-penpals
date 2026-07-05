@@ -5,7 +5,9 @@ import { preloadVideo } from '../../utils/videoPreloadCache.ts';
 import type { Thread } from '../../types/app.ts';
 import './ComposeView.css';
 
-const showsVideo = window.matchMedia('(min-width: 701px)');
+// Wide viewports show the video beside the letter (and morph it via view
+// transition); phones get a banner video without the shared-element name.
+const isWideViewport = window.matchMedia('(min-width: 701px)');
 
 interface ComposeViewProps {
   animalId: string;
@@ -23,8 +25,10 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
   const [draft, setDraft] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Autofocus only on wide viewports — on phones this would pop the keyboard
+  // over the page the moment it loads.
   useEffect(() => {
-    textareaRef.current?.focus();
+    if (isWideViewport.matches) textareaRef.current?.focus();
   }, []);
 
   // Preload the receive video into the shared cache so ReceiveAnimation can
@@ -94,7 +98,7 @@ export function ComposeView({ animalId, thread, externalText, onSend, onBack, on
 
       <div className="compose__body">
         {videoEntry && (
-          <div className="compose__video-wrap" style={showsVideo.matches ? { viewTransitionName: 'animal-video' } : undefined}>
+          <div className="compose__video-wrap" style={isWideViewport.matches ? { viewTransitionName: 'animal-video' } : undefined}>
             <video
               className="compose__video"
               src={videoEntry.url}

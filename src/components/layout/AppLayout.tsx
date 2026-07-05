@@ -14,7 +14,7 @@ import { trackAnimalSelected, trackLetterSent, trackLetterReceived, trackTtsPlay
 import type { AppOutletContext } from '../../types/outlet.ts';
 
 export function AppLayout() {
-  const { nav, goToMailbox, goToCompose, goToSending, goToReceiving, goToReading } = useNavigation();
+  const { nav, goToMailbox, goToCompose, goToReceiving, goToReading } = useNavigation();
   const store = useLetterStore();
   const ctx = useTransitionContext();
   const location = useLocation();
@@ -44,22 +44,97 @@ export function AppLayout() {
     goToCompose(animalId, existingThread?.id, animalLetterCount);
   }, [goToCompose, ctx]);
 
+  const handleComposeSend = useCallback((content: string) => {
+    const current = navRef.current;
+    if (current.view !== 'compose') return;
+
+    // Clear stale pending response from previous send
+    letterFlowState.setPendingResponse(null);
+    ctx.setPendingResponse(null);
+
+    const { threadId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
+    const thread = storeRef.current.getThread(threadId);
+    trackLetterSent(current.animalId, content.length, !!current.threadId, thread?.letters.length);
+    const animal = getAnimalById(current.animalId);
+
+    // Fire the API call while the send animation plays
+    const priorHistory = (thread?.letters ?? [])
+      .filter(l => !(l.from === 'child' && l.content === content))
+      .map(l => ({ from: l.from, content: l.content }));
+
+    const sendStartedAt = performance.now();
+    console.log('[send] T+0 generate-response request fired');
+    const responsePromise = fetch('/api/generate-response', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        animalId: current.animalId,
+        childLetter: content,
+        threadId,
+        threadHistory: priorHistory,
+      }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        // A 5xx still parses as JSON ({error: ...}, no response field) — throw
+        // so the friendly fallback below covers API errors, not just network ones.
+        if (typeof data.response !== 'string') throw new Error(data.error ?? 'missing response');
+        console.log(`[send] T+${(performance.now() - sendStartedAt).toFixed(0)}ms generate-response returned (${data.response.length} chars) — kicking off TTS prefetch`);
+        if (animal) prefetchTts(data.response, animal.voiceId);
+        return data.response;
+      })
+      .catch(() => "Oh no, my quill broke! I'll write back soon, I promise!");
+    letterFlowState.setResponsePromise(responsePromise);
+
+    // Swap view-transition-names before the snapshot so the send-letter
+    // CSS rules match. The unique name "sending-letter" scopes the animation
+    // without needing view transition types.
+    const videoWrap = document.querySelector('.compose__video-wrap');
+    if (videoWrap) (videoWrap as HTMLElement).style.viewTransitionName = 'none';
+
+    const composeContent = document.querySelector('.compose__content');
+    if (composeContent) (composeContent as HTMLElement).style.viewTransitionName = 'sending-letter';
+
+    const composeActions = document.querySelector('.compose__actions');
+    if (composeActions) (composeActions as HTMLElement).style.viewTransitionName = 'none';
+
+    goToReceiving(current.animalId, threadId, { viewTransition: true });
+  }, [goToReceiving, ctx]);
+
   const handleSendLetter = useCallback(() => {
     const current = navRef.current;
+    if (current.view !== 'compose') {
+      return "We're not on a letter-writing page, so nothing was sent. Use select_animal to pick a pen pal first.";
+    }
     const draft = letterFlowState.getCurrentDraft().trim();
-    if (current.view !== 'compose' || !draft) return;
-    const { threadId } = storeRef.current.addLetter(current.animalId, 'child', draft, current.threadId);
-    goToSending(current.animalId, threadId, draft);
-  }, [goToSending]);
+    if (!draft) {
+      return 'The letter is empty — nothing was sent. Help the child say what they want to write (use write_text), then try sending again.';
+    }
+    const animal = getAnimalById(current.animalId);
+    handleComposeSend(draft);
+    return `Letter sent! ${animal?.name ?? 'Your pen pal'}'s reply arrives in a few seconds — say something brief and excited, then stay quiet and wait.`;
+  }, [handleComposeSend]);
 
   const handleWriteText = useCallback((text: string) => {
+    const current = navRef.current;
+    if (current.view !== 'compose') {
+      return "We're not on a letter-writing page, so nothing was written down. Use select_animal to pick a pen pal first.";
+    }
     const existing = letterFlowState.getCurrentDraft();
     letterFlowState.setCurrentDraft(existing ? existing + ' ' + text : text);
     externalTextSeq.current += 1;
     ctx.setExternalText({ text, seq: externalTextSeq.current });
+    return `Added to letter: "${text}"`;
   }, [ctx]);
 
   const handleReadAloud = useCallback(() => {
+    const current = navRef.current;
+    if (current.view !== 'reading') {
+      if (current.view === 'compose' && current.threadId) {
+        return 'There is no letter open right now, so nothing was read. Use read_previous_letter with a letter number to open one of the earlier letters.';
+      }
+      return 'There is no letter open right now, so nothing was read aloud.';
+    }
     ttsSeq.current += 1;
     ctx.setTtsRequest({ seq: ttsSeq.current });
     return 'Reading the letter aloud now!';
@@ -163,60 +238,6 @@ export function AppLayout() {
     }
   }, [location.pathname]);
 
-  const handleComposeSend = useCallback((content: string) => {
-    const current = navRef.current;
-    if (current.view !== 'compose') return;
-
-    // Clear stale pending response from previous send
-    letterFlowState.setPendingResponse(null);
-    ctx.setPendingResponse(null);
-
-    const { threadId } = storeRef.current.addLetter(current.animalId, 'child', content, current.threadId);
-    const thread = storeRef.current.getThread(threadId);
-    trackLetterSent(current.animalId, content.length, !!current.threadId, thread?.letters.length);
-    const animal = getAnimalById(current.animalId);
-
-    // Fire the API call (moved from SendAnimation)
-    const priorHistory = (thread?.letters ?? [])
-      .filter(l => !(l.from === 'child' && l.content === content))
-      .map(l => ({ from: l.from, content: l.content }));
-
-    const sendStartedAt = performance.now();
-    console.log('[send] T+0 generate-response request fired');
-    const responsePromise = fetch('/api/generate-response', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        animalId: current.animalId,
-        childLetter: content,
-        threadId,
-        threadHistory: priorHistory,
-      }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        console.log(`[send] T+${(performance.now() - sendStartedAt).toFixed(0)}ms generate-response returned (${(data.response as string)?.length ?? 0} chars) — kicking off TTS prefetch`);
-        if (animal) prefetchTts(data.response, animal.voiceId);
-        return data.response as string;
-      })
-      .catch(() => "Oh no, my quill broke! I'll write back soon, I promise!");
-    letterFlowState.setResponsePromise(responsePromise);
-
-    // Swap view-transition-names before the snapshot so the send-letter
-    // CSS rules match. The unique name "sending-letter" scopes the animation
-    // without needing view transition types.
-    const videoWrap = document.querySelector('.compose__video-wrap');
-    if (videoWrap) (videoWrap as HTMLElement).style.viewTransitionName = 'none';
-
-    const composeContent = document.querySelector('.compose__content');
-    if (composeContent) (composeContent as HTMLElement).style.viewTransitionName = 'sending-letter';
-
-    const composeActions = document.querySelector('.compose__actions');
-    if (composeActions) (composeActions as HTMLElement).style.viewTransitionName = 'none';
-
-    goToReceiving(current.animalId, threadId, { viewTransition: true });
-  }, [goToReceiving, ctx]);
-
   const handleDraftChange = useCallback((animalId: string, content: string) => {
     letterFlowState.setCurrentDraft(content);
     if (draftNotifyRef.current) clearTimeout(draftNotifyRef.current);
@@ -224,13 +245,6 @@ export function AppLayout() {
       voice.notifyDraftChange(animalId, content);
     }, 800);
   }, [voice]);
-
-  const handleSendComplete = useCallback((responsePromise: Promise<string>) => {
-    const current = navRef.current;
-    if (current.view !== 'sending') return;
-    letterFlowState.setResponsePromise(responsePromise);
-    goToReceiving(current.animalId, current.threadId);
-  }, [goToReceiving]);
 
   const handleReceiveComplete = useCallback((animalResponse: string) => {
     const current = navRef.current;
@@ -276,7 +290,6 @@ export function AppLayout() {
     store,
     handleSelectAnimal,
     handleComposeSend,
-    handleSendComplete,
     handleReceiveComplete,
     handleReply,
     handleReadLetter,

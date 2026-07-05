@@ -88,9 +88,9 @@ describe('buildFirstMessage', () => {
     expect(msg).toContain('send it');
   });
 
-  it('returns sending greeting', () => {
+  it('returns receiving greeting', () => {
     const ctx: SessionContext = {
-      nav: { view: 'sending', animalId: 'elephant', threadId: 't1', letterContent: 'Hi!' },
+      nav: { view: 'receiving', animalId: 'elephant', threadId: 't1' },
       draft: '',
       thread: undefined,
     };
@@ -182,14 +182,14 @@ describe('buildRichContext', () => {
     expect(result).toContain('[CONVERSATION HISTORY with Ella the Elephant]');
   });
 
-  it('returns sending context that tells agent to wait', () => {
+  it('returns receiving context that tells agent to wait', () => {
     const ctx: SessionContext = {
-      nav: { view: 'sending', animalId: 'elephant', threadId: 't1', letterContent: 'Hi!' },
+      nav: { view: 'receiving', animalId: 'elephant', threadId: 't1' },
       draft: '',
       thread: undefined,
     };
     const result = buildRichContext(ctx);
-    expect(result).toContain('[SENDING]');
+    expect(result).toContain('[LETTER SENT]');
     expect(result).toContain('Ella the Elephant');
     expect(result).toContain('STAY QUIET');
     expect(result).toContain('Do NOT suggest');

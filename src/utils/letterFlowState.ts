@@ -14,14 +14,12 @@
 interface LetterFlowState {
   responsePromise: Promise<string> | null;
   pendingResponse: string | null;
-  letterContent: string | null;
   currentDraft: string;
 }
 
 const state: LetterFlowState = {
   responsePromise: null,
   pendingResponse: null,
-  letterContent: null,
   currentDraft: '',
 };
 
@@ -32,9 +30,6 @@ export const letterFlowState = {
   getPendingResponse: (): string | null => state.pendingResponse,
   setPendingResponse: (value: string | null): void => { state.pendingResponse = value; },
 
-  getLetterContent: (): string | null => state.letterContent,
-  setLetterContent: (value: string | null): void => { state.letterContent = value; },
-
   getCurrentDraft: (): string => state.currentDraft,
   setCurrentDraft: (value: string): void => { state.currentDraft = value; },
 
@@ -42,7 +37,6 @@ export const letterFlowState = {
   reset: (): void => {
     state.responsePromise = null;
     state.pendingResponse = null;
-    state.letterContent = null;
     state.currentDraft = '';
   },
 };

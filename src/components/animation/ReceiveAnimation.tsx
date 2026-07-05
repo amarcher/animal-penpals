@@ -21,7 +21,7 @@ export function ReceiveAnimation({ animalId, responsePromise, onComplete }: Rece
 
   // Prefetch TTS audio as soon as the API response is available — while the
   // video is still playing — so it's ready by the time ReadingView mounts.
-  // (Also fires from SendAnimation, but this is a safe duplicate call.)
+  // (Also fires from AppLayout's send handler, but this is a safe duplicate call.)
   useEffect(() => {
     if (!animal) return;
     responsePromise.then(text => {
