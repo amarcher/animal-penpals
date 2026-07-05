@@ -90,14 +90,15 @@ them. The tags produce actual vocal sounds — they are not displayed as text.`;
 
   try {
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 300,
+      model: 'claude-sonnet-5',
+      max_tokens: 400,
+      thinking: { type: 'disabled' },
       system: systemPrompt,
       messages,
     });
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    logUsage(response.usage.input_tokens, response.usage.output_tokens, 'claude-sonnet-4-20250514', animalId);
+    logUsage(response.usage.input_tokens, response.usage.output_tokens, 'claude-sonnet-5', animalId);
     return res.status(200).json({ response: text });
   } catch (err) {
     console.error('[generate-response] error:', err);
