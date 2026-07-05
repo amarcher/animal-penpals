@@ -12,7 +12,6 @@ function createHookWrapper(initialPath = '/mailbox') {
         createElement(Routes, null,
           createElement(Route, { path: 'mailbox', element: children }),
           createElement(Route, { path: 'compose/:animalId', element: children }),
-          createElement(Route, { path: 'sending/:animalId/:threadId', element: children }),
           createElement(Route, { path: 'receiving/:animalId/:threadId', element: children }),
           createElement(Route, { path: 'reading/:animalId/:letterId', element: children }),
         )
@@ -58,19 +57,6 @@ describe('useNavigation', () => {
     });
   });
 
-  it('goToSending sets sending view with letter content', () => {
-    const { result } = renderHook(() => useNavigation(), {
-      wrapper: createHookWrapper('/mailbox'),
-    });
-    act(() => result.current.goToSending('fox', 'thread-1', 'Hello fox!'));
-    expect(result.current.nav).toMatchObject({
-      view: 'sending',
-      animalId: 'fox',
-      threadId: 'thread-1',
-      letterContent: 'Hello fox!',
-    });
-  });
-
   it('goToReceiving sets receiving view', () => {
     const { result } = renderHook(() => useNavigation(), {
       wrapper: createHookWrapper('/mailbox'),
@@ -108,9 +94,6 @@ describe('useNavigation', () => {
 
     act(() => result.current.goToCompose('penguin'));
     expect(result.current.nav.view).toBe('compose');
-
-    act(() => result.current.goToSending('penguin', 'thread-1', 'Hi Percy!'));
-    expect(result.current.nav.view).toBe('sending');
 
     act(() => result.current.goToReceiving('penguin', 'thread-1'));
     expect(result.current.nav.view).toBe('receiving');

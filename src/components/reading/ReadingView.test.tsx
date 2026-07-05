@@ -6,14 +6,22 @@ import { ReadingView } from './ReadingView.tsx';
 // Mock useTtsPlayback
 const mockPlay = vi.fn().mockResolvedValue(true);
 const mockStop = vi.fn();
+const mockPause = vi.fn();
+const mockResume = vi.fn();
+const mockTtsState = {
+  isPlaying: false,
+  isPaused: false,
+  isLoading: false,
+};
 vi.mock('../../hooks/useTtsPlayback.ts', () => ({
   buildWordTimings: vi.fn(() => []),
   useTtsPlayback: () => ({
-    isPlaying: false,
-    isLoading: false,
+    ...mockTtsState,
     currentWordIndex: -1,
     wordTimings: [],
     play: mockPlay,
+    pause: mockPause,
+    resume: mockResume,
     stop: mockStop,
   }),
 }));
@@ -32,6 +40,9 @@ describe('ReadingView', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockTtsState.isPlaying = false;
+    mockTtsState.isPaused = false;
+    mockTtsState.isLoading = false;
   });
 
   it('renders letter content', () => {
@@ -70,6 +81,25 @@ describe('ReadingView', () => {
     mockPlay.mockClear();
     await userEvent.click(screen.getByRole('button', { name: /read aloud/i }));
     expect(mockPlay).toHaveBeenCalled();
+  });
+
+  it('shows "Pause" while playing and pauses in place (no reset)', async () => {
+    mockTtsState.isPlaying = true;
+    render(<ReadingView {...defaultProps} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /pause/i }));
+    expect(mockPause).toHaveBeenCalled();
+    expect(mockStop).not.toHaveBeenCalled(); // stop only fires on unmount cleanup
+  });
+
+  it('shows "Keep reading" while paused and resumes', async () => {
+    mockTtsState.isPaused = true;
+    render(<ReadingView {...defaultProps} />);
+
+    mockPlay.mockClear();
+    await userEvent.click(screen.getByRole('button', { name: /keep reading/i }));
+    expect(mockResume).toHaveBeenCalled();
+    expect(mockPlay).not.toHaveBeenCalled(); // resume continues, not restart
   });
 
   it('reply button calls onReply', async () => {

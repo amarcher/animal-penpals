@@ -107,8 +107,12 @@ export function ReadingView({ animalId, letterContent, ttsRequest, onReply, onBa
                 Loading voice...
               </button>
             ) : tts.isPlaying ? (
-              <button className="reading__action-btn" onClick={tts.stop} type="button">
+              <button className="reading__action-btn" onClick={tts.pause} type="button">
                 Pause
+              </button>
+            ) : tts.isPaused ? (
+              <button className="reading__action-btn" onClick={tts.resume} type="button">
+                Keep reading
               </button>
             ) : (
               <button className="reading__action-btn" onClick={handleReplay} type="button">

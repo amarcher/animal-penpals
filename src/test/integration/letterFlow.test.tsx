@@ -3,22 +3,32 @@ import { screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithRouter } from '../renderWithRouter.tsx';
 
-// Mock ElevenLabs voice agent (deeply tied to SDK + mic)
+// Mock ElevenLabs voice agent (deeply tied to SDK + mic). Capture the client
+// tool callbacks AppLayout wires up so tests can invoke them like the agent would.
+interface AgentCallbacks {
+  onSendLetter: () => string;
+  onWriteText: (text: string) => string;
+  onReadAloud: () => string;
+}
+let agentCallbacks: AgentCallbacks;
 vi.mock('../../hooks/usePenpalConversation.ts', () => ({
-  usePenpalConversation: () => ({
-    agentId: null, // Hides VoiceAgent component
-    status: 'off',
-    isSpeaking: false,
-    micError: null,
-    toggle: vi.fn(),
-    clearMicError: vi.fn(),
-    notifyViewChange: vi.fn(),
-    notifyDraftChange: vi.fn(),
-    notifyLetterReceivedWithTts: vi.fn(),
-    notifyLetterReceivedNoTts: vi.fn(),
-    muteAgent: vi.fn(),
-    unmuteAgent: vi.fn(),
-  }),
+  usePenpalConversation: (callbacks: AgentCallbacks) => {
+    agentCallbacks = callbacks;
+    return {
+      agentId: null, // Hides VoiceAgent component
+      status: 'off',
+      isSpeaking: false,
+      micError: null,
+      toggle: vi.fn(),
+      clearMicError: vi.fn(),
+      notifyViewChange: vi.fn(),
+      notifyDraftChange: vi.fn(),
+      notifyLetterReceivedWithTts: vi.fn(),
+      notifyLetterReceivedNoTts: vi.fn(),
+      muteAgent: vi.fn(),
+      unmuteAgent: vi.fn(),
+    };
+  },
 }));
 
 // Mock video preload cache
@@ -46,10 +56,13 @@ vi.mock('../../hooks/useTtsPlayback.ts', () => ({
   buildWordTimings: vi.fn(() => []),
   useTtsPlayback: () => ({
     isPlaying: false,
+    isPaused: false,
     isLoading: false,
     currentWordIndex: -1,
     wordTimings: [],
     play: mockTtsPlay,
+    pause: vi.fn(),
+    resume: vi.fn(),
     stop: vi.fn(),
   }),
 }));
@@ -108,12 +121,7 @@ describe('Letter Flow Integration', () => {
     expect(fetchBody.childLetter).toBe('Hello Ella! I love elephants!');
     expect(fetchBody.animalId).toBe('elephant');
 
-    // 6. SendAnimation completes after 1500ms → transitions to receiving
-    await act(async () => {
-      vi.advanceTimersByTime(1500);
-    });
-
-    // 7. ReceiveAnimation fallback progresses (6300ms total)
+    // 6. Send goes straight to receiving; ReceiveAnimation fallback progresses (6300ms total)
     await act(async () => {
       vi.advanceTimersByTime(6300);
     });
@@ -136,9 +144,6 @@ describe('Letter Flow Integration', () => {
     await user.click(screen.getByRole('button', { name: /send letter/i }));
 
     await act(async () => {
-      vi.advanceTimersByTime(1500);
-    });
-    await act(async () => {
       vi.advanceTimersByTime(6300);
     });
     await act(async () => {
@@ -155,6 +160,37 @@ describe('Letter Flow Integration', () => {
     expect(screen.getByText('First letter')).toBeInTheDocument();
   });
 
+  it('voice send_letter reports failure honestly and succeeds after write_text', async () => {
+    renderWithRouter('/mailbox');
+
+    // Not on a compose view → send must fail with an explanation
+    expect(agentCallbacks.onSendLetter()).toMatch(/nothing was sent/i);
+
+    // On compose with an empty letter → send must fail and NOT hit the API
+    await user.click(screen.getByLabelText('Write to Ella the Elephant'));
+    expect(agentCallbacks.onSendLetter()).toMatch(/empty/i);
+    expect(fetch).not.toHaveBeenCalled();
+
+    // Agent dictates text, then sends → success message + API call
+    let writeResult = '';
+    act(() => { writeResult = agentCallbacks.onWriteText('Hi Ella! I lost a tooth!'); });
+    expect(writeResult).toContain('Added to letter');
+
+    let sendResult = '';
+    await act(async () => { sendResult = agentCallbacks.onSendLetter(); });
+    expect(sendResult).toContain('Letter sent!');
+    expect(fetch).toHaveBeenCalledWith('/api/generate-response', expect.objectContaining({ method: 'POST' }));
+    const fetchBody = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+    expect(fetchBody.childLetter).toBe('Hi Ella! I lost a tooth!');
+  });
+
+  it('voice write_text and read_letter_aloud report failure outside their views', () => {
+    renderWithRouter('/mailbox');
+
+    expect(agentCallbacks.onWriteText('hello')).toMatch(/nothing was written/i);
+    expect(agentCallbacks.onReadAloud()).toMatch(/nothing was read/i);
+  });
+
   it('unread badge appears for new animal response', async () => {
     renderWithRouter('/mailbox');
 
@@ -163,7 +199,6 @@ describe('Letter Flow Integration', () => {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Hi Ella!' } });
     await user.click(screen.getByRole('button', { name: /send letter/i }));
 
-    await act(async () => { vi.advanceTimersByTime(1500); });
     await act(async () => { vi.advanceTimersByTime(6300); });
     await act(async () => { await vi.runAllTimersAsync(); });
 

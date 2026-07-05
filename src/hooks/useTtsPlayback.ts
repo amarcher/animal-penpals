@@ -9,6 +9,7 @@ export interface WordTiming {
 
 interface TtsPlaybackState {
   isPlaying: boolean;
+  isPaused: boolean;
   isLoading: boolean;
   currentWordIndex: number;
   currentCharIndex: number;
@@ -54,6 +55,7 @@ export function buildWordTimings(text: string, alignment: TtsAlignment): WordTim
 export function useTtsPlayback() {
   const [state, setState] = useState<TtsPlaybackState>({
     isPlaying: false,
+    isPaused: false,
     isLoading: false,
     currentWordIndex: -1,
     currentCharIndex: -1,
@@ -64,6 +66,8 @@ export function useTtsPlayback() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animFrameRef = useRef<number>(0);
   const playIdRef = useRef(0);
+  // Highlight-loop tick from the current play(); resume() restarts it after a pause.
+  const tickRef = useRef<(() => void) | null>(null);
 
   const detachAudio = useCallback(() => {
     const audio = audioRef.current;
@@ -78,8 +82,32 @@ export function useTtsPlayback() {
   const stop = useCallback(() => {
     playIdRef.current += 1;
     detachAudio();
-    setState({ isPlaying: false, isLoading: false, currentWordIndex: -1, currentCharIndex: -1, wordTimings: [], charCount: 0 });
+    tickRef.current = null;
+    setState({ isPlaying: false, isPaused: false, isLoading: false, currentWordIndex: -1, currentCharIndex: -1, wordTimings: [], charCount: 0 });
   }, [detachAudio]);
+
+  // Pause in place: audio and highlight state stay put so resume() can continue.
+  // Deliberately does NOT bump playIdRef — the paused play() session stays live.
+  const pause = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || audio.paused || audio.ended) return;
+    audio.pause();
+    cancelAnimationFrame(animFrameRef.current);
+    setState(s => ({ ...s, isPlaying: false, isPaused: true }));
+  }, []);
+
+  const resume = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || audio.ended) return;
+    setState(s => ({ ...s, isPlaying: true, isPaused: false }));
+    audio.play().then(() => {
+      if (tickRef.current) {
+        animFrameRef.current = requestAnimationFrame(tickRef.current);
+      }
+    }).catch(() => {
+      setState(s => ({ ...s, isPlaying: false, isPaused: true }));
+    });
+  }, []);
 
   const play = useCallback(async (text: string, voiceId: string): Promise<boolean> => {
     playIdRef.current += 1;
@@ -87,7 +115,7 @@ export function useTtsPlayback() {
 
     detachAudio();
 
-    setState(s => ({ ...s, isLoading: true, isPlaying: false, currentWordIndex: -1, currentCharIndex: -1, charCount: 0 }));
+    setState(s => ({ ...s, isLoading: true, isPlaying: false, isPaused: false, currentWordIndex: -1, currentCharIndex: -1, charCount: 0 }));
 
     const playStartedAt = performance.now();
     console.log('[tts] play() called', { textLength: text.length });
@@ -107,7 +135,7 @@ export function useTtsPlayback() {
       audio.currentTime = 0;
       audioRef.current = audio;
 
-      setState({ isLoading: false, isPlaying: true, wordTimings, currentWordIndex: 0, currentCharIndex: 0, charCount: data.alignment.characters.length });
+      setState({ isLoading: false, isPlaying: true, isPaused: false, wordTimings, currentWordIndex: 0, currentCharIndex: 0, charCount: data.alignment.characters.length });
 
       console.log(`[tts] starting playback ${(performance.now() - playStartedAt).toFixed(0)}ms after play()`);
       await audio.play();
@@ -132,6 +160,7 @@ export function useTtsPlayback() {
           animFrameRef.current = requestAnimationFrame(tick);
         }
       };
+      tickRef.current = tick;
       animFrameRef.current = requestAnimationFrame(tick);
 
       audio.onended = () => {
@@ -139,6 +168,7 @@ export function useTtsPlayback() {
         setState(s => ({
           ...s,
           isPlaying: false,
+          isPaused: false,
           currentWordIndex: s.wordTimings.length - 1,
           currentCharIndex: s.charCount - 1,
         }));
@@ -149,10 +179,10 @@ export function useTtsPlayback() {
     } catch (err) {
       if (thisPlayId !== playIdRef.current) return false;
       console.error('[TTS] playback failed:', err);
-      setState({ isPlaying: false, isLoading: false, currentWordIndex: -1, currentCharIndex: -1, wordTimings: [], charCount: 0 });
+      setState({ isPlaying: false, isPaused: false, isLoading: false, currentWordIndex: -1, currentCharIndex: -1, wordTimings: [], charCount: 0 });
       return false;
     }
   }, [detachAudio]);
 
-  return { ...state, play, stop };
+  return { ...state, play, pause, resume, stop };
 }

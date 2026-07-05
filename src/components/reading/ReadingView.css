@@ -190,9 +190,26 @@
   }
 }
 
+/* Phones: keep the animal visible as a compact top banner (same treatment as
+   portrait tablets above, just shorter) instead of hiding it entirely. */
 @media (max-width: 700px) {
+  .reading__body {
+    flex-direction: column;
+  }
+
   .reading__video-wrap {
-    display: none;
+    flex: none;
+    width: 100%;
+    height: 140px;
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+
+  .reading__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
   }
 
   .reading__letter {
@@ -201,6 +218,13 @@
 
   .reading__letter > * {
     max-width: none;
+  }
+}
+
+/* Short landscape phones: no room for the banner — give it all to the letter. */
+@media (max-width: 700px) and (max-height: 450px) {
+  .reading__video-wrap {
+    display: none;
   }
 }
 

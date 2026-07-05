@@ -11,9 +11,9 @@ export interface SessionContext {
 
 interface ConversationCallbacks {
   onSelectAnimal: (animalId: string) => void;
-  onSendLetter: () => void;
+  onSendLetter: () => string;
   onGoToMailbox: () => void;
-  onWriteText: (text: string) => void;
+  onWriteText: (text: string) => string;
   onReadAloud: () => string;
   onReadPreviousLetter: (letterIndex: number) => string;
   getSessionContext: () => SessionContext;
@@ -45,13 +45,13 @@ export function usePenpalConversation({ onSelectAnimal, onSendLetter, onGoToMail
         onSelectAnimal(match.id);
         return `Navigated to ${match.name}'s writing page`;
       },
+      // These callbacks report success or failure (e.g. "the letter is empty")
+      // — return their result verbatim so the agent knows what actually happened.
       write_text: (params: { text: string }) => {
-        onWriteText(params.text);
-        return `Added to letter: "${params.text}"`;
+        return onWriteText(params.text);
       },
       send_letter: () => {
-        onSendLetter();
-        return 'Letter sent!';
+        return onSendLetter();
       },
       go_to_mailbox: () => {
         onGoToMailbox();
@@ -291,7 +291,7 @@ export function buildFirstMessage(ctx: SessionContext): string | null {
       }
       return `Let's write to ${animal.name}! Just say what you want to tell them and I'll write it down. Say "send it" when you're done!`;
     }
-    case 'sending': {
+    case 'receiving': {
       const animal = getAnimalById(ctx.nav.animalId);
       if (!animal) return null;
       return `Off it goes! I wonder what ${animal.name} will write back!`;
@@ -336,10 +336,10 @@ export function buildRichContext(ctx: SessionContext): string | null {
       }
       return lines.join('\n');
     }
-    case 'sending': {
+    case 'receiving': {
       const animal = getAnimalById(ctx.nav.animalId);
       if (!animal) return null;
-      return `[SENDING] The letter to ${animal.name} is flying away! Say something brief and excited, then STAY QUIET. ${animal.name}'s response is coming in a few seconds. Do NOT suggest going to the mailbox or picking another animal. Just wait.`;
+      return `[LETTER SENT] The letter to ${animal.name} is flying away and ${animal.name} is writing back right now! Say something brief and excited, then STAY QUIET. The response is coming in a few seconds. Do NOT suggest going to the mailbox or picking another animal. Just wait.`;
     }
     case 'reading': {
       const animal = getAnimalById(ctx.nav.animalId);

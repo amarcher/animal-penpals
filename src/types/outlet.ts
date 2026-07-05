@@ -4,7 +4,6 @@ export interface AppOutletContext {
   store: LetterStore;
   handleSelectAnimal: (animalId: string) => void;
   handleComposeSend: (content: string) => void;
-  handleSendComplete: (responsePromise: Promise<string>) => void;
   handleReceiveComplete: (animalResponse: string) => void;
   handleReply: () => void;
   handleReadLetter: (letterId: string) => void;
