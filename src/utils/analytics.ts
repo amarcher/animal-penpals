@@ -12,7 +12,9 @@ declare global {
 }
 
 export function initAnalytics() {
-  const key = import.meta.env.VITE_POSTHOG_KEY;
+  // Env values set through `vercel env add` via stdin can carry a trailing
+  // newline; an untrimmed key silently breaks every PostHog capture.
+  const key = (import.meta.env.VITE_POSTHOG_KEY as string | undefined)?.trim();
   if (key) {
     posthog.init(key, {
       autocapture: false,
@@ -20,6 +22,8 @@ export function initAnalytics() {
       persistence: 'localStorage',
       api_host: 'https://us.i.posthog.com',
     });
+    // Several apps share one PostHog project; tag every event with its app.
+    posthog.register({ app: 'animal-penpals' });
   }
 }
 
